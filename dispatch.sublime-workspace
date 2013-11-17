@@ -1,0 +1,2281 @@
+{
+	"auto_complete":
+	{
+		"selected_items":
+		[
+			[
+				"tota",
+				"total_vehicles"
+			],
+			[
+				"limo",
+				"limo_file_index"
+			],
+			[
+				"city",
+				"city_companies"
+			],
+			[
+				"total",
+				"total_vehicles"
+			],
+			[
+				"cit",
+				"city_companies"
+			],
+			[
+				"gsu",
+				"gsub"
+			],
+			[
+				"phone",
+				"phones"
+			],
+			[
+				"uni",
+				"uniq"
+			],
+			[
+				"com",
+				"companies"
+			],
+			[
+				"comp",
+				"companies"
+			],
+			[
+				"vehi",
+				"vehicles"
+			],
+			[
+				"vehic",
+				"vehicle"
+			],
+			[
+				"delete",
+				"delete_if"
+			],
+			[
+				"phon",
+				"phone_regex"
+			],
+			[
+				"elem",
+				"elements"
+			],
+			[
+				"url",
+				"url_path"
+			],
+			[
+				"pho",
+				"photo_page"
+			],
+			[
+				"image",
+				"image_urls"
+			],
+			[
+				"veh",
+				"vehicle_link"
+			],
+			[
+				"read_vehi",
+				"read_vehicle_info"
+			],
+			[
+				"bor",
+				"border-radius"
+			],
+			[
+				"box",
+				"box-shadow"
+			],
+			[
+				"vehicle_",
+				"vehicle_kind"
+			],
+			[
+				"it",
+				"italic"
+			],
+			[
+				"fs",
+				"font-style"
+			],
+			[
+				"auto",
+				"autocomplete"
+			],
+			[
+				"padding-",
+				"padding-top"
+			],
+			[
+				"Кра",
+				"Крайслер"
+			],
+			[
+				"Ми",
+				"Микроавтобусы"
+			],
+			[
+				"ba",
+				"baseline"
+			],
+			[
+				"min",
+				"min-width"
+			],
+			[
+				"pick",
+				"pickup_time"
+			],
+			[
+				"vn",
+				"vnif	validates_numericality_of if"
+			],
+			[
+				"m",
+				"margin"
+			],
+			[
+				"vp",
+				"validates_presence_of"
+			],
+			[
+				"pad",
+				"padding"
+			],
+			[
+				"paddin",
+				"padding"
+			],
+			[
+				"bo",
+				"border-top"
+			],
+			[
+				"coun",
+				"counter-increment"
+			],
+			[
+				"padding",
+				"padding-left"
+			],
+			[
+				"b",
+				"border-top"
+			],
+			[
+				"spa",
+				"letter-spacing"
+			],
+			[
+				"ce",
+				"center"
+			],
+			[
+				"bac",
+				"background-size"
+			],
+			[
+				"bag",
+				"background-position"
+			],
+			[
+				"no",
+				"no-repeat"
+			],
+			[
+				"border",
+				"border"
+			],
+			[
+				"max",
+				"max-width"
+			],
+			[
+				"upp",
+				"uppercase"
+			],
+			[
+				"fo",
+				"font-size"
+			],
+			[
+				"mess",
+				"message_params"
+			],
+			[
+				"pic",
+				"pickup_hour"
+			],
+			[
+				"first",
+				"first_photo"
+			],
+			[
+				"class",
+				"class_name"
+			],
+			[
+				"pl",
+				"padding-left"
+			],
+			[
+				"error",
+				"error_class"
+			],
+			[
+				"va",
+				"val	Ruby validates"
+			],
+			[
+				"hour",
+				"hourly_price"
+			],
+			[
+				"v",
+				"vnif	validates_numericality_of if"
+			],
+			[
+				"пасс",
+				"пассажиров"
+			],
+			[
+				"inlin",
+				"inline"
+			],
+			[
+				"vehicle",
+				"vehicles"
+			],
+			[
+				"cate",
+				"category"
+			],
+			[
+				"br",
+				"background-repeat"
+			],
+			[
+				"te",
+				"text-transform"
+			],
+			[
+				"ab",
+				"absolute"
+			],
+			[
+				"ma",
+				"max-width"
+			],
+			[
+				"btn-",
+				"btn-medium"
+			],
+			[
+				"err",
+				"error_class"
+			],
+			[
+				"oe",
+				"operators"
+			],
+			[
+				"wid",
+				"width"
+			],
+			[
+				"drop",
+				"dropoff_minute"
+			],
+			[
+				"Auto",
+				"autocomplete"
+			],
+			[
+				"i",
+				"inline"
+			],
+			[
+				"message",
+				"new_message_path"
+			],
+			[
+				"opera",
+				"operators"
+			],
+			[
+				"ope",
+				"operator"
+			],
+			[
+				"font",
+				"font-family"
+			],
+			[
+				"back",
+				"background"
+			],
+			[
+				"gr",
+				"group"
+			],
+			[
+				"t",
+				"text-transform"
+			],
+			[
+				"inl",
+				"inline-block"
+			],
+			[
+				"in",
+				"inline-block"
+			],
+			[
+				"block",
+				"inline-block"
+			],
+			[
+				"date",
+				"datepicker"
+			],
+			[
+				"pass",
+				"passengers"
+			],
+			[
+				"event_",
+				"event_date"
+			],
+			[
+				"resource",
+				"resources"
+			],
+			[
+				"border-col",
+				"border-color"
+			],
+			[
+				"event",
+				"event_date"
+			],
+			[
+				"by",
+				"by_weekday"
+			],
+			[
+				"by_",
+				"by_capacity"
+			],
+			[
+				"bc",
+				"background-color"
+			],
+			[
+				"font-s",
+				"font-style"
+			],
+			[
+				"margin",
+				"margin"
+			],
+			[
+				"padd",
+				"padding"
+			],
+			[
+				"or",
+				"order_email"
+			],
+			[
+				"order",
+				"order_phone"
+			],
+			[
+				"Vip",
+				"VipCareta"
+			],
+			[
+				"vic",
+				"vipcareta"
+			],
+			[
+				"ta",
+				"text-align"
+			],
+			[
+				"mar",
+				"margin"
+			],
+			[
+				"di",
+				"display"
+			],
+			[
+				"border-r",
+				"border-right"
+			],
+			[
+				"tex",
+				"text-indent"
+			],
+			[
+				"isPla",
+				"isPlaying"
+			],
+			[
+				"setNeeds",
+				"setNeedsDisplay"
+			],
+			[
+				"setNeed",
+				"setNeedsDisplay"
+			],
+			[
+				"CGContextFill",
+				"CGContextFillRect"
+			],
+			[
+				"colorWith",
+				"CIColor.colorWithCGColor:"
+			],
+			[
+				"CGContextShow",
+				"CGContextShowText"
+			],
+			[
+				"CGContextTex",
+				"CGContextShowTextAtPoint"
+			],
+			[
+				"CGContext",
+				"CGContextBeginPath"
+			],
+			[
+				"CGContextAddL",
+				"CGContextAddLineToPoint"
+			],
+			[
+				"CGContextAdd",
+				"CGContextAddLines"
+			],
+			[
+				"gray",
+				"UIColor.lightGrayColor"
+			],
+			[
+				"seekTo",
+				"seekToTime:"
+			],
+			[
+				"first_pause",
+				"first_pause_index"
+			],
+			[
+				"lan",
+				"launchOptions"
+			],
+			[
+				"laun",
+				"launchOptions"
+			],
+			[
+				"init",
+				"initWithNibName"
+			],
+			[
+				"size",
+				"sizeToFit"
+			],
+			[
+				"cla",
+				"cla	class .. < ParentClass .. initialize .. end"
+			],
+			[
+				"cl",
+				"cla	class .. < ParentClass .. initialize .. end"
+			],
+			[
+				"addTar",
+				"addTarget:action:forControlEvents:"
+			],
+			[
+				"UITableViewRowAnimation",
+				"UITableViewRowAnimationRight (1)"
+			],
+			[
+				"reload",
+				"reloadData"
+			],
+			[
+				"tV",
+				"tableView"
+			]
+		]
+	},
+	"buffers":
+	[
+		{
+			"file": "TODO",
+			"settings":
+			{
+				"buffer_size": 463,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "server.coffee",
+			"settings":
+			{
+				"buffer_size": 338,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "config.js",
+			"settings":
+			{
+				"buffer_size": 107,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "client.coffee",
+			"settings":
+			{
+				"buffer_size": 353,
+				"line_ending": "Unix"
+			}
+		}
+	],
+	"build_system": "Packages/NodeDevJS.sublime-build",
+	"command_palette":
+	{
+		"height": 375.0,
+		"selected_items":
+		[
+			[
+				"inst",
+				"Package Control: Install Package"
+			],
+			[
+				"jshi",
+				"JSHint"
+			],
+			[
+				"nodejs",
+				"Nodejs::Default File Settings"
+			],
+			[
+				"install",
+				"Package Control: Install Package"
+			],
+			[
+				"ins",
+				"Package Control: Install Package"
+			],
+			[
+				"pretyy",
+				"Pretty JSON: Reformat (Pretty Print) JSON"
+			],
+			[
+				"ena",
+				"Package Control: Enable Package"
+			],
+			[
+				"comm",
+				"Git: Commit"
+			],
+			[
+				"add",
+				"Git: Add..."
+			],
+			[
+				"instal",
+				"Package Control: Install Package"
+			],
+			[
+				"ad",
+				"Git: Add..."
+			],
+			[
+				"com",
+				"Git: Commit"
+			],
+			[
+				"las",
+				"Rails Latest Migration: Open latest Rails migration"
+			],
+			[
+				"diff",
+				"Git: Diff Current File"
+			],
+			[
+				"last",
+				"Rails Latest Migration: Open latest Rails migration"
+			],
+			[
+				"commi",
+				"Git: Commit"
+			],
+			[
+				"la",
+				"Rails Latest Migration: Open latest Rails migration"
+			],
+			[
+				"lat",
+				"Rails Latest Migration: Open latest Rails migration"
+			],
+			[
+				"open",
+				"Rails Latest Migration: Open latest Rails migration"
+			],
+			[
+				"insta",
+				"Package Control: Install Package"
+			],
+			[
+				"open las",
+				"Rails Latest Migration: Open latest Rails migration"
+			],
+			[
+				"last mi",
+				"Rails Latest Migration: Open latest Rails migration"
+			],
+			[
+				"latest",
+				"Rails Latest Migration: Open latest Rails migration"
+			],
+			[
+				"che",
+				"Markdown Preview: Open Markdown Cheat sheet"
+			],
+			[
+				"cheat",
+				"Markdown Preview: Open Markdown Cheat sheet"
+			],
+			[
+				"enab",
+				"Package Control: Enable Package"
+			],
+			[
+				"enabl",
+				"Package Control: Enable Package"
+			],
+			[
+				"mark",
+				"Set Syntax: MultiMarkdown"
+			],
+			[
+				"dis",
+				"Package Control: Disable Package"
+			],
+			[
+				"disa",
+				"Package Control: Disable Package"
+			],
+			[
+				"previe",
+				"Markdown Preview: Python Markdown: Export HTML in Sublime Text"
+			],
+			[
+				"prev",
+				"Markdown Preview: Open Markdown Cheat sheet"
+			],
+			[
+				"mar",
+				"Markdown Preview: Python Markdown: Preview in Browser"
+			],
+			[
+				"commit",
+				"Git: Commit"
+			],
+			[
+				"git ad",
+				"Git: Add..."
+			],
+			[
+				"git co",
+				"Git: Commit"
+			],
+			[
+				"git",
+				"Package Control: Install Package"
+			],
+			[
+				"disab",
+				"Package Control: Disable Package"
+			],
+			[
+				"enable",
+				"Package Control: Enable Package"
+			],
+			[
+				"disable",
+				"Package Control: Disable Package"
+			],
+			[
+				"package",
+				"Package Control: Remove Package"
+			],
+			[
+				"save",
+				"Project: Save As"
+			],
+			[
+				"File:",
+				"File: Copy Path"
+			],
+			[
+				"path",
+				"File: Copy Path From Project"
+			],
+			[
+				"gommi",
+				"Git: Commit"
+			],
+			[
+				"file op",
+				"File: Copy Path"
+			],
+			[
+				"disabl",
+				"Package Control: Disable Package"
+			],
+			[
+				"upd",
+				"Package Control: Upgrade Package"
+			],
+			[
+				"up",
+				"Package Control: Upgrade Package"
+			],
+			[
+				"add repo",
+				"Package Control: Add Repository"
+			],
+			[
+				"clang",
+				"Preferences: SublimeClang Settings – User"
+			],
+			[
+				"list",
+				"Package Control: List Packages"
+			],
+			[
+				"in",
+				"Package Control: Install Package"
+			],
+			[
+				"packa",
+				"Package Control: List Packages"
+			],
+			[
+				"RubyMotionBuilder: Generate syntax",
+				"RubyMotionBuilder: Generate syntax"
+			],
+			[
+				"build",
+				"RubyMotionBuilder: Run"
+			],
+			[
+				"run",
+				"RubyMotionBuilder: Deploy"
+			],
+			[
+				"RMB",
+				"RubyMotionBuilder: Generate completions"
+			],
+			[
+				"upda",
+				"Package Control: Upgrade Package"
+			],
+			[
+				"PC",
+				"Package Control: Upgrade Package"
+			],
+			[
+				"upg",
+				"Package Control: Upgrade Package"
+			],
+			[
+				"upgra",
+				"Package Control: Upgrade Package"
+			],
+			[
+				"a",
+				"Git: Add..."
+			],
+			[
+				"co",
+				"Git: Commit"
+			],
+			[
+				"Comm",
+				"Git: Commit"
+			],
+			[
+				"c",
+				"Git: Commit"
+			],
+			[
+				"dif",
+				"Git: Diff Current File"
+			],
+			[
+				"Com",
+				"Git: Commit"
+			],
+			[
+				"git pu",
+				"Git: Push"
+			],
+			[
+				"push",
+				"Git: Push"
+			],
+			[
+				"status",
+				"Git: Status"
+			],
+			[
+				"log",
+				"Git: Log Current File"
+			],
+			[
+				"C",
+				"Git: Commit"
+			],
+			[
+				"Add",
+				"Git: Add..."
+			],
+			[
+				"ruby",
+				"Set Syntax: Ruby"
+			],
+			[
+				"test",
+				"RubyTest: Show Test Panel"
+			],
+			[
+				"termin",
+				"Preferences: Terminal Key Bindings – Default"
+			],
+			[
+				"remove",
+				"Package Control: Remove Package"
+			],
+			[
+				"todo",
+				"Todo: Open File"
+			],
+			[
+				"show",
+				"Show TODOs in project and open files"
+			],
+			[
+				"",
+				"Snippet: Lorem ipsum"
+			],
+			[
+				"Show",
+				"Show TODOs in project and open files"
+			],
+			[
+				"git: ",
+				"Git: Push"
+			],
+			[
+				"git: ad",
+				"Git: Custom Command"
+			],
+			[
+				"git: commi",
+				"Git: Quick Commit"
+			],
+			[
+				"git:",
+				"Git: Graph Current File"
+			],
+			[
+				"goto",
+				"Goto Documentation"
+			],
+			[
+				"disc",
+				"Package Control: Discover Packages"
+			],
+			[
+				"list pa",
+				"Package Control: List Packages"
+			],
+			[
+				"pack",
+				"Package Control: Install Package"
+			],
+			[
+				"pa",
+				"Package Control: Install Package"
+			]
+		],
+		"width": 462.0
+	},
+	"console":
+	{
+		"height": 293.0
+	},
+	"distraction_free":
+	{
+		"menu_visible": true,
+		"show_minimap": false,
+		"show_open_files": false,
+		"show_tabs": false,
+		"side_bar_visible": false,
+		"status_bar_visible": false
+	},
+	"file_history":
+	[
+		"/Users/tisunov/dispatch/node_modules/jayson/examples/batch_request/client.js",
+		"/Users/tisunov/dispatch/node_modules/jayson/examples/forking/fork.js",
+		"/Users/tisunov/dispatch/node_modules/jayson/examples/forking/client.js",
+		"/Users/tisunov/dispatch/node_modules/jayson/examples/many_interfaces/server.js",
+		"/Users/tisunov/dispatch/node_modules/jayson/examples/http_server_and_client/server.js",
+		"/Users/tisunov/dispatch/node_modules/jayson/examples/http_server_and_client/client.js",
+		"/Users/tisunov/dispatch/node_modules/jayson/examples/notifications/client.js",
+		"/Users/tisunov/dispatch/node_modules/jayson/examples/notifications/server.js",
+		"/Users/tisunov/dispatch/server.js",
+		"/Users/tisunov/dispatch/client.coffee",
+		"/Users/tisunov/dispatch/config.js",
+		"/Users/tisunov/dispatch/node_modules/mongoskin/examples/gridfs.js",
+		"/Users/tisunov/dispatch/node_modules/mongoskin/examples/replSetBenchmark.js",
+		"/Users/tisunov/dispatch/node_modules/mongoskin/examples/config.js",
+		"/Users/tisunov/dispatch/node_modules/mongoskin/examples/admin.js",
+		"/Users/tisunov/dispatch/node_modules/mongoskin/examples/insert.js",
+		"/Users/tisunov/dispatch/client.js",
+		"/Users/tisunov/dispatch/package.json",
+		"/Users/tisunov/dispatch/models/db.js",
+		"/Users/tisunov/dispatch/models",
+		"/Users/tisunov/dispatch/node_modules/multitransport-jsonrpc/test/full-stack.js",
+		"/Users/tisunov/dispatch/node_modules/multitransport-jsonrpc/README.md",
+		"/Users/tisunov/dispatch/node_modules/multitransport-jsonrpc/package.json",
+		"/Users/tisunov/dispatch/node_modules/multitransport-jsonrpc/.travis.yml",
+		"/Users/tisunov/dispatch/node_modules/multitransport-jsonrpc/.npmignore",
+		"/Users/tisunov/dispatch/node_modules/multitransport-jsonrpc/node_modules/queue-flow/package.json",
+		"/Users/tisunov/dispatch/npm-debug.log",
+		"/Users/tisunov/dispatch/node_modules/multitransport-jsonrpc/prepublish.sh",
+		"/Users/tisunov/dispatch/node_modules/multitransport-jsonrpc/lib/client.js",
+		"/Users/tisunov/dispatch/node_modules/multitransport-jsonrpc/test/server-http.js",
+		"/Users/tisunov/dispatch/node_modules/multitransport-jsonrpc/test/server.js",
+		"/Users/tisunov/Library/Application Support/Sublime Text 2/Packages/Nodejs/Nodejs.sublime-settings",
+		"/Users/tisunov/Dropbox/appdata/sublime/Packages/NodeDevJS.sublime-build",
+		"/Users/tisunov/dispatch/app.js",
+		"/Users/tisunov/Dropbox/appdata/sublime/Packages/Nodejs/Readme.md",
+		"/Users/tisunov/Dropbox/appdata/sublime/Packages/Nodejs/Nodejs.sublime-settings",
+		"/Users/tisunov/Dropbox/appdata/sublime/Packages/Nodejs/Nodejs.sublime-build",
+		"/Users/tisunov/app.js",
+		"/Users/tisunov/TODO",
+		"/Users/tisunov/limolead/lib/tasks/gorko_crawler.rb",
+		"/Users/tisunov/limolead/lib/tasks/gorko_neater.rb",
+		"/Users/tisunov/limolead/TODO",
+		"/Users/tisunov/limolead/lib/tasks/gorko_cleaned/voronezh_21_407.json",
+		"/Users/tisunov/limolead/lib/tasks/gorko/voronezh_cars.json",
+		"/Users/tisunov/limolead/lib/tasks/gorko/voronezh_limousine.json",
+		"/Users/tisunov/limolead/db/seeds/vehicles.yml",
+		"/Users/tisunov/limolead/lib/tasks/gorko/volgograd_cars_118.json",
+		"/Users/tisunov/limolead/lib/tasks/gorko/kaliningrad_cars_36.json",
+		"/Users/tisunov/limolead/config/locales/ru.yml",
+		"/Users/tisunov/limolead/lib/tasks/{\"name\"=>\"infiniti m35x\", \"city\"=>\"Воронеж\", \"seats\"=>\"10\", \"hourly_price\"=>\"35004000\", \"min_hours\"=>\"1\", \"year\"=>\"2013\", \"photo_urls\"=>[\"https",
+		"/Users/tisunov/limolead/lib/tasks/gorko/kaliningrad_limousine_13.json",
+		"/Users/tisunov/limolead/lib/tasks/gorko/belgorod_cars_33.json",
+		"/Users/tisunov/limolead/lib/tasks/gorko/penza_cars_12.json",
+		"/Users/tisunov/limolead/lib/tasks/gorko/yar_limousine_7.json",
+		"/Users/tisunov/limolead/lib/tasks/gorko/krs_cars_72.json",
+		"/Users/tisunov/limolead/lib/tasks/gorko/krs_limousine_32.json",
+		"/Users/tisunov/limolead/lib/tasks/gorko/yar_cars_20.json",
+		"/Users/tisunov/Hopper/Podfile",
+		"/Users/tisunov/Hopper/Hopper.xc",
+		"/Users/tisunov/limolead/lib/tasks/gorko/tula_limousine_30.json",
+		"/Users/tisunov/limolead/lib/tasks/gorko/nabchel_limousine_1.json",
+		"/Users/tisunov/limolead/lib/tasks/gorko/kemerovo_cars_36.json",
+		"/Users/tisunov/limolead/lib/tasks/gorko/izhevsk_limousine_1.json",
+		"/Users/tisunov/limolead/lib/tasks/gorko/omsk_limousine_28.json",
+		"/Users/tisunov/limolead/lib/tasks/gorko/perm_limousine_14.json",
+		"/Users/tisunov/limolead/lib/tasks/gorko/saratov_limousine_46.json",
+		"/Users/tisunov/limolead/lib/tasks/gorko/perm_cars_90.json",
+		"/Users/tisunov/limolead/lib/tasks/gorko/spb_limousine_66.json",
+		"/Users/tisunov/limolead/lib/tasks/gorko_voronezh_limousine.json",
+		"/Users/tisunov/limolead/lib/tasks/gorko_limousine.json",
+		"/Users/tisunov/limolead/lib/tasks/factual_client.rb",
+		"/Users/tisunov/limolead/lib/tasks/factual_companies_292.json",
+		"/Users/tisunov/limolead/lib/tasks/by name 82, 2",
+		"/Users/tisunov/limolead/app/views/operators/success.html.haml",
+		"/Users/tisunov/limolead/db/seeds/cities.yml",
+		"/Users/tisunov/Dropbox/Projects/extract_streets.rb",
+		"/Users/tisunov/.zshrc",
+		"/Users/tisunov/Desktop/untitled.py",
+		"/Users/tisunov/limolead/lib/tasks/gorko_cars.json",
+		"/Users/tisunov/Library/Application Support/Sublime Text 2/Packages/Default/Preferences.sublime-settings",
+		"/Users/tisunov/limorides/source/javascripts/app.js.coffee",
+		"/Users/tisunov/limolead/app/assets/javascripts/vehicle_request.js.coffee",
+		"/Users/tisunov/Dropbox/appdata/sublime/Packages/Theme - Railscasts/Cast.tmTheme",
+		"/Users/tisunov/Library/Application Support/Sublime Text 2/Packages/User/Preferences.sublime-settings",
+		"/Users/tisunov/limolead/app/models/vehicle.rb",
+		"/Users/tisunov/limolead/lib/tasks/crawler.rb",
+		"/Users/tisunov/Dropbox/appdata/sublime/Packages/Ruby/Ruby.sublime-build",
+		"/Users/tisunov/limolead/config/newrelic.yml",
+		"/Users/tisunov/limolead/log/newrelic_agent.log",
+		"/Users/tisunov/limolead/Отзывы.txt",
+		"/Users/tisunov/limorides/limorides.sublime-project",
+		"/Users/tisunov/limolead/app/assets/stylesheets/shared.css.scss",
+		"/Users/tisunov/limolead/app/assets/stylesheets/application.css.scss",
+		"/Users/tisunov/limolead/app/assets/stylesheets/companies.css.scss",
+		"/Users/tisunov/limolead/app/views/companies/show.html.haml",
+		"/Users/tisunov/limorides/source/stylesheets/screen.css.scss",
+		"/Users/tisunov/limolead/app/views/layouts/application.html.haml",
+		"/Users/tisunov/limolead/app/assets/javascripts/shared.js.coffee",
+		"/Users/tisunov/limolead/app/assets/javascripts/application.js",
+		"/Users/tisunov/limolead/app/assets/javascripts/companies.js.coffee",
+		"/Users/tisunov/limolead/db/seeds/reviews.yml",
+		"/Users/tisunov/limorides/source/more-vehicles.html.haml",
+		"/Users/tisunov/limorides/source/advertise.html.haml",
+		"/Users/tisunov/limolead/vendor/assets/stylesheets/bootstrap.no-icons.css",
+		"/Users/tisunov/limorides/source/stylesheets/bootstrap.no-icons.css",
+		"/Users/tisunov/limolead/app/views/user_sessions/new.html.haml",
+		"/Users/tisunov/limolead/app/views/vehicle_requests/edit.html.haml",
+		"/Users/tisunov/limolead/app/views/shared/_vehicle_request_form.html.haml",
+		"/Users/tisunov/limolead/app/assets/stylesheets/vehicle_requests.css.scss",
+		"/Users/tisunov/limolead/db/seeds/operators.yml",
+		"/Users/tisunov/limolead/vendor/assets/stylesheets/vendor.css.scss",
+		"/Users/tisunov/limolead/app/controllers/companies_controller.rb",
+		"/Users/tisunov/limolead/config/routes.rb",
+		"/Users/tisunov/limorides/source/sedan.html.haml",
+		"/Users/tisunov/limorides/source/limousine.html.haml",
+		"/Users/tisunov/limorides/source/index.html.haml",
+		"/Users/tisunov/limorides/source/city/city_template.html.haml",
+		"/Users/tisunov/limolead/app/controllers/operators_controller.rb",
+		"/Users/tisunov/limolead/app/views/requests_mailer/rental_request.html.haml",
+		"/Users/tisunov/limolead/app/mailers/requests_mailer.rb",
+		"/Users/tisunov/limolead/app/controllers/vehicle_requests_controller.rb",
+		"/Users/tisunov/limolead/config/environments/development.rb",
+		"/Users/tisunov/limolead/config/initializers/setup_mail.rb",
+		"/Users/tisunov/limolead/config/environments/production.rb",
+		"/Users/tisunov/limolead/Gemfile",
+		"/Users/tisunov/limolead/app/helpers/vehicles_helper.rb",
+		"/Users/tisunov/limolead/app/helpers/vehicle_requests_helper.rb",
+		"/Users/tisunov/limorides/Gemfile"
+	],
+	"find":
+	{
+		"height": 35.0
+	},
+	"find_in_files":
+	{
+		"height": 95.0,
+		"where_history":
+		[
+			"",
+			"/Users/tisunov/limolead",
+			"/Users/tisunov/limolead,/Users/tisunov/limorides",
+			"/Users/tisunov/limolead",
+			"/Users/tisunov/limorides",
+			"",
+			"/Users/paul/limolead",
+			"limolead",
+			"",
+			"*.cs",
+			"",
+			"<open files>",
+			"",
+			"*.txt",
+			"*.cs",
+			"*.rb",
+			"",
+			"area",
+			"",
+			"@",
+			"*",
+			"",
+			"*.rb",
+			"",
+			"<open files>",
+			"",
+			"*.haml",
+			"*.js;*.coffee",
+			""
+		]
+	},
+	"find_state":
+	{
+		"case_sensitive": true,
+		"find_history":
+		[
+			"keep-alive",
+			"null",
+			"jsonRpcTcpServer",
+			"Loopback",
+			"jsonRpcHttpServer",
+			"Коро",
+			"PersonGR",
+			"«Vipcareta»",
+			"ТК«Vipcareta»",
+			"ТПК «Эталон»",
+			"e-class",
+			"Mercedes e-class",
+			"teana",
+			"Sprinter",
+			"СХ7 CX7",
+			"Boxer",
+			"Tiguan",
+			"года - 750 рубчас!!!",
+			"тел: +7950-759-60-16 или +7908-134-44-43",
+			"или",
+			"илиэ",
+			"или",
+			":или",
+			"phone_inside_address_regex",
+			"Volkswagen",
+			"Тойота Камри",
+			"Воронеж,Северный р-он",
+			"benz",
+			"W221",
+			"Mercedes- S600 W221",
+			"ТК«Vipcareta»",
+			"clean_limo_name",
+			"clean_company_and_vehicles",
+			"clean_vehicles",
+			"denisyaurov@yandex.ru",
+			"boxava@gmail.com",
+			"+7(910)3444401",
+			"тел.",
+			"Г. ",
+			"Воронеж, ",
+			"Phantom Auto",
+			"vehicles",
+			"v['name'].",
+			"для свадеб и торжеств",
+			"\"name\": null",
+			"\"email\": null",
+			"\"name\": null",
+			"\"email\": null",
+			"\"city\": null",
+			"\"email\": null",
+			"89273657556",
+			"comwww",
+			"\"email\": \"101limuzin@gmail.comwww.101limuzin.com101лимузин.рфwww.elite-limo.ru\",",
+			"comwww",
+			"101limuzin",
+			"next_element?",
+			"next_element",
+			"read_company_info",
+			"saratov",
+			"GORKO_VRN_BASE",
+			"ead_images_from_gallery",
+			"next_element_text",
+			"gsub",
+			"/",
+			"/^",
+			"read_images_from_gallery",
+			"read_company_info",
+			"background",
+			"read_vehicle_info",
+			"codepoint_to_string",
+			"read_company_info",
+			"@converter",
+			"http://voronezh.gorko.ru/%D0%B0%D0%B2%D1%82%D0%BE%D0%BC%D0%BE%D0%B1%D0%B8%D0%BB%D0%B8/9461/",
+			"$",
+			"%",
+			"pod-sp-cta",
+			".service-rating",
+			".rating",
+			".review-date-wrap",
+			"h4,",
+			".all-vehicles",
+			".profile-meta",
+			"/ TODO: head.description = company.description[0..164]\nborder-box",
+			"border-box",
+			"headline",
+			"h5,",
+			"margin: 10px 0",
+			"margin: 10px 0;",
+			"profile",
+			".box-narrow",
+			".no-inset",
+			"background-color: #fff;\npadding: 0;\nposition: relative;\nmargin: 0 0 30px;\nclear: both;",
+			"р1",
+			".wrapper",
+			"page-title",
+			"form {",
+			"form{",
+			"page-title",
+			"companies",
+			"#search-vehicles-form",
+			"media",
+			"delivery_method",
+			"postmaster@limorides.ru",
+			"5fsif3k7s2m9",
+			"delivery_method",
+			"utm_campaign",
+			"sendgrid",
+			"sendgrid-rails",
+			"email_address_with_name",
+			"rental_request",
+			"#request-sent",
+			"t-light",
+			"t-medium",
+			".btn=med",
+			"$field-height",
+			"input",
+			"input[type='text']",
+			"input[type='tel']",
+			".t-banner",
+			".engage-block",
+			"call-to-action",
+			"call-to",
+			".bg-",
+			"footer",
+			"headline",
+			"#search-vehicles-form",
+			"t-head",
+			".btn-medium"
+		],
+		"highlight": true,
+		"in_selection": false,
+		"preserve_case": false,
+		"regex": false,
+		"replace_history":
+		[
+			"PersonaGR",
+			"ТК «Vipcareta»",
+			"«Эталон»",
+			"",
+			"ТК «Vipcareta»",
+			"\"phones\": [\n  \"+7(910)3444401\",\n  \"\",\n  \"+7(950)7547802\"\n],\nТК «Vipcareta»",
+			"",
+			"name.",
+			"\"name\": \"Виктор Карпухин\"",
+			"\"email\": \"101limuzin@gmail.com\",\n\"websites\": [\n  \"www.101limuzin.com\",\n  \"101лимузин.рф\",\n  \"www.elite-limo.ru\"\n],      \n",
+			"vehicle_kind",
+			"kind:",
+			"stretch_suv",
+			"type:",
+			"RequestsMailer",
+			"VehicleRequest.",
+			"@request",
+			"Request.",
+			"@request",
+			"ая }",
+			"- { name: ",
+			"%h4",
+			"tisunov.pavel@gmail.com",
+			"email: \"tisunov.pavel@gmail.com+",
+			"\"#{",
+			"\",",
+			"\"",
+			"#{root_domain}/city",
+			"roles",
+			"dayprice",
+			"\"",
+			"TRAITS",
+			"trait",
+			"min_hours",
+			"pricing:",
+			"@vehicle",
+			"Vehicle",
+			"@message.search",
+			"\"#{root_domain}/articles",
+			"",
+			"website:",
+			"company_name:",
+			"h5",
+			"/kak-eto-rabotaet",
+			"Лиморайдс",
+			"вам",
+			"ваши",
+			"вашей",
+			"вашими",
+			"вы",
+			"Лимузин Хаммер H2",
+			".ru\",",
+			"url: \"http",
+			"root_domain",
+			".row",
+			"o",
+			"schedule: [",
+			"photo_url",
+			"",
+			"minimum",
+			"email",
+			"phone",
+			"",
+			"Limorides.ru",
+			"[:title]",
+			"title",
+			"servicename",
+			"current_page.data",
+			"current_page.data.",
+			"currentpage",
+			"#{current_page.service_name}",
+			"VipCareta",
+			".vehicle-class",
+			"operator",
+			"mendelson/mendelson",
+			"",
+			"2ecc71",
+			"27AE60",
+			"v",
+			"seats",
+			"next_tapped_internal",
+			":playMode_PlayContinuous",
+			"@playbackMode",
+			"pauses",
+			"selectionSec.begin",
+			"def",
+			"end",
+			"",
+			"@pauseSearcher",
+			".endInit",
+			".beginInit",
+			"@waveform_view",
+			"",
+			"playhead_position",
+			"frame_duration",
+			"pixelsInSecond",
+			"pixelsToSeconds",
+			"secondsToPixels",
+			":selectNew",
+			"@downOffsetSec",
+			"@downSelectionX",
+			"@mouseMode",
+			"self.setNeedsDisplay",
+			"",
+			"end",
+			"@mouseSelectMode",
+			"@selectionX.end",
+			"selectionX =",
+			"selectionX = ",
+			"@wavePressed_IsChangingLeft",
+			"@selectionX",
+			"@downSelectionX.begin",
+			":select",
+			"@scrollAreaHeight",
+			"@downY",
+			"@downX",
+			"@downSelectionX.end",
+			"@wavePressed_X",
+			":selectNew_Wait",
+			":moveRight",
+			":moveLeft",
+			":scroll",
+			"@selectionToBorderMinDistance",
+			"and",
+			"if",
+			"def",
+			"",
+			"empty?"
+		],
+		"reverse": false,
+		"show_context": false,
+		"use_buffer2": false,
+		"whole_word": false,
+		"wrap": true
+	},
+	"groups":
+	[
+		{
+			"sheets":
+			[
+				{
+					"buffer": 0,
+					"file": "TODO",
+					"settings":
+					{
+						"buffer_size": 463,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								386,
+								463
+							]
+						],
+						"settings":
+						{
+							"BracketHighlighterBusy": false,
+							"bh_regions":
+							[
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close"
+							],
+							"syntax": "Packages/Text/Plain text.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 1,
+					"file": "server.coffee",
+					"settings":
+					{
+						"buffer_size": 338,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								305,
+								305
+							]
+						],
+						"settings":
+						{
+							"BracketHighlighterBusy": false,
+							"bh_regions":
+							[
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close"
+							],
+							"syntax": "Packages/CoffeeScript/CoffeeScript.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "config.js",
+					"settings":
+					{
+						"buffer_size": 107,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								107,
+								107
+							]
+						],
+						"settings":
+						{
+							"BracketHighlighterBusy": false,
+							"bh_regions":
+							[
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close"
+							],
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "client.coffee",
+					"settings":
+					{
+						"buffer_size": 353,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								264,
+								264
+							]
+						],
+						"settings":
+						{
+							"BracketHighlighterBusy": false,
+							"bh_regions":
+							[
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close"
+							],
+							"syntax": "Packages/CoffeeScript/CoffeeScript.tmLanguage"
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				}
+			]
+		}
+	],
+	"incremental_find":
+	{
+		"height": 0.0
+	},
+	"input":
+	{
+		"height": 33.0
+	},
+	"layout":
+	{
+		"cells":
+		[
+			[
+				0,
+				0,
+				1,
+				1
+			]
+		],
+		"cols":
+		[
+			0.0,
+			1.0
+		],
+		"rows":
+		[
+			0.0,
+			1.0
+		]
+	},
+	"menu_visible": true,
+	"output.clang":
+	{
+		"height": 98.0
+	},
+	"output.clang_static_analyzer":
+	{
+		"height": 0.0
+	},
+	"output.exec":
+	{
+		"height": 157.0
+	},
+	"output.find_results":
+	{
+		"height": 102.0
+	},
+	"output.git":
+	{
+		"height": 110.0
+	},
+	"output.markdown":
+	{
+		"height": 102.0
+	},
+	"output.unsaved_changes":
+	{
+		"height": 102.0
+	},
+	"replace":
+	{
+		"height": 62.0
+	},
+	"save_all_on_build": true,
+	"select_file":
+	{
+		"height": 0.0,
+		"selected_items":
+		[
+			[
+				"cli",
+				"client.coffee"
+			],
+			[
+				"con",
+				"config.js"
+			],
+			[
+				"serverjs",
+				"server.js"
+			],
+			[
+				"to",
+				"limolead/TODO"
+			],
+			[
+				"tod",
+				"limolead/TODO"
+			],
+			[
+				"cra",
+				"limolead/lib/tasks/gorko_crawler.rb"
+			],
+			[
+				"voronezh",
+				"limolead/lib/tasks/gorko/voronezh_limousine.json"
+			],
+			[
+				"vehi",
+				"limolead/db/seeds/vehicles.yml"
+			],
+			[
+				"vc",
+				"limolead/lib/tasks/gorko/volgograd_cars_118.json"
+			],
+			[
+				"ru",
+				"limolead/config/locales/ru.yml"
+			],
+			[
+				"gork",
+				"limolead/lib/tasks/gorko_crawler.rb"
+			],
+			[
+				"craw",
+				"limolead/lib/tasks/gorko_crawler.rb"
+			],
+			[
+				"gor",
+				"limolead/lib/tasks/gorko_crawler.rb"
+			],
+			[
+				"success",
+				"limolead/app/views/operators/success.html.haml"
+			],
+			[
+				"citi",
+				"limolead/db/seeds/cities.yml"
+			],
+			[
+				"vr",
+				"limolead/app/assets/javascripts/vehicle_request.js.coffee"
+			],
+			[
+				"app",
+				"limorides/source/javascripts/app.js.coffee"
+			],
+			[
+				"newr",
+				"limolead/config/newrelic.yml"
+			],
+			[
+				"sub",
+				"limorides/limorides.sublime-project"
+			],
+			[
+				"scr",
+				"limorides/source/stylesheets/screen.css.scss"
+			],
+			[
+				"appl",
+				"limolead/app/views/layouts/application.html.haml"
+			],
+			[
+				"revie",
+				"limolead/db/seeds/reviews.yml"
+			],
+			[
+				"more",
+				"limorides/source/more-vehicles.html.haml"
+			],
+			[
+				"ad",
+				"limorides/source/advertise.html.haml"
+			],
+			[
+				"scre",
+				"limorides/source/stylesheets/screen.css.scss"
+			],
+			[
+				"bootno",
+				"limolead/vendor/assets/stylesheets/bootstrap.no-icons.css"
+			],
+			[
+				"boot",
+				"limorides/source/stylesheets/bootstrap.no-icons.css"
+			],
+			[
+				"todo",
+				"limolead/TODO"
+			],
+			[
+				"vrf",
+				"limolead/app/views/shared/_vehicle_request_form.html.haml"
+			],
+			[
+				"edit",
+				"limolead/app/views/vehicle_requests/edit.html.haml"
+			],
+			[
+				"usersenew",
+				"limolead/app/views/user_sessions/new.html.haml"
+			],
+			[
+				"oper",
+				"limolead/db/seeds/operators.yml"
+			],
+			[
+				"comp",
+				"limolead/app/assets/stylesheets/companies.css.scss"
+			],
+			[
+				"sed",
+				"limorides/source/sedan.html.haml"
+			],
+			[
+				"limousi",
+				"limorides/source/limousine.html.haml"
+			],
+			[
+				"index",
+				"limorides/source/index.html.haml"
+			],
+			[
+				"city",
+				"limorides/source/city/city_template.html.haml"
+			],
+			[
+				"show",
+				"limolead/app/views/companies/show.html.haml"
+			],
+			[
+				"cc",
+				"limolead/app/controllers/companies_controller.rb"
+			],
+			[
+				"rou",
+				"limolead/config/routes.rb"
+			],
+			[
+				"rout",
+				"limolead/config/routes.rb"
+			],
+			[
+				"oc",
+				"limolead/app/controllers/operators_controller.rb"
+			],
+			[
+				"rent",
+				"limolead/app/views/requests_mailer/rental_request.html.haml"
+			],
+			[
+				"produ",
+				"limolead/config/environments/production.rb"
+			],
+			[
+				"dev",
+				"limolead/config/environments/development.rb"
+			],
+			[
+				"gem",
+				"limolead/Gemfile"
+			],
+			[
+				"mail",
+				"limolead/config/initializers/setup_mail.rb"
+			],
+			[
+				"setp",
+				"limolead/config/initializers/setup_mail.rb"
+			],
+			[
+				"vh",
+				"limolead/app/helpers/vehicles_helper.rb"
+			],
+			[
+				"mai",
+				"limolead/config/initializers/setup_mail.rb"
+			],
+			[
+				"gm",
+				"limorides/Gemfile"
+			],
+			[
+				"us",
+				"limolead/app/models/user.rb"
+			],
+			[
+				"ge",
+				"limolead/Gemfile"
+			],
+			[
+				"vrc",
+				"limolead/app/controllers/vehicle_requests_controller.rb"
+			],
+			[
+				"ola",
+				"limorides/source/_olark.html.erb"
+			],
+			[
+				"cont",
+				"limorides/source/contact.html.haml"
+			],
+			[
+				"faq",
+				"limorides/source/advertiser-faq.html.haml"
+			],
+			[
+				"foot",
+				"limorides/source/_footer.html.haml"
+			],
+			[
+				"use",
+				"limolead/app/models/user.rb"
+			],
+			[
+				"ht",
+				"limorides/source/.htaccess"
+			],
+			[
+				"seed",
+				"limolead/db/seeds.rb"
+			],
+			[
+				"edi",
+				"limolead/app/views/vehicle_requests/edit.html.haml"
+			],
+			[
+				"new",
+				"limolead/app/views/vehicle_requests/new.html.haml"
+			],
+			[
+				"_fo",
+				"limorides/source/_footer.html.haml"
+			],
+			[
+				"foote",
+				"limorides/source/_footer.html.haml"
+			],
+			[
+				"adve",
+				"limorides/source/_advertise.haml"
+			],
+			[
+				"why",
+				"limorides/source/_why-use.haml"
+			],
+			[
+				"how",
+				"limorides/source/_how-it-works.haml"
+			],
+			[
+				"regis",
+				"limolead/app/views/operators/register.html.haml"
+			],
+			[
+				"regi",
+				"limorides/data/regions.yml"
+			],
+			[
+				"inde",
+				"limorides/source/index.html.haml"
+			],
+			[
+				"in",
+				"limorides/source/index.html.haml"
+			],
+			[
+				"rf",
+				"limorides/source/_request-form.haml"
+			],
+			[
+				"rq",
+				"limolead/app/views/requests_mailer/request_quote.html.haml"
+			],
+			[
+				"_nav",
+				"limorides/source/_nav.html.haml"
+			],
+			[
+				"vrh",
+				"limolead/app/helpers/vehicle_requests_helper.rb"
+			],
+			[
+				"mailer",
+				"limolead/app/mailers/requests_mailer.rb"
+			],
+			[
+				"rental",
+				"limolead/app/views/requests_mailer/rental_request.html.haml"
+			],
+			[
+				"_na",
+				"limorides/source/_nav.html.haml"
+			],
+			[
+				"ind",
+				"limorides/source/index.html.haml"
+			],
+			[
+				"conf",
+				"limorides/config.rb"
+			],
+			[
+				"q",
+				"limorides/source/_request-quote.haml"
+			],
+			[
+				"vhr",
+				"limolead/app/assets/stylesheets/vehicle_requests.css.scss"
+			],
+			[
+				"vrcs",
+				"limolead/app/assets/stylesheets/vehicle_requests.css.scss"
+			],
+			[
+				"ro",
+				"limolead/config/routes.rb"
+			],
+			[
+				"ver",
+				"limolead/app/assets/javascripts/vehicle_request.js.coffee"
+			],
+			[
+				"jquau",
+				"limorides/source/javascripts/jquery.autocomplete.js"
+			],
+			[
+				"vrjs",
+				"limolead/app/assets/javascripts/vehicle_request.js.coffee"
+			],
+			[
+				"autoc",
+				"limolead/app/controllers/autocomplete_controller.rb"
+			],
+			[
+				"vehicl",
+				"limolead/db/seeds/vehicles.yml"
+			],
+			[
+				"sch",
+				"limolead/db/schema.rb"
+			],
+			[
+				"vehicleym",
+				"limolead/db/seeds/vehicles.yml"
+			],
+			[
+				"vrnew",
+				"limolead/app/views/vehicle_requests/new.html.haml"
+			],
+			[
+				"vendor",
+				"limolead/vendor/assets/javascripts/vendor.js"
+			],
+			[
+				"sche",
+				"limolead/db/schema.rb"
+			],
+			[
+				"cit",
+				"limorides/source/city/city_template.html.haml"
+			],
+			[
+				"limo",
+				"limorides/source/limousine.html.haml"
+			],
+			[
+				"sc",
+				"limorides/source/stylesheets/screen.css.scss"
+			],
+			[
+				"confi",
+				"limorides/config.rb"
+			],
+			[
+				"_wh",
+				"limorides/source/_why-use.haml"
+			],
+			[
+				"_ad",
+				"limorides/source/_advertise.haml"
+			],
+			[
+				"lay",
+				"limorides/source/layouts/layout-article.haml"
+			],
+			[
+				"head",
+				"limorides/source/_head-meta.html.erb"
+			],
+			[
+				"ho",
+				"limorides/source/_how-it-works.haml"
+			],
+			[
+				"_how",
+				"limorides/source/_how-it-works.haml"
+			],
+			[
+				"appha",
+				"limolead/app/views/layouts/application.html.haml"
+			],
+			[
+				"vehiresh",
+				"limolead/app/views/vehicle_requests/show.html.haml"
+			],
+			[
+				"vrsh",
+				"limolead/app/views/reviews/show.html.haml"
+			],
+			[
+				"vehinew",
+				"limolead/app/views/vehicle_requests/new.html.haml"
+			],
+			[
+				"usessnew",
+				"limolead/app/views/user_sessions/new.html.haml"
+			],
+			[
+				"adv",
+				"limorides/source/advertise.html.haml"
+			],
+			[
+				"vehir",
+				"limolead/app/assets/stylesheets/vehicle_requests.css.scss"
+			],
+			[
+				"versho",
+				"limolead/app/views/vehicle_requests/show.html.haml"
+			],
+			[
+				"val",
+				"limolead/config/locales/validates_timeliness.en.yml"
+			],
+			[
+				"valida",
+				"limolead/config/initializers/validates_timeliness.rb"
+			],
+			[
+				"rm",
+				"limolead/app/mailers/requests_mailer.rb"
+			],
+			[
+				"ma",
+				"limolead/app/mailers/mail_preview.rb"
+			],
+			[
+				"ah",
+				"limolead/app/helpers/application_helper.rb"
+			],
+			[
+				"trip",
+				"limolead/app/views/requests_mailer/trip.html.haml"
+			],
+			[
+				"requmm",
+				"limolead/app/views/requests_mailer/request_quote.html.haml"
+			],
+			[
+				"rr",
+				"limolead/app/views/requests_mailer/rental_request.html.haml"
+			],
+			[
+				"uc",
+				"limolead/app/controllers/users_controller.rb"
+			],
+			[
+				"sessnew",
+				"limolead/app/views/user_sessions/new.html.haml"
+			],
+			[
+				"user",
+				"limolead/app/models/user.rb"
+			],
+			[
+				"bootic",
+				"limorides/source/stylesheets/bootstrap.no-icons.css"
+			],
+			[
+				"bootstricon",
+				"limorides/source/stylesheets/bootstrap.no-icons.css"
+			],
+			[
+				"cities",
+				"limolead/db/seeds/cities.yml"
+			],
+			[
+				"rc",
+				"limolead/app/controllers/vehicle_requests_controller.rb"
+			]
+		],
+		"width": 0.0
+	},
+	"select_project":
+	{
+		"height": 500.0,
+		"selected_items":
+		[
+			[
+				"",
+				"/Users/paul/Projects/oriz/oriz.sublime-project"
+			],
+			[
+				"ori",
+				"/Users/paul/Projects/oriz/oriz.sublime-project"
+			]
+		],
+		"width": 380.0
+	},
+	"show_minimap": false,
+	"show_open_files": true,
+	"show_tabs": true,
+	"side_bar_visible": true,
+	"side_bar_width": 177.0,
+	"status_bar_visible": true
+}
