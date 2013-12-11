@@ -1,1 +1,6 @@
 /node_modules
+.DS_STORE
+android/*
+TODO
+uber_*.txt
+*.chls

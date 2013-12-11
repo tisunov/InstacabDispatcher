@@ -1,51 +1,69 @@
 var WebSocket = require('ws'),
 	util = require('util'),
-	events = require('events');
+	events = require('events'),
+	assert = require('assert');
 
-function User(initialState) {
-	this.connected = false;
-	this.state = initialState;
+// Create a new object, that prototypally inherits from the Error constructor
+function NetworkError(message, socketError) {
+  this.name = "NetworkError";
+  this.message = message || "Default Message";
+  this.socketError = socketError;
 }
 
-/**
- * Inherits from EventEmitter.
+NetworkError.prototype = new Error();
+NetworkError.prototype.constructor = NetworkError;
+
+/** User
+ *
  */
 
-util.inherits(User, events.EventEmitter);
-
-User.prototype.getLocation = function() {
-	return {
-		longitude: this.lon,
-		latitude: this.lat
-	}
+function User(defaultState) {
+	this.connected = false;
+	this.state = defaultState;
 }
 
-User.prototype.setTrip = function(val) {
-	if (val) {
-		this.tripId = val.id;
-	}
-	else {
-		delete this.tripId;
-	}
+util.inherits(User, require('events').EventEmitter);
+
+User.prototype.getSchema = function() {
+	return ['id', 'firstName', 'email', 'token', 'mobile', 'rating', 'state', 'location', 'tripId'];
 }
 
-User.prototype.hasTrip = function() {
-	return this.tripId !== null && this.tripId !== undefined; 
+User.prototype.load = function(callback) {
+	if (this.tripId) {
+		require('./trip').repository.get(this.tripId, function(err, trip){
+			this.trip = trip;
+			callback(err);
+		}.bind(this));
+	}
+	else
+		callback();
 }
 
-// THINK: Складывать в буфер сообщения которые не были посланы или просто сказать запросившему
-// посылку что была ошибка и пусть она сам позже пробует еще?
+User.prototype.setTrip = function(trip) {
+	this.trip = trip;
+	this.tripId = trip.id;
+}
+
+User.prototype.clearTrip = function() {
+	this.trip = null;
+	this.tripId = null;
+}
+
 User.prototype.send = function(message, callback) {
-	if (this.connection.readyState !== WebSocket.OPEN) {
-		return callback(new Error(this.constructor.name + ' ' + this.id + ' not connected'));
+	callback = callback || function(err) {
+		if (err) console.log(err);
+	};
+
+	if (!this.connection || this.connection.readyState !== WebSocket.OPEN) {
+		return callback(new Error(this.constructor.name + ' ' + this.id + ' is not connected'));
 	}
 
-	console.log('Sending ' + message.messageType + ' to ' + this.constructor.name);
-	console.log(message);
+	console.log('Sending ' + message.messageType + ' to ' + this.constructor.name + ' ' + this.id);
+	console.log(util.inspect(message, {depth: 3, colors: true}));
 
 	this.connection.send(JSON.stringify(message), function(err) {
 		if (err) {
-			return callback(new Error('Failed to send message to ' + this.constructor.name + ' ' + this.id), null);
+			return callback(new NetworkError('Failed to send message to ' + this.constructor.name + ' ' + this.id, err));
 		}
 
 		callback(null);
@@ -54,7 +72,6 @@ User.prototype.send = function(message, callback) {
 
 User.prototype._connectionClosed = function() {
 	console.log(this.constructor.name + ' ' + this.id + ' disconnected');
-	console.log(this.constructor.name + ' ' + this.id + ' connection readyState: ' + this.connection.readyState);
 	
 	this.connected = false;
 	this.emit('disconnect');
@@ -64,9 +81,11 @@ User.prototype._connectionError = function() {
 	console.log(this.constructor.name + ' ' + this.id + ' connection error');
 }
 
-User.prototype.update = function(context) {
-	this.lat = context.message.latitude;
-	this.lon = context.message.longitude;
+User.prototype.updateLocation = function(context) {
+	this.location = {
+		latitude: context.message.latitude,
+		longitude: context.message.longitude
+	};
 
 	var isNewConnection = this.connection !== context.connection;
 	if (isNewConnection) {
@@ -80,6 +99,8 @@ User.prototype.update = function(context) {
 }
 
 User.prototype.changeState = function(state) {
+	assert(state, 'Can not change state to ' + state);
+
 	console.log('Change ' + this.constructor.name + ' ' + this.id + ' state from ' + this.state + ' to ' + state);
 	this.state = state;
 };

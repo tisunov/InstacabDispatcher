@@ -3,34 +3,34 @@ var Dispatcher = require('./dispatch'),
     express = require('express'),
     inspect = require('util').inspect;
 
-var app = express();
 var dispatcher = new Dispatcher();
 
-var server = app.listen(9000);
-console.log('Express started on port %d', 9000);
+dispatcher.load(function(err) {
+  if (err) return console.log(err);
 
-var wss = new WebSocketServer({
-  server: server
-});
+  var app = express();
+  var server = app.listen(9000);
+  console.log('Express started on port %d', 9000);
 
-dispatcher = new Dispatcher();
+  var wss = new WebSocketServer({ server: server });
 
-wss.on('connection', function(connection) {
-  console.log('socket client connected');
-  
-  connection.on('message', function(data) {
-    dispatcher.processMessage(data, connection);
+  wss.on('connection', function(connection) {
+    console.log('socket client connected');
+    
+    connection.on('message', function(data) {
+      dispatcher.processMessage(data, connection);
+    });
+
+    connection.on('close', function() {
+      console.log('socket client disconnected');
+    });
+
+    connection.on('error', function(reason, code){
+      console.log('socket error: reason ' + reason + ', code ' + code);
+    })
   });
 
-  connection.on('close', function() {
-    console.log('socket client disconnected');
-  });
-
-  connection.on('error', function(reason, code){
-    console.log('socket error: reason ' + reason + ', code ' + code);
-  })
-});
-
+})
 
 // Enable keep alive
 // server.on('connection', (socket) ->

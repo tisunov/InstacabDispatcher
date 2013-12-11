@@ -2,6 +2,7 @@ var login1 = {
   messageType: "LoginDriver",
   app: "driver",
   email: 'mike@mail.ru',
+  password: 'securepassword',
   latitude: 51.68274,
   longitude: 39.12119
 };
@@ -66,13 +67,17 @@ var arrivingNow = {
 var beginTrip = {
   messageType: "BeginTripDriver",
   app: 'driver',
-  token: 'db1eba81d9d8'
+  token: 'db1eba81d9d8',
+  latitude: 51.68274,
+  longitude: 39.12119  
 };
 
 var endTrip = {
   messageType: "EndTrip",
   app: 'driver',
-  token: 'db1eba81d9d8'
+  token: 'db1eba81d9d8',
+  latitude: 51.68274,
+  longitude: 39.12119  
 };
 
 var tripCoordinates = [
@@ -117,6 +122,7 @@ function driveToClient(tripId, pickupLocation) {
     enroute.tripId = tripId;
     enroute.latitude = tripCoordinates[i][0];
     enroute.longitude = tripCoordinates[i][1];
+    enroute.timestamp = Date.now();
     client.sendWithLog(enroute);
 
     // Send arriving now
@@ -131,6 +137,29 @@ function driveToClient(tripId, pickupLocation) {
 
     i++;
   }, 500);
+}
+
+function driveClient(tripId, callback) {
+  var routeCoords = tripCoordinates.reverse();
+
+  var i = 0;
+  var timerId = setInterval(function() {
+    // Send driver coordinates every second
+    pingDriver.tripId = tripId;
+    pingDriver.latitude = tripCoordinates[i][0];
+    pingDriver.longitude = tripCoordinates[i][1];
+    pingDriver.timestamp = Math.round(Date.now() / 1000); // in seconds
+    client.sendWithLog(pingDriver);
+
+    // Send Ping
+    if (i == tripCoordinates.length - 1) {
+      clearInterval(timerId);
+      callback();
+    }
+
+    i++;
+  }, 500);
+
 }
 
 client.on('message', function(event) {
@@ -157,13 +186,17 @@ client.on('message', function(event) {
       break;
 
     case 'BeginTrip':
+      // let the Trip begin
       beginTrip.tripId = response.trip.id;
       client.sendWithLog(beginTrip);
-      
-      setTimeout(function() {
+
+      // send couple of gps points to dispatcher
+      driveClient(response.trip.id, function() {
+        // end trip
         endTrip.tripId = response.trip.id;
         client.sendWithLog(endTrip);
-      }, 500);
+      });
+      
       break;
   }    
 });

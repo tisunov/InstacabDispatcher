@@ -1,203 +1,209 @@
 var async = require('async'),
+	util = require('util'),
 	inspect = require('util').inspect,
-	BusinessLogic = require('./businessLogic'),
-	Trip = require("./models/trip"),
-	Driver = require("./models/driver"),
-	Client = require("./models/client"),
+	GroundControlAPI = require('./groundControlApi'),
+	Trip = require("./models/trip").Trip,
+	tripRepository = require('./models/trip').repository,
+	driverRepository = require('./models/driver').repository,
+	clientRepository = require('./models/client').repository,
+	Driver = require("./models/driver").Driver,
+	Client = require("./models/client").Client,
 	MessageFactory = require("./messageFactory");
-
-function findClientByToken(context, callback) {
-	var client = Client.getByToken(context.message.token);
-	if (!client) {
-		return callback(new Error("Client token " + context.message.token + " not found"), null);
-	}
-
-	callback(null, client);
-}
-
-function findDriverByToken(context, callback) {
-	var client = Driver.getByToken(context.message.token);
-	if (!client) {
-		return callback(new Error("Driver token " + context.message.token + " not found"), null);
-	}
-
-	callback(null, client);
-}
-
-function tripNotFoundError(context) {
-	return new Error("Trip id " + context.message.tripId + " not found");
-}
-
-// Remote Procedure Call Handlers
-var RPC = {
-	client: {
-		Login: function(context, callback) {
-			async.waterfall([
-				function(nextFn) {
-					BusinessLogic.loginClient(context.message.email, nextFn);
-				},
-				function(client, nextFn) {
-					client.login(context, nextFn);
-				}
-			], callback);
-		},
-		
-		PingClient: function(context, callback) {
-			async.waterfall([
-				function(nextFn) {
-					findClientByToken(context, nextFn);
-				},
-				function(client, nextFn) {
-					client.ping(context);
-					Driver.findAllAvaiable(client, nextFn);
-				}
-			], callback);
-		},
-
-		Pickup: function(context, callback) {
-			async.waterfall([
-				function(nextFn) {
-					findClientByToken(context, nextFn);
-				},
-				function(client, nextFn) {
-					Driver.findOneAvailable(client, function(err, driver){
-						nextFn(err, client, driver);
-					});
-				},
-				function(client, driver, nextFn) {
-					// keeping track of trip
-					var trip = new Trip(driver, client);
-					trip.pickup(context, nextFn);
-				}
-			], callback);
-		},
-		
-		BeginTripClient: function(context, callback) {
-			var trip = Trip.getById(context.message.tripId);
-			if (!trip) return callback(tripNotFoundError(context), null);
-			
-			trip.clientBegin(context, callback);
-		},
-
-		PickupCanceledClient: function(context, callback) {
-			var trip = Trip.getById(context.message.tripId);
-			if (!trip) return callback(tripNotFoundError(context), null);
-			
-			trip.clientPickupCanceled(context, callback);
-		}
-	},
-
-	RateDriver: function(context, callback) {
-		var trip = Trip.getById(context.message.tripId);
-		if (!trip) return callback(tripNotFoundError(context), null);
-
-		trip.clientRateDriver(context, callback);
-	},
-
-	driver: {
-		LoginDriver: function(context, callback) {
-			async.waterfall([
-				function(nextFn) {
-					BusinessLogic.loginDriver(context.message.email, nextFn);
-				},
-				function(driver, nextFn) {
-					driver.login(context, nextFn);						
-				}
-			], callback);
-		},
-
-		LogoutDriver: function(context, callback) {
-			findDriverByToken(context, function(err, driver) {
-				if (err) return callback(err, null);
-
-				driver.logout(context, callback);
-			});			
-		},
-
-		PingDriver: function(context, callback) {
-			async.waterfall([
-				function(nextFn) {
-					findDriverByToken(context, nextFn);
-				},
-				function(driver, nextFn) {
-					if (driver.hasTrip()) {
-						var trip = Trip.getForDriver(driver);
-						nextFn(null, driver.ping(context, trip));
-					}
-					else {
-						nextFn(null, driver.ping(context));						
-					}
-				}
-			], callback);
-		},
-
-		Enroute: function(context, callback) {
-			if (context.message.tripId) {
-				var trip = Trip.getById(context.message.tripId);
-				if (!trip) return callback(tripNotFoundError(context), null);
-
-				trip.driverEnroute(context, callback);
-			}
-		},
-
-		// var message = MessageFactory.createVehicleMoved({
-		// 		id: driver.id,
-		// 		longitude: driver.lon,
-		// 		latitude: driver.lat
-		// 	});
-
-		// Client.forEach(function updateVehiclePosition(client){
-		// 	client.send(message, function(err){
-		// 		if (err) console.log(err);
-		// 	});
-		// })
-
-		ConfirmPickup: function(context, callback) {
-			var trip = Trip.getById(context.message.tripId);
-			if (!trip) return callback(tripNotFoundError(context), null);
-
-			trip.confirm(context, callback);
-		},
-
-		PickupCanceledDriver: function(context, callback) {
-			var trip = Trip.getById(context.message.tripId);
-			if (!trip) return callback(tripNotFoundError(context), null);
-
-			trip.driverPickupCanceled(context, callback);
-		},
-
-		ArrivingNow: function(context, callback) {
-			var trip = Trip.getById(context.message.tripId);
-			if (!trip) return callback(tripNotFoundError(context), null);
-
-			trip.driverArriving(context, callback);
-		},
-
-		BeginTripDriver: function(context, callback) {
-			var trip = Trip.getById(context.message.tripId);
-			if (!trip) return callback(tripNotFoundError(context), null);
-
-			trip.driverBegin(context, callback);
-		},
-		
-		EndTrip: function(context, callback) {
-			var trip = Trip.getById(context.message.tripId);
-			if (!trip) return callback(tripNotFoundError(context), null);
-
-			trip.end(context, callback);
-		},
-
-		RateClient: function(context, callback) {
-			var trip = Trip.getById(context.message.tripId);
-			if (!trip) return callback(tripNotFoundError(context), null);
-
-			trip.driverRateClient(context, callback);
-		}
-	}
-}
 
 function Dispatcher() {
 	
+}
+
+Dispatcher.prototype = {
+	Login: function(context, callback) {
+		async.waterfall([
+			function(nextFn) {
+				GroundControlAPI.loginClient(context.message.email, context.message.password, nextFn);
+			},
+			function(client, nextFn) {
+				client.login(context, nextFn);
+			}
+		], callback);
+	},
+	
+	LogoutClient: function(context, callback) {
+		async.waterfall([
+			clientRepository.get.bind(clientRepository, context.message.id),
+
+			function(client, nextFn) {
+				client.logout(context, nextFn);
+			}
+		], callback);
+	},
+
+	PingClient: function(context, callback) {
+		async.waterfall([
+			clientRepository.get.bind(clientRepository, context.message.id),
+
+			function(client, nextFn) {
+				client.ping(context, nextFn);
+			}
+		], callback);
+	},
+
+	Pickup: function(context, callback) {
+		async.waterfall([
+			clientRepository.get.bind(clientRepository, context.message.id),
+
+			function(client, next) {
+				Driver.findFirstAvailable(client, function(err, driver){
+					next(err, client, driver);
+				});
+			},
+			function(client, driver, next) {
+				var trip = new Trip();
+				trip.pickup(driver, client, context, next);
+			}
+		], callback);
+	},
+	
+	BeginTripClient: function(context, callback) {
+		tripRepository.get(context.message.tripId, function(err, trip){
+			if (err) return callback(err);
+
+			trip.clientBegin(context, callback);
+		});
+	},
+
+	// Client canceled pickup request while we were searching/waiting for drivers
+	CancelPickupClient: function(context, callback) {
+		tripRepository.get(context.message.tripId, function(err, trip){
+			if (err) return callback(err);
+
+			trip.clientCancelPickup(context, callback);
+		});
+	},
+
+	// Client canceled trip after driver was dispatched and before trip start
+	CancelTripClient: function(context, callback) {
+		tripRepository.get(context.message.tripId, function(err, trip){
+			if (err) return callback(err);
+
+			trip.clientCancel(context, callback);
+		});
+	},
+
+	RateDriver: function(context, callback) {
+		tripRepository.get(context.message.tripId, function(err, trip){
+			if (err) return callback(err);
+
+			trip.clientRateDriver(context, callback);
+		});
+	},
+
+	LoginDriver: function(context, callback) {
+		async.waterfall([
+			function(nextFn) {
+				GroundControlAPI.loginDriver(context.message.email, context.message.password, nextFn);
+			},
+			function(driver, nextFn) {
+				this._subscribeToDriverEvents(driver);
+				driver.login(context, nextFn);
+			}.bind(this),
+		], callback);
+	},
+
+	LogoutDriver: function(context, callback) {
+		driverRepository.get(context.message.id, function(err, driver) {
+			if (err) return callback(err, null);
+
+			driver.logout(context, callback);
+		});
+	},
+
+	PingDriver: function(context, callback) {
+		// find trip and keep driver gps log in trip
+		if (context.message.tripId) {
+			tripRepository.get(context.message.tripId, function(err, trip) {
+				if (err) return callback(err);
+
+				callback(null, trip.driverPing(context));
+			});
+		}
+		else {
+			driverRepository.get(context.message.id, function(err, driver) {
+				if (err) return callback(err);
+
+				callback(null, driver.ping(context))
+			})
+		}
+	},
+
+	Enroute: function(context, callback) {
+		tripRepository.get(context.message.tripId, function(err, trip){
+			if (err) return callback(err);
+
+			trip.driverEnroute(context, callback);
+		});
+	},
+
+	// TODO: Сделать чтобы приложение водителя посылало Ping/VehicleMoved переодически, либо при существенной смене позиции
+	//  Это нужно чтобы клиенты видели положение автомобилей и время прибытия ближайшего водителя
+	// TODO: У меня уже есть Ping сообщение оно может исполнять эту роль и посылаться в Available при смещении машины больше чем на 1 метр
+	// var message = MessageFactory.createVehicleMoved({
+	// 		id: driver.id,
+	// 		longitude: driver.lon,
+	// 		latitude: driver.lat
+	// 	});
+
+	// Client.forEach(function updateVehiclePosition(client){
+	// 	client.send(message, function(err){
+	// 		if (err) console.log(err);
+	// 	});
+	// })
+
+	ConfirmPickup: function(context, callback) {
+		tripRepository.get(context.message.tripId, function(err, trip){
+			if (err) return callback(err);
+
+			trip.confirm(context, callback);
+		});
+	},
+
+	ArrivingNow: function(context, callback) {
+		tripRepository.get(context.message.tripId, function(err, trip){
+			if (err) return callback(err);
+
+			trip.driverArriving(context, callback);
+		});
+	},
+
+	BeginTripDriver: function(context, callback) {
+		tripRepository.get(context.message.tripId, function(err, trip){
+			if (err) return callback(err);
+
+			trip.driverBegin(context, callback);
+		});
+	},
+
+	CancelTripDriver: function(context, callback) {
+		tripRepository.get(context.message.tripId, function(err, trip){
+			if (err) return callback(err);
+
+			trip.driverCancel(context, callback);
+		});
+	},
+	
+	EndTrip: function(context, callback) {
+		tripRepository.get(context.message.tripId, function(err, trip) {
+			if (err) return callback(err);
+
+			trip.driverEnd(context, callback);
+		});
+	},
+
+	RateClient: function(context, callback) {
+		tripRepository.get(context.message.tripId, function(err, trip){
+			if (err) return callback(err);
+
+			trip.driverRateClient(context, callback);
+		});
+	}
 }
 
 function responseWithError(text){
@@ -205,7 +211,7 @@ function responseWithError(text){
 	this.send(JSON.stringify(MessageFactory.createError(text)));
 }
 
-function parseJSONData(data, connection) {
+Dispatcher.prototype._parseJSONData = function(data, connection) {
 	var message;
 	try {
 	  message = JSON.parse(data);
@@ -218,13 +224,12 @@ function parseJSONData(data, connection) {
 	return message;
 }
 
-function findMessageHandler(message, connection) {
+Dispatcher.prototype._findMessageHandler = function(message, connection) {
 	if (message.app !== 'client' && message.app !== 'driver') {
 		return responseWithError.call(connection, 'Unknown client app: ' + message.app);
 	}
 
-	var messageHandlers = RPC[message.app];
-	var handler = messageHandlers[message.messageType];
+	var handler = this.__proto__[message.messageType];
 	if (!handler) {
 		return responseWithError.call(connection, 'Unsupported message type: ' + message.messageType);
 	}
@@ -232,27 +237,82 @@ function findMessageHandler(message, connection) {
 	return handler;
 }
 
+// Update all clients except the one requested pickup
+Dispatcher.prototype._updateNearbyDrivers = function(clientRequestedPickup) {
+	var skipClientId = clientRequestedPickup ? clientRequestedPickup.id : null;
+
+	clientRepository.each(function(client) {
+		if (client.id === skipClientId) return;
+
+		client.updateNearbyDrivers(function(err){
+			if (err) console.log(err);
+		});
+	});
+}
+
+Dispatcher.prototype._subscribeToDriverEvents = function(driver) {
+	var eventCallback = this._updateNearbyDrivers.bind(this);
+	driver
+		.on('disconnect', eventCallback)
+		.on('available', eventCallback)
+		.on('unavailable', eventCallback);
+}
+
+Dispatcher.prototype.load = function(callback) {
+	var self = this;
+	async.parallel({
+		drivers: driverRepository.all.bind(driverRepository),
+		clients: clientRepository.all.bind(clientRepository),
+		trips: tripRepository.all.bind(tripRepository)
+	},
+	function(err, result){
+		async.parallel([
+			function(next) {
+				console.log('Loaded ' + result.drivers.length + ' driver(s)');
+				async.each(result.drivers, function(driver, cb){
+					self._subscribeToDriverEvents(driver);
+					driver.load(cb);
+				}, next);
+			},
+			function(next) {
+				console.log('Loaded ' + result.clients.length + ' client(s)');
+				async.each(result.clients, function(client, cb){
+					client.load(cb);
+				}, next);
+			},
+			function(next) {
+				console.log('Loaded ' + result.trips.length + ' trip(s)');
+				async.each(result.trips, function(trip, cb){
+					trip.load(cb);
+				}, next);
+			}
+
+		], callback);
+	});
+}
+
 Dispatcher.prototype.processMessage = function(data, connection) {
 	console.log("Process message");
-	console.log(data);
 
 	var message;
-	if (!(message = parseJSONData(data, connection))) return;
+	if (!(message = this._parseJSONData(data, connection))) return;
+
+	console.log(util.inspect(message, {depth: 3, colors: true}));
 
 	// Find message handler
 	var messageHandler;
-	if (!(messageHandler = findMessageHandler(message, connection))) return;
+	if (!(messageHandler = this._findMessageHandler(message, connection))) return;
 
 	// Handle message
 	// returns: RPC response message
-	messageHandler({message: message, connection: connection}, function(err, result){
+	messageHandler.call(this, {message: message, connection: connection}, function(err, result) {
 		if(err) {
 			console.log(err.stack);
 			return responseWithError.call(connection, err.message);
 		}
 
-		console.log('Send response');
-		console.log(result);
+		console.log('Sending response');
+		console.log(util.inspect(result, {depth: 3, colors: true}));
 
 		// Send response
 		connection.send(JSON.stringify(result), function(err) {

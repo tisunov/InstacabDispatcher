@@ -5,26 +5,22 @@ login = {
   longitude: 39.122151,
   latitude: 51.683448,
   email: 'tisunov.pavel@gmail.com',
-  password: 'test',
+  password: 'securepassword',
   app: 'client'
 };
 
 pingClient = {
   messageType: "PingClient",
-  id: 3144716,
   longitude: 39.122151,
   latitude: 51.683448,
   app: 'client',
-  token: '0c761ee198e0'
 };
 
 requestPickup = {
   messageType: "Pickup",
-  id: 3144716,
   longitude: 39.122151,
   latitude: 51.683448,
   app: 'client',
-  token: '0c761ee198e0',
   location: {
     streetAddress: "9 Января, 302",
     region: "Коминтерновский район",
@@ -36,20 +32,16 @@ requestPickup = {
 
 cancelPickup = {
   messageType: "PickupCanceledClient",
-  id: 3144716,
   longitude: 39.122151,
   latitude: 51.683448,
   app: 'client',
-  token: '0c761ee198e0'
 };
 
 beginTrip = {
   messageType: "BeginTripClient",
-  id: 3144716,
   longitude: 39.122151,
   latitude: 51.683448,
   app: 'client',
-  token: '0c761ee198e0'
 };
 
 var WebSocket = require('faye-websocket'),
@@ -75,6 +67,8 @@ client.on('open', function(event) {
   // }, 10000);
 });
 
+var clientId;
+
 client.on('message', function(event) {
   console.log("Received: " + event.data);
   
@@ -87,6 +81,10 @@ client.on('message', function(event) {
   }
   
   switch (response.messageType) {
+    case 'Login':
+      clientId = response.client.id;
+      break;
+
     case 'ConfirmPickup':
       // cancelPickup.tripId = response.trip.id;
       // client.sendWithLog(cancelPickup);
@@ -94,14 +92,16 @@ client.on('message', function(event) {
 
     case 'ArrivingNow':
       setTimeout(function() {
+        beginTrip.id = clientId;
         beginTrip.tripId = response.trip.id;
         client.sendWithLog(beginTrip);
-      }, 3000);
+      }, 0);
       break;
   }
 });
 
 setTimeout(function() {
+  requestPickup.id = clientId;
   client.sendWithLog(requestPickup);
 }, 1000);
 

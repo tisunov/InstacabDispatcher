@@ -1,165 +1,267 @@
 var MessageFactory = require("../messageFactory"),
-	LatLon = require('../latlon'), 
-	util = require("util"),
-	async = require("async"),
-	User = require("./user"),
-	DRIVER_STATE = require("./constants").DRIVER_STATE,
-	Schema = require("../config").schema,
-	Store = require('../store').Store;
+  LatLon = require('../latlon'),
+  util = require("util"),
+  async = require("async"),
+  Repository = require('../lib/repository'),
+  User = require("./user");
 
-var Driver = Schema.define('Driver', {
-    firstName:    String,
-    email:    	  String,
-    token:    	  String,
-    mobile:    	  String,
-    rating:       Number,
-    state:    	  String,
-    longitude: 	  Number,
-    latitude: 	  Number
-});
+function Driver() {
+  User.call(this, Driver.OFFDUTY);
+}
 
 util.inherits(Driver, User);
-var store = new Store(Driver, 'token');
 
-// Update state to Available only if driver has signed out before
-function makeAvailable() {
-	var offDuty = !this.state || this.state === DRIVER_STATE.OFF_DUTY
-	if (offDuty) {
-		this.updateState(DRIVER_STATE.AVAILABLE);
-	}
+var repository = new Repository(Driver);
+
+/**
+ * Driver States
+ */
+
+['OffDuty', 'Available', 'Dispatching', 'Accepted', 'Arrived', 'DrivingClient', 'PendingRating'].forEach(function (readableState, index) {
+  var state = readableState.toUpperCase();
+    Driver.prototype[state] = Driver[state] = readableState;
+});
+
+Driver.prototype.getSchema = function() {
+  var props = User.prototype.getSchema.call(this);
+  props.push('vehicle');
+  return props;
 }
 
-// Initialize new instance
-Driver.afterInitialize = function(next) {
-	User.call(this, DRIVER_STATE.OFF_DUTY);
+Driver.prototype.login = function(context, callback) {
+  this.updateLocation(context);
+
+  console.log('Driver ' + this.id + ' logged in: ' + this.state + ' connected: ' + this.connected);
+  // Update state to Available only if driver has signed out before
+  var offDuty = !this.state || this.state === Driver.OFFDUTY
+  if (offDuty) {
+    this.changeState(Driver.AVAILABLE);
+  }
+
+  this.save(function(err) {
+    callback(err, MessageFactory.createDriverLoginOK(this));
+  }.bind(this));
 }
 
-Driver.prototype.login = function(context, cb) {
-	this.update(context);
-	console.log('Driver ' + this.id + ' logged in: ' + this.state + ' connected: ' + this.connected);
-	makeAvailable.call(this);
-
-	store.set(this.id, this, function(err, storeReply) {
-		if (err) return cb(err, null);
-		cb(null, MessageFactory.createDriverLoginOK(this));
-	}.bind(this));
+Driver.prototype.changeState = function(state, client) {
+  User.prototype.changeState.call(this, state);
+  
+  if (this.state === Driver.AVAILABLE) {
+    this.emit('available');
+    this.clearTrip();
+  }
+  else {
+    this.emit('unavailable', client);
+  }
 }
 
-Driver.prototype.logout = function(context, cb) {
-	console.log('Driver ' + this.id + ' went off duty');
-	this.update(context);
-	this.updateState(DRIVER_STATE.OFF_DUTY);
+Driver.prototype.logout = function(context, callback) {
+  console.log('Driver ' + this.id + ' went off duty');
+  this.updateLocation(context);
+  this.changeState(Driver.OFFDUTY);
 
-	cb(null, MessageFactory.createDriverOK(this));
+  this.save(function(err) {
+    callback(err, MessageFactory.createDriverOK(this));
+  }.bind(this));
 }
 
-Driver.prototype.ping = function(context, trip) {
-	this.update(context);
-	if (this.state === DRIVER_STATE.AVAILABLE) {
-		return MessageFactory.createDriverPing(this);
-	}
-	else {
-		return MessageFactory.createDriverPing(this, trip);
-	}
+// Update driver's position
+Driver.prototype.ping = function(context) {
+  this.updateLocation(context);
+  this.save();
+
+  return MessageFactory.createDriverOK(this, this.trip, this.state === Driver.PENDINGRATING);
 }
 
-Driver.prototype.distanceTo = function(lat, lon) {
-	// FIXME: Оптимизировать позже
-	return new LatLon(this.lat, this.lon).distanceTo(new LatLon(lat, lon), 4);
+Driver.prototype.dispatch = function(client, trip, callback) {
+  this.changeState(Driver.DISPATCHING, client);
+  this.setTrip(trip);
+
+  async.series([
+    this.send.bind(this, MessageFactory.createDriverPickup(this, trip, client)),
+    repository.save.bind(repository, this)
+  ], callback);
 }
 
-Driver.getByToken = function(token) {
-	return store.get(token);
+Driver.prototype.save = function(callback) {
+  callback = callback || function(err) {
+    if (err) console.log(err);
+  };
+  repository.save(this, callback);  
 }
 
-function isOnlineAndAvailable() {
-	return this.connected && this.state === DRIVER_STATE.AVAILABLE;
+// Notify driver that Dispatcher/Client canceled pickup
+Driver.prototype.pickupCanceled = function(reason, callback) {
+  this.changeState(Driver.AVAILABLE);
+
+  this.send(MessageFactory.createDriverPickupCanceled(this, reason));
+  this.save(callback);
 }
 
-Driver.findAllAvaiable = function(client, callback) {
-	async.waterfall([
-		// select available
-		function(nextFn) {
-			store.filter(
-				function(driver, cb) {
-					cb(isOnlineAndAvailable.call(driver));
-				},
-				// bind context and err parameter to null
-				nextFn.bind(null, null)
-			);
-		},
-		// TODO: Можно посчитать расстояние до каждого водителя чтобы потом показать примерное время прибытия
-		// водителя перед тем как Клиент закажет машину
-		function(availableDrivers, nextFn) {
-			async.map(
-				availableDrivers,
-				function(driver, cb) {
-					cb(null, { id: driver.vehicleId, longitude: driver.lon, latitude: driver.lat });
-				},
-				nextFn
-			);
-		}],
+Driver.prototype.tripCanceled = function(callback) {
+  this.changeState(Driver.AVAILABLE);
+  this.send(MessageFactory.createDriverTripCanceled(this, "Клиент лично отменил заказ."));
+  this.save(callback);  
+}
 
-		function(err, results){
-			callback(null, MessageFactory.createNearbyVehicles(client, results));
-		}
-	);
+// Driver explicitly canceled trip
+Driver.prototype.cancelTrip = function(context, callback) {
+  this.updateLocation(context);
+  this.changeState(Driver.AVAILABLE);
+
+  this.save(function(err) {
+    callback(err, MessageFactory.createDriverOK(this));
+  }.bind(this));
+}
+
+Driver.prototype.confirm = function(context, callback) {
+  this.updateLocation(context);
+  this.changeState(Driver.ACCEPTED);
+  this.save(function(err) {
+    callback(err, MessageFactory.createDriverOK(this));
+  }.bind(this));
+}
+
+Driver.prototype.enroute = function(context, callback) {
+  this.updateLocation(context);
+  this.save(function(err) {
+    callback(err, MessageFactory.createDriverOK(this));
+  }.bind(this));
+}
+
+Driver.prototype.arriving = function(context, callback) {
+  this.updateLocation(context);
+  this.changeState(Driver.ARRIVED);
+  this.save(function(err) {
+    callback(err, MessageFactory.createDriverOK(this));
+  }.bind(this));
+}
+
+Driver.prototype.begin = function(context, callback) {
+  this.updateLocation(context);
+  this.changeState(Driver.DRIVINGCLIENT);
+  this.save(function(err) {
+    callback(err, MessageFactory.createDriverOK(this));
+  }.bind(this));
+}
+
+Driver.prototype.end = function(context, callback) {
+  this.updateLocation(context);
+  this.changeState(Driver.PENDINGRATING);
+
+  this.save(function(err) {
+    callback(err, MessageFactory.createDriverOK(this, this.trip, this.state === Driver.PENDINGRATING));
+  }.bind(this));
+}
+
+Driver.prototype.rateClient = function(context, callback) {
+  this.updateLocation(context);
+  this.changeState(Driver.AVAILABLE);
+  
+  this.save(function(err) {
+    callback(err, MessageFactory.createDriverOK(this));
+  }.bind(this));
+}
+
+Driver.prototype.updateRating = function(rating, callback) {
+  User.prototype.updateRating.call(this, rating);
+  this.save(callback);  
+}
+
+Driver.prototype._distanceTo = function(location) {
+  // FIXME: Оптимизировать позже
+  return new LatLon(this.location.latitude, this.location.longitude).distanceTo(new LatLon(location.latitude, location.longitude), 4);
+}
+
+Driver.prototype.isDrivingClient = function() {
+  return this.state === Driver.DRIVINGCLIENT;
+}
+
+Driver.prototype._isOnlineAndAvailable = function() {
+  return this.connected && this.state === Driver.AVAILABLE;
+}
+
+Driver.findAllAvaiable = function(callback) {
+  async.waterfall([
+    // select available
+    function(nextFn) {
+      repository.filter(
+        function(driver, cb) {
+          cb(driver._isOnlineAndAvailable());
+        },
+        // bind context and err parameter to null
+        nextFn.bind(null, null)
+      );
+    },
+    // TODO: Посчитать расстояние до каждого водителя и расчитать примерное время прибытия
+    // водителя перед тем как Клиент закажет машину
+    function(availableDrivers, nextFn) {
+      async.map(
+        availableDrivers,
+        function(driver, cb) {
+          cb(null, { id: driver.vehicle.id, longitude: driver.location.longitude, latitude: driver.location.latitude });
+        },
+        nextFn
+      );
+    }], 
+    callback
+  );
 }
 
 Driver.findAllAvailableOrderByDistance = function(client, callback) {
-	if (store.count() == 0) return callback(new Error("No drivers available"), null);
+  async.waterfall([
+    // select available
+    function(nextFn) {
+      repository.filter(
+        function(driver, cb) {
+          console.log('Driver ' + driver.id + ' ' + driver.state + ' connected: ' + driver.connected);
+          cb(driver._isOnlineAndAvailable());
+        },
+        // bind context and err parameter to null
+        nextFn.bind(null, null)
+      );
+    },
+    // find distance to each driver
+    function(availableDrivers, nextFn) {
+      console.log('Available and connected drivers:');
+      console.log(util.inspect(availableDrivers, {colors:true}));
 
-	async.waterfall([
-		// select available
-		function(nextFn) {
-			store.filter(
-				function(driver, cb) {
-					console.log('Driver ' + driver.id + ' ' + driver.state + ' connected: ' + driver.connected);
-					cb(isOnlineAndAvailable.call(driver));
-				},
-				// bind context and err parameter to null
-				nextFn.bind(null, null)
-			);
-		},
-		// find distance to each driver
-		function(availableDrivers, nextFn) {
-			console.log('Available and connected drivers:');
-			console.log(availableDrivers);
-			if (availableDrivers.length === 0) return nextFn(new Error('No available drivers found'));
-
-			async.map(
-				availableDrivers,
-				function(driver, cb) {
-					var distanceToDriver = driver.distanceTo(client.lat, client.lon);
-					cb(null, { driver: driver, distanceKm: distanceToDriver });
-				}, 
-				nextFn
-			);			
-		},
-		// order drivers by distance
-		function(driversAndDistances, nextFn) {	
-			async.sortBy(
-				driversAndDistances, 
-				function(item, cb) { 
-					cb(null, item.distanceKm) 
-				},
-				nextFn
-			);
-		}
-	], callback);	
+      async.map(
+        availableDrivers,
+        function(driver, cb) {
+          var distanceToDriver = driver._distanceTo(client.location);
+          cb(null, { driver: driver, distanceKm: distanceToDriver });
+        }, 
+        nextFn
+      );      
+    },
+    // order drivers by distance
+    function(driversAndDistances, nextFn) { 
+      async.sortBy(
+        driversAndDistances, 
+        function(item, cb) { 
+          cb(null, item.distanceKm) 
+        },
+        nextFn
+      );
+    }
+  ], callback);
 }
 
-Driver.findOneAvailable = function(client, callback) {
-	Driver.findAllAvailableOrderByDistance(client, function(err, driversWithDistance){
-		if (err) return callback(err);
+Driver.findFirstAvailable = function(client, callback) {
+  Driver.findAllAvailableOrderByDistance(client, function(err, driversWithDistance){
+    if (err) return callback(err);
 
-		console.log('Drivers in ascending order by distance from the client:');
-		console.log(driversWithDistance);
+    console.log('Drivers in ascending order by distance from the client:');
+    console.log(util.inspect(driversWithDistance,{colors:true}));
 
-		// TODO: Возможно вернуть вместе с расстоянием чтобы посчитать время прибытия
-		callback(null, driversWithDistance[0].driver);		
-	});
+    if (driversWithDistance.length === 0) return callback(new Error('No available drivers'));
+
+    // TODO: Вернуть вместе с расстоянием и временем прибытия
+    callback(null, driversWithDistance[0].driver);    
+  });
 }
 
 // export Driver constructor
-module.exports = Driver;
+module.exports.Driver = Driver;
+module.exports.repository = repository;
