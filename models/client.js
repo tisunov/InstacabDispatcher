@@ -50,18 +50,9 @@ Client.prototype.ping = function(context, callback) {
 	}
 	else if (this.state === Client.LOOKING)
 	{
-		Driver.findAllAvaiable(function(err, vehicles) {
-			callback(err, this._nearbyVehiclesToMessage(vehicles));
+		Driver.findAllAvaiable(this, function(err, vehicles) {
+			callback(err, MessageFactory.createNearbyVehicles(this, vehicles));
 		}.bind(this));
-	}
-}
-
-Client.prototype._nearbyVehiclesToMessage = function(vehicles) {
-	if (vehicles.length === 0) {
-		return MessageFactory.createNearbyVehicles(this, "Извините, нет доступных машин рядом с вами");
-	}
-	else {
-		return MessageFactory.createNearbyVehicles(this, vehicles);
 	}
 }
 
@@ -73,14 +64,16 @@ Client.prototype.changeState = function(state) {
   }
 }
 
+// LATER: Обновилась позиция всего одного водителя и не нужно пересчитывать расстояние и время прибытия
+// всех остальных
 //  Notify client about changes in nearby vehicles
 Client.prototype.updateNearbyDrivers = function(callback) {
+	if (!this.connected || this.state !== Client.LOOKING) return;
+	
 	console.log('Update nearby drivers for client ' + this.id + ', connected: ' + this.connected + ', state: ' + this.state);
 
-	if (!this.connected || this.state !== Client.LOOKING) return;
-
-	Driver.findAllAvaiable(function(err, vehicles) {
-		this.send(this._nearbyVehiclesToMessage(vehicles), callback);
+	Driver.findAllAvaiable(this, function(err, vehicles) {
+		this.send(MessageFactory.createNearbyVehicles(this, vehicles), callback);
 	}.bind(this));
 }
 

@@ -1,21 +1,33 @@
+var _ = require('underscore');
+
 function MessageFactory() {
 	
 }
 
 // TODO: Реализовать SetDestination для установки DropOff destination, передачи водителю и расчета примерной стоимости для клиента
 
+// TODO: NearbyVehicles не нужно, заменить на OK и Клиент будет проверять наличие nearbyVehicles в сообщении
 // Messages to the Client
-MessageFactory.createNearbyVehicles = function(client, vehiclePoints) {
+MessageFactory.createNearbyVehicles = function(client, vehicles) {
 	var msg = {
 	  messageType: 'NearbyVehicles',
 	  client: userToJSON(client)
 	};
 
-	if (typeof vehiclePoints === 'string') {
-		msg['nearbyVehicles'] = { sorryMsg: vehiclePoints };
+	// В Vehicle View
+	// "etaString": "6 minutes",
+	// "etaStringShort": "6 mins",
+	// "minEta": 6
+
+	if (!vehicles || vehicles.length === 0) {
+		// TODO: Это при PingClient из города который не обслуживаем
+		msg['nearbyVehicles'] = { sorryMsg: "Извините, нет доступных машин рядом с вами" };
+		// Когда нет свободных автомобилей для заказа
+		msg['noneAvailableString'] = "Нет доступных автомобилей премиум класса";
 	}
 	else {
-		msg['nearbyVehicles'] = { minEta: 15, vehiclePoints: vehiclePoints };
+		var minEta = _.min(vehicles, function(vehicle){ return vehicle.eta; }).eta;
+		msg['nearbyVehicles'] = { minEta: minEta, vehiclePoints: vehicles };
 	}
 
 	return msg;
@@ -227,10 +239,11 @@ MessageFactory.createDriverLoginOK = function(driver) {
 	};
 };
 
-MessageFactory.createDriverPickup = function(driver, trip, client){
+MessageFactory.createDriverPickup = function(driver, trip, client, eta) {
 	return {
 		messageType: 'Pickup',
 		driver: driverToJSON(driver),
+		eta: eta,
 		trip: {
 			id: trip.id,
 			pickupLocation: trip.pickupLocation,

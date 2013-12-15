@@ -3,6 +3,7 @@ var MessageFactory = require("../messageFactory"),
   util = require("util"),
   async = require("async"),
   Repository = require('../lib/repository'),
+  DistanceMatrix = require('../lib/google-distance'),
   User = require("./user");
 
 function Driver() {
@@ -12,6 +13,7 @@ function Driver() {
 util.inherits(Driver, User);
 
 var repository = new Repository(Driver);
+var DEFAULT_PICKUP_TIME_SECONDS = 20 * 60;
 
 /**
  * Driver States
@@ -73,14 +75,20 @@ Driver.prototype.ping = function(context) {
   return MessageFactory.createDriverOK(this, this.trip, this.state === Driver.PENDINGRATING);
 }
 
+// TODO: Если произошла ошибка посылки водителю или ошибка сохранения, то перевести водителя в AVAILABLE
 Driver.prototype.dispatch = function(client, trip, callback) {
   this.changeState(Driver.DISPATCHING, client);
   this.setTrip(trip);
 
-  async.series([
-    this.send.bind(this, MessageFactory.createDriverPickup(this, trip, client)),
-    repository.save.bind(repository, this)
-  ], callback);
+  // Estimate time required to pickup the client
+  queryETAForClient(client, this, function(err, eta) {
+
+    async.series([
+      this.send.bind(this, MessageFactory.createDriverPickup(this, trip, client, eta)),
+      this.save.bind(this)
+    ], callback);
+
+  }.bind(this));
 }
 
 Driver.prototype.save = function(callback) {
@@ -177,60 +185,72 @@ Driver.prototype.isDrivingClient = function() {
   return this.state === Driver.DRIVINGCLIENT;
 }
 
-Driver.prototype._isOnlineAndAvailable = function() {
-  return this.connected && this.state === Driver.AVAILABLE;
+function isAvailable(driver, callback) {
+  callback(driver.connected && driver.state === Driver.AVAILABLE);
 }
 
-Driver.findAllAvaiable = function(callback) {
+function userLocationToString(user) {
+  return user.location.latitude + ',' + user.location.longitude
+}
+
+function findAvailableDrivers(callback) {
+  // bind function context and first (err) param to null
+  repository.filter(isAvailable, callback.bind(null, null));
+}
+
+// TODO: Нужно кэшировать полученные расстояния когда координаты origin и destination входят в небольшой bounding box
+// Иначе очень быстро исчерпаются временной и дневной лимиты на запросы к Google Maps Distance Matrix API
+function queryETAForClient(client, driver, callback) {
+  DistanceMatrix.get({
+    origin: userLocationToString(driver),
+    destination: userLocationToString(client)
+  }, function(err, data) {
+    if (err) {
+      data = { durationSeconds: DEFAULT_PICKUP_TIME_SECONDS };
+      console.log(err);
+    }
+
+    var eta = Math.ceil(data.durationSeconds / 60);
+    callback(null, eta);
+  });
+}
+
+function vehicleLocationsWithTimeToClient(client, drivers, callback) {
+  async.map(drivers, function(driver, next) {
+    queryETAForClient(client, driver, function(err, eta) {
+      var v = {
+        id: driver.vehicle.id,
+        longitude: driver.location.longitude, 
+        latitude: driver.location.latitude,
+        eta: eta
+      };
+
+      next(null, v);
+    });
+  }, callback);
+}
+
+Driver.findAllAvaiable = function(client, callback) {
   async.waterfall([
-    // select available
-    function(nextFn) {
-      repository.filter(
-        function(driver, cb) {
-          cb(driver._isOnlineAndAvailable());
-        },
-        // bind context and err parameter to null
-        nextFn.bind(null, null)
-      );
-    },
-    // TODO: Посчитать расстояние до каждого водителя и расчитать примерное время прибытия
-    // водителя перед тем как Клиент закажет машину
-    function(availableDrivers, nextFn) {
-      async.map(
-        availableDrivers,
-        function(driver, cb) {
-          cb(null, { id: driver.vehicle.id, longitude: driver.location.longitude, latitude: driver.location.latitude });
-        },
-        nextFn
-      );
-    }], 
-    callback
-  );
+    findAvailableDrivers,
+    vehicleLocationsWithTimeToClient.bind(null, client)
+  ], callback);
 }
 
 Driver.findAllAvailableOrderByDistance = function(client, callback) {
   async.waterfall([
-    // select available
-    function(nextFn) {
-      repository.filter(
-        function(driver, cb) {
-          console.log('Driver ' + driver.id + ' ' + driver.state + ' connected: ' + driver.connected);
-          cb(driver._isOnlineAndAvailable());
-        },
-        // bind context and err parameter to null
-        nextFn.bind(null, null)
-      );
-    },
+    findAvailableDrivers,
     // find distance to each driver
     function(availableDrivers, nextFn) {
-      console.log('Available and connected drivers:');
-      console.log(util.inspect(availableDrivers, {colors:true}));
+      console.log('Available drivers:');
+      console.log(util.inspect(availableDrivers, { colors:true }));
 
       async.map(
         availableDrivers,
         function(driver, cb) {
-          var distanceToDriver = driver._distanceTo(client.location);
-          cb(null, { driver: driver, distanceKm: distanceToDriver });
+          // distance from client in km
+          var distanceToClient = driver._distanceTo(client.location);
+          cb(null, { driver: driver, distanceToClient: distanceToClient });
         }, 
         nextFn
       );      
@@ -239,9 +259,7 @@ Driver.findAllAvailableOrderByDistance = function(client, callback) {
     function(driversAndDistances, nextFn) { 
       async.sortBy(
         driversAndDistances, 
-        function(item, cb) { 
-          cb(null, item.distanceKm) 
-        },
+        function(item, cb) { cb(null, item.distanceToClient) },
         nextFn
       );
     }
@@ -257,8 +275,7 @@ Driver.findFirstAvailable = function(client, callback) {
 
     if (driversWithDistance.length === 0) return callback(new Error('No available drivers'));
 
-    // TODO: Вернуть вместе с расстоянием и временем прибытия
-    callback(null, driversWithDistance[0].driver);    
+    callback(null, driversWithDistance[0].driver);
   });
 }
 
