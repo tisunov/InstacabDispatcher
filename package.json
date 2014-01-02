@@ -11,6 +11,7 @@
 		"caminte": "0.0.9-9",
 		"request": "2.29",
 		"googlemaps" :"0.1.9",
-		"node-config": "0.4.33"
+		"config": "~> 0.4.33",
+		"js-yaml": "~> 3.0.0"
 	}
 }
