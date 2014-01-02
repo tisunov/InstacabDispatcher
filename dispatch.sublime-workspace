@@ -523,15 +523,7 @@
 			"file": "TODO",
 			"settings":
 			{
-				"buffer_size": 3680,
-				"line_ending": "Unix"
-			}
-		},
-		{
-			"file": "models/driver.js",
-			"settings":
-			{
-				"buffer_size": 8355,
+				"buffer_size": 3967,
 				"line_ending": "Unix"
 			}
 		},
@@ -539,7 +531,39 @@
 			"file": "models/trip.js",
 			"settings":
 			{
-				"buffer_size": 11105,
+				"buffer_size": 11127,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "messageFactory.js",
+			"settings":
+			{
+				"buffer_size": 5869,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "models/user.js",
+			"settings":
+			{
+				"buffer_size": 3435,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "models/driver.js",
+			"settings":
+			{
+				"buffer_size": 8452,
+				"line_ending": "Unix"
+			}
+		},
+		{
+			"file": "driver-app.js",
+			"settings":
+			{
+				"buffer_size": 4267,
 				"line_ending": "Unix"
 			}
 		}
@@ -547,16 +571,20 @@
 	"build_system": "Packages/NodeDevJS.sublime-build",
 	"command_palette":
 	{
-		"height": 375.0,
+		"height": 313.0,
 		"selected_items":
 		[
 			[
-				"git ",
-				"Git: Status"
-			],
-			[
 				"comm",
 				"Git: Commit"
+			],
+			[
+				"add",
+				"Git: Add..."
+			],
+			[
+				"git ",
+				"Git: Status"
 			],
 			[
 				"g",
@@ -565,10 +593,6 @@
 			[
 				"commi",
 				"Git: Commit"
-			],
-			[
-				"add",
-				"Git: Add..."
 			],
 			[
 				"commit",
@@ -923,7 +947,7 @@
 				"Package Control: Install Package"
 			]
 		],
-		"width": 535.0
+		"width": 633.0
 	},
 	"console":
 	{
@@ -940,29 +964,30 @@
 	},
 	"file_history":
 	[
+		"/Users/tisunov/dispatch/lib/google-distance.js",
+		"/Users/tisunov/dispatch/driver-app.js",
+		"/Users/tisunov/dispatch/android/UBRequestFragment.java",
+		"/Users/tisunov/dispatch/models/driver.js",
+		"/Users/tisunov/dispatch/groundControlApi.js",
+		"/Users/tisunov/dispatch/dispatch.js",
+		"/Users/tisunov/dispatch/models/client.js",
+		"/Users/tisunov/dispatch/lib/repository.js",
+		"/Users/tisunov/dispatch/uber_android.txt",
 		"/Users/tisunov/dispatch/messageFactory.js",
 		"/Users/tisunov/dispatch/models/trip.js",
-		"/Users/tisunov/dispatch/dispatch.js",
-		"/Users/tisunov/dispatch/lib/google-distance.js",
 		"/Users/tisunov/dispatch/lib/cache.js",
 		"/Users/tisunov/dispatch/package.json",
 		"/Users/tisunov/dispatch/uber_messages.txt",
 		"/Users/tisunov/dispatch/uber_events.txt",
-		"/Users/tisunov/dispatch/groundControlApi.js",
-		"/Users/tisunov/dispatch/models/client.js",
-		"/Users/tisunov/dispatch/lib/repository.js",
 		"/Users/tisunov/dispatch/lib/googleDistance.js",
 		"/Users/tisunov/dispatch/.gitignore",
-		"/Users/tisunov/dispatch/driver-app.js",
 		"/Users/tisunov/dispatch/TODO",
-		"/Users/tisunov/dispatch/models/driver.js",
 		"/Users/tisunov/dispatch/client-app.js",
 		"/Users/tisunov/dispatch/models/user.js",
 		"/Users/tisunov/Desktop/untitled",
 		"/Users/tisunov/dispatch/node_modules/socket.io-client/lib/parser.js",
 		"/Users/tisunov/dispatch/businessLogic.js",
 		"/Users/tisunov/dispatch/app.js",
-		"/Users/tisunov/dispatch/android/UBRequestFragment.java",
 		"/Users/tisunov/dispatch/android/UBService.java",
 		"/Users/tisunov/Library/Application Support/Sublime Text 2/Packages/Default/Preferences.sublime-settings",
 		"/Users/tisunov/Downloads/Uber-2.7.2 Android/apk-mac/APKTool/Uber-2.7.2/smali/com/facebook/widget/LoginButton.smali",
@@ -1050,7 +1075,6 @@
 		"/Users/tisunov/Downloads/UBCAnalyticsManager.java",
 		"/Users/tisunov/InstaCab/Podfile",
 		"/Users/tisunov/InstaCab/Podfile.lock",
-		"/Users/tisunov/dispatch/uber_android.txt",
 		"/Users/tisunov/Dropbox/Travel/Bremerhaven/Дорога от аэропорта до ЖД вокзала Бремена.txt",
 		"/Users/tisunov/Downloads/UBPingResponse.java",
 		"/Users/tisunov/Downloads/apk-mac/APKTool/Uber-2.7.2/smali/com/ubercab/client/login/UBLoginFragment.java",
@@ -1116,6 +1140,22 @@
 		"case_sensitive": false,
 		"find_history":
 		[
+			"login1",
+			"login",
+			"isSurging",
+			"surge",
+			"userLocationToString",
+			"connected",
+			"findAvailableDrivers",
+			"createNearbyVehicles",
+			"NearbyVehicles",
+			"changeState",
+			"dropoffTimestamp",
+			"fareString",
+			"dropoffTimestamp",
+			"login1",
+			".load",
+			"callback",
 			"ignore2",
 			"fare",
 			"pickupTimestamp",
@@ -1227,23 +1267,7 @@
 			"createDriverOK",
 			".series",
 			"createDriverOK",
-			"cancelTrip",
-			"driver.cancel",
-			"cancelPickup",
-			"_cancelDriverPickup",
-			"cancelPickup",
-			"pickupCanceled",
-			"clientPickupCanceled",
-			"PickupCanceledClient",
-			"clientPickupCanceled",
-			"pickupCanceled",
-			"CANCELED",
-			"clearTrip",
-			"Driver.AVAILABLE",
-			"cancelPickup",
-			"createPickupConfirm",
-			"driverContext",
-			"createTripCanceled"
+			"cancelTrip"
 		],
 		"highlight": true,
 		"in_selection": false,
@@ -1389,7 +1413,7 @@
 	"groups":
 	[
 		{
-			"selected": 2,
+			"selected": 5,
 			"sheets":
 			[
 				{
@@ -1397,15 +1421,15 @@
 					"file": "TODO",
 					"settings":
 					{
-						"buffer_size": 3680,
+						"buffer_size": 3967,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								570,
-								570
+								923,
+								923
 							]
 						],
 						"settings":
@@ -1464,27 +1488,231 @@
 				},
 				{
 					"buffer": 1,
-					"file": "models/driver.js",
+					"file": "models/trip.js",
 					"settings":
 					{
-						"buffer_size": 8355,
+						"buffer_size": 11127,
 						"regions":
 						{
-							"bookmarks":
-							{
-								"flags": 144,
-								"icon": "bookmark",
-								"regions":
-								[
-								],
-								"scope": "bookmarks"
-							}
 						},
 						"selection":
 						[
 							[
-								6139,
-								6139
+								8676,
+								8688
+							]
+						],
+						"settings":
+						{
+							"BracketHighlighterBusy": false,
+							"bh_regions":
+							[
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close"
+							],
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 3875.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 2,
+					"file": "messageFactory.js",
+					"settings":
+					{
+						"buffer_size": 5869,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								347,
+								367
+							]
+						],
+						"settings":
+						{
+							"BracketHighlighterBusy": false,
+							"bh_regions":
+							[
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close"
+							],
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 0.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 3,
+					"file": "models/user.js",
+					"settings":
+					{
+						"buffer_size": 3435,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								2053,
+								2053
+							]
+						],
+						"settings":
+						{
+							"BracketHighlighterBusy": false,
+							"bh_regions":
+							[
+								"bh_regex",
+								"bh_regex_center",
+								"bh_regex_open",
+								"bh_regex_close",
+								"bh_double_quote",
+								"bh_double_quote_center",
+								"bh_double_quote_open",
+								"bh_double_quote_close",
+								"bh_square",
+								"bh_square_center",
+								"bh_square_open",
+								"bh_square_close",
+								"bh_angle",
+								"bh_angle_center",
+								"bh_angle_open",
+								"bh_angle_close",
+								"bh_curly",
+								"bh_curly_center",
+								"bh_curly_open",
+								"bh_curly_close",
+								"bh_default",
+								"bh_default_center",
+								"bh_default_open",
+								"bh_default_close",
+								"bh_unmatched",
+								"bh_unmatched_center",
+								"bh_unmatched_open",
+								"bh_unmatched_close",
+								"bh_round",
+								"bh_round_center",
+								"bh_round_open",
+								"bh_round_close",
+								"bh_tag",
+								"bh_tag_center",
+								"bh_tag_open",
+								"bh_tag_close",
+								"bh_single_quote",
+								"bh_single_quote_center",
+								"bh_single_quote_open",
+								"bh_single_quote_close"
+							],
+							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
+							"translate_tabs_to_spaces": false
+						},
+						"translation.x": 0.0,
+						"translation.y": 1053.0,
+						"zoom_level": 1.0
+					},
+					"type": "text"
+				},
+				{
+					"buffer": 4,
+					"file": "models/driver.js",
+					"settings":
+					{
+						"buffer_size": 8452,
+						"regions":
+						{
+						},
+						"selection":
+						[
+							[
+								6153,
+								6153
 							]
 						],
 						"settings":
@@ -1538,25 +1766,25 @@
 							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 2793.0,
+						"translation.y": 3003.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
 				},
 				{
-					"buffer": 2,
-					"file": "models/trip.js",
+					"buffer": 5,
+					"file": "driver-app.js",
 					"settings":
 					{
-						"buffer_size": 11105,
+						"buffer_size": 4267,
 						"regions":
 						{
 						},
 						"selection":
 						[
 							[
-								10817,
-								10824
+								1452,
+								1432
 							]
 						],
 						"settings":
@@ -1606,10 +1834,11 @@
 								"bh_single_quote_close"
 							],
 							"syntax": "Packages/JavaScript/JavaScript.tmLanguage",
-							"translate_tabs_to_spaces": false
+							"tab_size": 2,
+							"translate_tabs_to_spaces": true
 						},
 						"translation.x": 0.0,
-						"translation.y": 4976.0,
+						"translation.y": 834.0,
 						"zoom_level": 1.0
 					},
 					"type": "text"
@@ -1687,16 +1916,44 @@
 		"selected_items":
 		[
 			[
+				"gd",
+				"lib/google-distance.js"
+			],
+			[
+				"da",
+				"driver-app.js"
+			],
+			[
+				"dri",
+				"models/driver.js"
+			],
+			[
+				"ground",
+				"groundControlApi.js"
+			],
+			[
+				"dis",
+				"dispatch.js"
+			],
+			[
+				"user",
+				"models/user.js"
+			],
+			[
+				"mf",
+				"messageFactory.js"
+			],
+			[
+				"repos",
+				"lib/repository.js"
+			],
+			[
 				"trip",
 				"models/trip.js"
 			],
 			[
 				"distan",
 				"lib/google-distance.js"
-			],
-			[
-				"dis",
-				"dispatch.js"
 			],
 			[
 				"cache",
@@ -1715,10 +1972,6 @@
 				"uber_events.txt"
 			],
 			[
-				"repos",
-				"lib/repository.js"
-			],
-			[
 				"cli",
 				"models/client.js"
 			],
@@ -1731,32 +1984,12 @@
 				"uber_messages.txt"
 			],
 			[
-				"dri",
-				"models/driver.js"
-			],
-			[
-				"mf",
-				"messageFactory.js"
-			],
-			[
 				"to",
 				"TODO"
 			],
 			[
-				"ground",
-				"groundControlApi.js"
-			],
-			[
-				"da",
-				"driver-app.js"
-			],
-			[
 				"mess",
 				"uber_messages.txt"
-			],
-			[
-				"user",
-				"models/user.js"
 			],
 			[
 				"cla",
@@ -2193,10 +2426,6 @@
 			[
 				"bootno",
 				"limolead/vendor/assets/stylesheets/bootstrap.no-icons.css"
-			],
-			[
-				"boot",
-				"limorides/source/stylesheets/bootstrap.no-icons.css"
 			]
 		],
 		"width": 0.0

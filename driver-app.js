@@ -3,25 +3,18 @@ var login1 = {
   app: "driver",
   email: 'mike@mail.ru',
   password: 'securepassword',
-  latitude: 51.68274,
-  longitude: 39.12119
+  latitude: 51.66351,
+  longitude: 39.185234
 };
 
 var login2 = {
   messageType: "LoginDriver",
   app: "driver",
-  token: '83fdd5c78b14',
-  latitude: 51.68517,
-  longitude: 39.12254
-};
-
-var login3 = {
-  messageType: "LoginDriver",
-  app: "driver",
-  token: 'a6f4f35a486e',
-  latitude: 51.68182,
-  longitude: 39.12404
-};
+  email: 'katrin@gmail.com',
+  password: 'securepassword',
+  latitude: 51.66251,
+  longitude: 39.185234  
+}
 
 var signOut = {
   messageType: "SignOut",
@@ -88,7 +81,7 @@ var tripCoordinates = [
   [51.675719, 39.143300],
   [51.677901, 39.136691],
   [51.680296, 39.129653],
-  [51.683448, 39.122151]
+  [51.683448, 39.122151],
 ];
 
 
@@ -104,7 +97,6 @@ client.on('open', function(event) {
   };
 
   client.sendWithLog(login1);
-
 });
 
 
@@ -158,7 +150,7 @@ function driveClient(tripId, callback) {
     }
 
     i++;
-  }, 500);
+  }, 1500);
 
 }
 
