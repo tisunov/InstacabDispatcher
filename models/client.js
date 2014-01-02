@@ -143,7 +143,7 @@ Client.prototype.cancelTrip = function(context, callback) {
 // Notify client that driver canceled trip
 Client.prototype.tripCanceled = function(callback) {
 	this.changeState(Client.LOOKING);
-	this.send(MessageFactory.createClientTripCanceled(this, "У водителя возникли проблемы в дороге и он вынужден был отменить ваш заказ."));
+	this.send(MessageFactory.createClientTripCanceled(this, "Водитель вынужден был отменить ваш заказ."));
 	this.save(callback);
 }
 
