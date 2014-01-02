@@ -238,7 +238,7 @@ Dispatcher.prototype._findMessageHandler = function(message, connection) {
 }
 
 // Update all clients except the one requested pickup
-Dispatcher.prototype._updateNearbyDrivers = function(clientRequestedPickup) {
+Dispatcher.prototype._clientsUpdateNearbyDrivers = function(clientRequestedPickup) {
 	var skipClientId = clientRequestedPickup ? clientRequestedPickup.id : null;
 
 	clientRepository.each(function(client) {
@@ -251,8 +251,9 @@ Dispatcher.prototype._updateNearbyDrivers = function(clientRequestedPickup) {
 }
 
 Dispatcher.prototype._subscribeToDriverEvents = function(driver) {
-	var eventCallback = this._updateNearbyDrivers.bind(this);
+	var eventCallback = this._clientsUpdateNearbyDrivers.bind(this);
 	driver
+		.on('connect', eventCallback)
 		.on('disconnect', eventCallback)
 		.on('available', eventCallback)
 		.on('unavailable', eventCallback);
@@ -283,7 +284,10 @@ Dispatcher.prototype.load = function(callback) {
 			function(next) {
 				console.log('Loaded ' + result.trips.length + ' trip(s)');
 				async.each(result.trips, function(trip, cb){
-					trip.load(cb);
+					trip.load(function(err) {
+						if (err) console.log('Error loading trip ' + trip.id + ':' + err);
+						cb()
+					});
 				}, next);
 			}
 
