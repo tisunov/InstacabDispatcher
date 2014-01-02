@@ -324,6 +324,7 @@ Trip.prototype.driverEnd = function(driverContext, callback) {
 		
 		this.client.end();
 		this.driver.end(driverContext, callback);
+		this.save();
 
 	}.bind(this));
 }
@@ -366,7 +367,7 @@ Trip.prototype.driverRateClient = function(driverContext, callback) {
 }
 
 function timestamp() {
-	Math.round(Date.now() / 1000);
+	return Math.round(Date.now() / 1000);
 }
 
 // export Trip constructor

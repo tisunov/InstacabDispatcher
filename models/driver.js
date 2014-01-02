@@ -108,7 +108,7 @@ Driver.prototype.pickupCanceled = function(reason, callback) {
 
 Driver.prototype.tripCanceled = function(callback) {
   this.changeState(Driver.AVAILABLE);
-  this.send(MessageFactory.createDriverTripCanceled(this, "Клиент лично отменил заказ."));
+  this.send(MessageFactory.createDriverTripCanceled(this, "Клиент отменил заказ."));
   this.save(callback);  
 }
 
@@ -186,6 +186,7 @@ Driver.prototype.isDrivingClient = function() {
 }
 
 function isAvailable(driver, callback) {
+  console.log('+ isAvailable: Driver ' + driver.id + ' => ' + driver.connected + ', ' + driver.state);
   callback(driver.connected && driver.state === Driver.AVAILABLE);
 }
 
