@@ -81,21 +81,34 @@ User.prototype._connectionError = function() {
 	console.log(this.constructor.name + ' ' + this.id + ' connection error');
 }
 
-User.prototype.updateLocation = function(context) {
-	this.location = {
-		latitude: context.message.latitude,
-		longitude: context.message.longitude
-	};
+function isEqualLocations(oldLocation, newLocation) {
+	return oldLocation.latitude === newLocation.latitude &&
+				 oldLocation.longitude === newLocation.longitude;
+}
 
-	var isNewConnection = this.connection !== context.connection;
+User.prototype._setConnection = function(connection) {
+	var isNewConnection = this.connection !== connection;
 	if (isNewConnection) {
 		console.log(this.constructor.name + ' ' + this.id + ' connected');
 
-		this.connected = context.connection.readyState === WebSocket.OPEN;
-		this.connection = context.connection;
+		this.connected = connection.readyState === WebSocket.OPEN;
+		this.connection = connection;
 		this.connection.once('close', this._connectionClosed.bind(this));
 		this.connection.once('error', this._connectionError.bind(this));
+
+		this.emit('connect');
+	}	
+}
+
+User.prototype.updateLocation = function(context) {
+	var newLocation = { latitude: context.message.latitude, longitude: context.message.longitude };
+
+	// Notify observers when location changed
+	if (!this.location || !isEqualLocations(this.location, newLocation)) {
+		this.emit('locationChange', newLocation);
 	}
+	this.location = newLocation;
+	this._setConnection(context.connection);
 }
 
 User.prototype.changeState = function(state) {
