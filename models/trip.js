@@ -14,7 +14,7 @@ function Trip() {
 var PICKUP_TIMEOUT = 15000; // 15 secs
 var repository = new Repository(Trip);
 
-['dispatcher_canceled', 'client_canceled', 'driver_canceled', 'completed'].forEach(function (readableState, index) {
+['dispatcher_canceled', 'client_canceled', 'driver_canceled', 'completed', 'driver_began'].forEach(function (readableState, index) {
   var state = readableState.toUpperCase();
     Trip.prototype[state] = Trip[state] = readableState;
 });
@@ -235,18 +235,6 @@ Trip.prototype.driverArriving = function(driverContext, callback) {
 		this.save();
 
 		callback(null, result);	
-	}.bind(this));
-}
-
-// Клиент разрешил начать поездку. Известить водителя что он может начинать поездку
-Trip.prototype.clientBegin = function(clientContext, callback) {
-	this.state = Trip.CLIENT_BEGAN;
-	this.save();
-
-	this.client.begin(clientContext, function(err) {
-		// Let driver know he can begin trip
-		sendMessage(this.driver, MessageFactory.createBeginTrip(this, this.client));
-		callback(null, MessageFactory.createClientOK(this.client));
 	}.bind(this));
 }
 

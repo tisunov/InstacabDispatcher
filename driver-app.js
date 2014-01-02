@@ -174,21 +174,22 @@ client.on('message', function(event) {
         client.sendWithLog(confirmPickup);
         
         driveToClient(response.trip.id, response.trip.pickupLocation);
+
+        // begin trip after 2 seconds
+        setTimeout(function() {
+          // let the Trip begin
+          beginTrip.tripId = response.trip.id;
+          client.sendWithLog(beginTrip);
+
+          // send couple of gps points to dispatcher
+          driveClient(response.trip.id, function() {
+            // end trip
+            endTrip.tripId = response.trip.id;
+            client.sendWithLog(endTrip);
+          });
+        }, 2000);
+
       }, 2000);
-      break;
-
-    case 'BeginTrip':
-      // let the Trip begin
-      beginTrip.tripId = response.trip.id;
-      client.sendWithLog(beginTrip);
-
-      // send couple of gps points to dispatcher
-      driveClient(response.trip.id, function() {
-        // end trip
-        endTrip.tripId = response.trip.id;
-        client.sendWithLog(endTrip);
-      });
-      
       break;
   }    
 });

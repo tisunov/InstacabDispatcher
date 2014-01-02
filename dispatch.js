@@ -62,14 +62,6 @@ Dispatcher.prototype = {
 		], callback);
 	},
 	
-	BeginTripClient: function(context, callback) {
-		tripRepository.get(context.message.tripId, function(err, trip){
-			if (err) return callback(err);
-
-			trip.clientBegin(context, callback);
-		});
-	},
-
 	// Client canceled pickup request while we were searching/waiting for drivers
 	CancelPickupClient: function(context, callback) {
 		tripRepository.get(context.message.tripId, function(err, trip){

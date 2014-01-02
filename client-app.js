@@ -37,13 +37,6 @@ cancelPickup = {
   app: 'client',
 };
 
-beginTrip = {
-  messageType: "BeginTripClient",
-  longitude: 39.122151,
-  latitude: 51.683448,
-  app: 'client',
-};
-
 var WebSocket = require('faye-websocket'),
     client    = new WebSocket.Client('ws://localhost:9000/');
 
@@ -90,13 +83,6 @@ client.on('message', function(event) {
       // client.sendWithLog(cancelPickup);
       break;
 
-    case 'ArrivingNow':
-      setTimeout(function() {
-        beginTrip.id = clientId;
-        beginTrip.tripId = response.trip.id;
-        client.sendWithLog(beginTrip);
-      }, 0);
-      break;
   }
 });
 

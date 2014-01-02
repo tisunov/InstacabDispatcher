@@ -252,16 +252,4 @@ MessageFactory.createDriverPickup = function(driver, trip, client, eta) {
 	}
 }
 
-MessageFactory.createBeginTrip = function(trip, client) {
-	return {
-		messageType: "BeginTrip",
-		trip: {
-			id: trip.id,
-			pickupLocation: trip.pickupLocation,
-			client: clientPropertiesForDriver(client)
-		}
-	}
-}
-
-
 module.exports = MessageFactory;
