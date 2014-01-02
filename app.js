@@ -2,7 +2,13 @@ var Dispatcher = require('./dispatch'),
     WebSocketServer = require('ws').Server,
     express = require('express'),
     inspect = require('util').inspect,
+    bugsnag = require("bugsnag"),
     CONFIG = require('config').Server;
+
+// Register the bugsnag notifier
+if (process.env.NODE_ENV === "production") {
+  bugsnag.register("889ee967ff69e8a6def329190b410677");
+};
 
 var dispatcher = new Dispatcher();
 
@@ -10,8 +16,9 @@ dispatcher.load(function(err) {
   if (err) return console.log(err);
 
   var app = express();
-  var server = app.listen(CONFIG.port);
-  console.log('Express started on port %d', CONFIG.port);
+  var port = process.env.PORT || 9000;
+  var server = app.listen(port);
+  console.log('Express started on port %d', port);
 
   var wss = new WebSocketServer({ server: server });
 
