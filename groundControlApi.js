@@ -7,7 +7,7 @@ var Driver = require("./models/driver").Driver,
 function GroundControlAPI() { 
 }
 
-var backendUrl = 'http://' + CONFIG.apiHost + ':' + CONFIG.apiPort;
+var backendUrl = 'http://' + CONFIG.host + ':' + CONFIG.port;
 
 function initProperties(sourceProps) {
 	Object.keys(sourceProps).forEach(function(propName) {
@@ -58,7 +58,7 @@ GroundControlAPI.completeTrip = function(trip, callback) {
 	    }
 	});
 
-	request.post('http://localhost:3000/api/v1/trips/complete', { json: {trip: tripData} }, function (error, response, body) {
+	request.post(backendUrl + '/api/v1/trips/complete', { json: {trip: tripData} }, function (error, response, body) {
 		// network error
 		if (error) return callback(error);
 
