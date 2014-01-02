@@ -1,7 +1,8 @@
 var Dispatcher = require('./dispatch'),
     WebSocketServer = require('ws').Server,
     express = require('express'),
-    inspect = require('util').inspect;
+    inspect = require('util').inspect,
+    CONFIG = require('config').Server;
 
 var dispatcher = new Dispatcher();
 
@@ -9,8 +10,8 @@ dispatcher.load(function(err) {
   if (err) return console.log(err);
 
   var app = express();
-  var server = app.listen(9000);
-  console.log('Express started on port %d', 9000);
+  var server = app.listen(CONFIG.port);
+  console.log('Express started on port %d', CONFIG.port);
 
   var wss = new WebSocketServer({ server: server });
 

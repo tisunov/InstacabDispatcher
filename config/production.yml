@@ -1,3 +1,6 @@
+Server:
+  port: 80
+
 Backend:
   apiHost: ancient-oasis-4982.herokuapp.com
   apiHost: 80

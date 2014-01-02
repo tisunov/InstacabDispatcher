@@ -1,3 +1,6 @@
+Server:
+  port: 9000
+
 Backend:
   apiHost: localhost
   apiHost: 3000
