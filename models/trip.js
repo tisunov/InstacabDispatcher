@@ -220,6 +220,7 @@ Trip.prototype.driverPing = function(context) {
 		};
 
 		this.route.push(location);
+		this.save();
 	}
 
 	return this.driver.ping(context);
