@@ -4,7 +4,7 @@ var Driver = require("./models/driver").Driver,
 		util = require("util"),
 		CONFIG = require('config').Backend;
 
-function GroundControlAPI() { 
+function Backend() { 
 }
 
 var backendUrl = 'http://' + CONFIG.host + ':' + CONFIG.port;
@@ -41,15 +41,15 @@ function login(url, email, password, constructor, callback) {
 	});
 }
 
-GroundControlAPI.loginDriver = function(email, password, callback) {
+Backend.loginDriver = function(email, password, callback) {
 	login(backendUrl + '/api/v1/drivers/sign_in', email, password, Driver, callback);
 }
 
-GroundControlAPI.loginClient = function(email, password, callback) {
+Backend.loginClient = function(email, password, callback) {
 	login(backendUrl + '/api/v1/sign_in', email, password, Client, callback);
 }
 
-GroundControlAPI.completeTrip = function(trip, callback) {
+function tripToJson(trip) {
 	var tripData = {};
 
 	trip.getSchema().forEach(function(prop) {
@@ -58,15 +58,25 @@ GroundControlAPI.completeTrip = function(trip, callback) {
 	    }
 	});
 
-	request.post(backendUrl + '/api/v1/trips/complete', { json: {trip: tripData} }, function (error, response, body) {
+	return tripData;
+}
+
+Backend.addTrip = function(trip, callback) {
+	request.post(backendUrl + '/api/v1/trips', { json: {trip: tripToJson(trip)} }, function (error, response, body) {		
+		callback(error);
+	});	
+}
+
+Backend.billTrip = function(trip, callback) {
+	request.post(backendUrl + '/api/v1/trips/complete', { json: {trip: tripToJson(trip)} }, function (error, response, body) {
 		// network error
 		if (error) return callback(error);
 
-		console.log('+ GroundControlAPI.completeTrip:');
+		console.log('+ Backend.billTrip:');
 		console.log(util.inspect(body, {colors:true}));
 		
 		callback(null, body['fare']);
 	});
 }
 
-module.exports = GroundControlAPI;
+module.exports = Backend;

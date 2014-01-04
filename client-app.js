@@ -1,4 +1,4 @@
-var beginTrip, login, pingClient, pingLoop, postRequest, request, requestPickup;
+var login, pingClient, pingLoop, postRequest, request, requestPickup;
 
 login = {
   messageType: "Login",

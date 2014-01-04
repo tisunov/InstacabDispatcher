@@ -1,7 +1,7 @@
 var async = require('async'),
 	util = require('util'),
 	inspect = require('util').inspect,
-	GroundControlAPI = require('./groundControlApi'),
+	Backend = require('./backend'),
 	Trip = require("./models/trip").Trip,
 	tripRepository = require('./models/trip').repository,
 	driverRepository = require('./models/driver').repository,
@@ -18,7 +18,7 @@ Dispatcher.prototype = {
 	Login: function(context, callback) {
 		async.waterfall([
 			function(nextFn) {
-				GroundControlAPI.loginClient(context.message.email, context.message.password, nextFn);
+				Backend.loginClient(context.message.email, context.message.password, nextFn);
 			},
 			function(client, nextFn) {
 				client.login(context, nextFn);
@@ -91,7 +91,7 @@ Dispatcher.prototype = {
 	LoginDriver: function(context, callback) {
 		async.waterfall([
 			function(nextFn) {
-				GroundControlAPI.loginDriver(context.message.email, context.message.password, nextFn);
+				Backend.loginDriver(context.message.email, context.message.password, nextFn);
 			},
 			function(driver, nextFn) {
 				this._subscribeToDriverEvents(driver);
