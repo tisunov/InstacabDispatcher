@@ -214,17 +214,11 @@ Trip.prototype.confirm = function(driverContext, callback) {
 	);
 }
 
-// Водитель в пути, обновляет координаты
-Trip.prototype.driverEnroute = function(driverContext, callback) {
-	this.driver.enroute(driverContext, function(err, result) {
-		sendMessage(this.client, MessageFactory.createDriverEnroute(this));
-		callback(null, result);
-	}.bind(this));
-}
-
 Trip.prototype.driverPing = function(context) {
+	var result = this.driver.ping(context);
+
 	if (this.driver.isDrivingClient()) {
-		var location = {
+		var routePoint = {
 			latitude: context.message.latitude,
 			longitude: context.message.longitude,
 			horizontalAccuracy: context.message.horizontalAccuracy,
@@ -234,11 +228,12 @@ Trip.prototype.driverPing = function(context) {
 			timestamp: context.message.timestamp
 		};
 
-		this.route.push(location);
+		this.route.push(routePoint);
 		this._save();
 	}
 
-	return this.driver.ping(context);
+	this.client.driverEnroute();
+	return result;
 }
 
 // Водитель совсем рядом или на месте. Известить клиента чтобы он выходил

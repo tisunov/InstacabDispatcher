@@ -126,15 +126,7 @@ Dispatcher.prototype = {
 		}
 	},
 
-	Enroute: function(context, callback) {
-		tripRepository.get(context.message.tripId, function(err, trip){
-			if (err) return callback(err);
-
-			trip.driverEnroute(context, callback);
-		});
-	},
-
-	// TODO: Сделать чтобы приложение водителя посылало Ping/VehicleMoved переодически, либо при существенной смене позиции
+	// TODO: Сделать чтобы приложение Водителя посылало Ping/VehicleMoved переодически, либо при существенной смене позиции
 	//  Это нужно чтобы клиенты видели положение автомобилей и время прибытия ближайшего водителя
 	// TODO: У меня уже есть Ping сообщение оно может исполнять эту роль и посылаться в Available при смещении машины больше чем на 1 метр
 	// var message = MessageFactory.createVehicleMoved({

@@ -125,13 +125,6 @@ Driver.prototype.confirm = function(context, callback) {
   }.bind(this));
 }
 
-Driver.prototype.enroute = function(context, callback) {
-  this.updateLocation(context);
-  this.save(function(err) {
-    callback(err, MessageFactory.createDriverOK(this));
-  }.bind(this));
-}
-
 Driver.prototype.arriving = function(context, callback) {
   this.updateLocation(context);
   this.changeState(Driver.ARRIVED);

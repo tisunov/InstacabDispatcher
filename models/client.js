@@ -106,6 +106,10 @@ Client.prototype.start = function(callback) {
 	this.save(callback);
 }
 
+Client.prototype.driverEnroute = function(callback) {
+	this.send(MessageFactory.createClientDriverEnroute(this.trip));
+}
+
 Client.prototype.end = function(callback) {
 	this.changeState(Client.PENDINGRATING);
 	this.send(MessageFactory.createClientEndTrip(this, this.trip))

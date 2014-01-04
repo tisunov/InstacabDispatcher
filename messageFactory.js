@@ -162,16 +162,16 @@ MessageFactory.createClientTripCanceled = function(client, reason) {
 	}
 }
 
+MessageFactory.createClientDriverEnroute = function(trip) {
+	return tripToClientMessage(trip, 'Enroute');
+}
+
 MessageFactory.createDriverTripCanceled = function(driver, reason) {
 	return {
 		messageType: 'TripCanceled',
 		reason: reason,
 		driver: userToJSON(driver)
 	}
-}
-
-MessageFactory.createDriverEnroute = function(trip) {
-	return tripToClientMessage(trip, 'Enroute');
 }
 
 MessageFactory.createClientLoginOK = function(client) {

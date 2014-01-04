@@ -26,15 +26,6 @@ var signOut = {
 
 var pingDriver = {
   messageType: "PingDriver",
-  altitude: 0,
-  latitude: 51.68274,
-  longitude: 39.12119,
-  app: 'driver',
-  token: 'db1eba81d9d8'
-};
-
-var enroute = {
-  messageType: "Enroute",
   app: 'driver',
   token: 'db1eba81d9d8'
 };
@@ -70,7 +61,7 @@ var endTrip = {
   app: 'driver',
   token: 'db1eba81d9d8',
   latitude: 51.68274,
-  longitude: 39.12119  
+  longitude: 39.12119
 };
 
 var tripCoordinates = [
@@ -93,6 +84,7 @@ client.on('open', function(event) {
   
   client.sendWithLog = function(message) {
     console.log('Sending ' + message.messageType);
+    console.log(message);
     this.send(JSON.stringify(message));
   };
 
@@ -111,14 +103,14 @@ function driveToClient(tripId, pickupLocation) {
   var i = 0;
   var timerId = setInterval(function() {
     // Send driver coordinates every second
-    enroute.tripId = tripId;
-    enroute.latitude = tripCoordinates[i][0];
-    enroute.longitude = tripCoordinates[i][1];
-    enroute.timestamp = Date.now();
-    client.sendWithLog(enroute);
+    pingDriver.tripId = tripId;
+    pingDriver.latitude = tripCoordinates[i][0];
+    pingDriver.longitude = tripCoordinates[i][1];
+    pingDriver.timestamp = Date.now();
+    client.sendWithLog(pingDriver);
 
     // Send arriving now
-    if (i == tripCoordinates.length - 1) {
+    if (i === tripCoordinates.length - 1) {
       clearInterval(timerId);
 
       arrivingNow.tripId = tripId;
@@ -128,14 +120,14 @@ function driveToClient(tripId, pickupLocation) {
     }
 
     i++;
-  }, 500);
+  }, 1000);
 }
 
 function driveClient(tripId, callback) {
-  var routeCoords = tripCoordinates.reverse();
-
-  var i = 0;
+  var i = tripCoordinates.length;
   var timerId = setInterval(function() {
+    i--;
+
     // Send driver coordinates every second
     pingDriver.tripId = tripId;
     pingDriver.latitude = tripCoordinates[i][0];
@@ -144,13 +136,11 @@ function driveClient(tripId, callback) {
     client.sendWithLog(pingDriver);
 
     // Send Ping
-    if (i == tripCoordinates.length - 1) {
+    if (i === 0) {
       clearInterval(timerId);
       callback();
     }
-
-    i++;
-  }, 1500);
+  }, 1000);
 
 }
 
@@ -187,7 +177,7 @@ client.on('message', function(event) {
             endTrip.tripId = response.trip.id;
             client.sendWithLog(endTrip);
           });
-        }, 2000);
+        }, 10000);
 
       }, 2000);
       break;
