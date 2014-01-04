@@ -80,15 +80,10 @@ Driver.prototype.dispatch = function(client, trip, callback) {
   this.changeState(Driver.DISPATCHING, client);
   this.setTrip(trip);
 
-  // Estimate time required to pickup the client
-  queryETAForClient(client, this, function(err, eta) {
-
-    async.series([
-      this.send.bind(this, MessageFactory.createDriverPickup(this, trip, client, eta)),
-      this.save.bind(this)
-    ], callback);
-
-  }.bind(this));
+  async.series([
+    this.send.bind(this, MessageFactory.createDriverPickup(this, trip, client)),
+    this.save.bind(this)
+  ], callback);
 }
 
 Driver.prototype.save = function(callback) {
@@ -201,9 +196,9 @@ function findAvailableDrivers(callback) {
 
 // TODO: Нужно кэшировать полученные расстояния когда координаты origin и destination входят в небольшой bounding box
 // Иначе очень быстро исчерпаются временной и дневной лимиты на запросы к Google Maps Distance Matrix API
-function queryETAForClient(client, driver, callback) {
+Driver.prototype.queryETAForClient = function(client, callback) {
   DistanceMatrix.get({
-    origin: userLocationToString(driver),
+    origin: userLocationToString(this),
     destination: userLocationToString(client)
   }, function(err, data) {
     if (err) {
@@ -218,7 +213,7 @@ function queryETAForClient(client, driver, callback) {
 
 function vehicleLocationsWithTimeToClient(client, drivers, callback) {
   async.map(drivers, function(driver, next) {
-    queryETAForClient(client, driver, function(err, eta) {
+    driver.queryETAForClient(client, function(err, eta) {
       var v = {
         id: driver.vehicle.id,
         longitude: driver.location.longitude, 

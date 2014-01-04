@@ -88,7 +88,8 @@ function tripToClientMessage(trip, messageType) {
 			state: trip.driver.state,
 			location: trip.driver.location
 		},
-		vehicle: trip.driver.vehicle
+		vehicle: trip.driver.vehicle,
+		eta: trip.eta
 	};
 
 	return {
@@ -239,14 +240,14 @@ MessageFactory.createDriverLoginOK = function(driver) {
 	};
 };
 
-MessageFactory.createDriverPickup = function(driver, trip, client, eta) {
+MessageFactory.createDriverPickup = function(driver, trip, client) {
 	return {
 		messageType: 'Pickup',
 		driver: driverToJSON(driver),
-		eta: eta,
 		trip: {
 			id: trip.id,
 			pickupLocation: trip.pickupLocation,
+			eta: trip.eta,
 			client: clientPropertiesForDriver(client)
 		}
 	}

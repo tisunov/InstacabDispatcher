@@ -133,14 +133,20 @@ Trip.prototype._clearPickupTimeout = function() {
 }
 
 Trip.prototype._dispatchDriver = function(callback) {
-	this._pickupTimer = setTimeout(this._passPickupToNextAvailableDriver.bind(this), PICKUP_TIMEOUT);
+	// Estimate time required to pickup the client
+	this.driver.queryETAForClient(this.client, function(err, eta) {
+		// Keep ETA for client and driver apps
+		this.eta = eta;
+		this._pickupTimer = setTimeout(this._passPickupToNextAvailableDriver.bind(this), PICKUP_TIMEOUT);
 
-	this.driver.dispatch(this.client, this, function(err){
-		// TODO: Если ошибка посылки Pickup запроса, то сразу отменять таймер и передавать следующему ближайшему водителю
-		// Иначе пройдет 15 секунд и только после этого запрос передастся другому водителю
-		if (err) console.log(err);
-		if (typeof callback === 'function') callback(err);
-	});
+		this.driver.dispatch(this.client, this, function(err){
+			// TODO: Если ошибка посылки Pickup запроса, то сразу отменять таймер и передавать следующему ближайшему водителю
+			// Иначе пройдет 15 секунд и только после этого запрос передастся другому водителю
+			if (err) console.log(err);
+			if (typeof callback === 'function') callback(err);
+		});
+
+	}.bind(this));
 }
 
 function sendMessage(user, message) {
@@ -155,7 +161,7 @@ function sendMessage(user, message) {
 }
 
 Trip.prototype.getSchema = function() {
-	return ['id', 'clientId', 'driverId', 'state', 'pickupLocation', 'dropoffLocation', 'pickupTimestamp', 'dropoffTimestamp', 'driverRating', 'clientRating', 'fareBilledToCard', 'canceledDriverIds', 'route', 'estimatedArrivalTime', 'actualArrivalTime', 'confirmTimestamp', 'arrivalTimestamp'];
+	return ['id', 'clientId', 'driverId', 'state', 'pickupLocation', 'dropoffLocation', 'pickupTimestamp', 'dropoffTimestamp', 'driverRating', 'clientRating', 'fareBilledToCard', 'canceledDriverIds', 'route', 'eta', 'timeToPickupSeconds', 'confirmTimestamp', 'arrivalTimestamp'];
 }
 
 Trip.prototype._setClient = function(value) {
@@ -180,7 +186,7 @@ Trip.prototype.pickup = function(driver, client, clientContext, callback) {
 
 	async.series({
 		// save trip
-		saveTrip: this.save.bind(this),
+		saveTrip: this._save.bind(this),
 		// dispatch to nearest available driver
 		dispatchDriver: this._dispatchDriver.bind(this),
 		// update and save client
@@ -195,7 +201,6 @@ Trip.prototype.confirm = function(driverContext, callback) {
 	if (this.driver.state !== Driver.DISPATCHING) return callback(new Error('Unexpected Pickup confirmation'));
 
 	this.confirmTimestamp = timestamp();
-	this.estimatedArrivalTime = this.driver.etaMinutes * 60; // convert to seconds
 	this._clearPickupTimeout();
 
 	async.series({
@@ -239,7 +244,7 @@ Trip.prototype.driverPing = function(context) {
 // Водитель совсем рядом или на месте. Известить клиента чтобы он выходил
 Trip.prototype.driverArriving = function(driverContext, callback) {
 	this.arrivalTimestamp = timestamp();
-	this.actualArrivalTime = this.arrivedTimestamp - this.confirmTimestamp;
+	this.timeToPickupSeconds = this.arrivedTimestamp - this.confirmTimestamp;
 
 	this.driver.arriving(driverContext, function(err, result) {
 		sendMessage(this.client, MessageFactory.createArrivingNow(this));
