@@ -144,6 +144,8 @@ function driveClient(tripId, callback) {
 
 }
 
+var timer;
+
 client.on('message', function(event) {
   console.log("Received: " + event.data);
   
@@ -156,8 +158,12 @@ client.on('message', function(event) {
   }
   
   switch (response.messageType) {
+    case 'PickupCanceled': 
+      clearTimeout(timer);
+      break;
+
     case 'Pickup':
-      setTimeout(function() {
+      timer = setTimeout(function() {
         confirmPickup.tripId = response.trip.id;
         confirmPickup.latitude = 51.681520;
         confirmPickup.longitude = 39.183383;
@@ -166,7 +172,7 @@ client.on('message', function(event) {
         driveToClient(response.trip.id, response.trip.pickupLocation);
 
         // begin trip after 2 seconds
-        setTimeout(function() {
+        timer = setTimeout(function() {
           // let the Trip begin
           beginTrip.tripId = response.trip.id;
           client.sendWithLog(beginTrip);
@@ -179,7 +185,7 @@ client.on('message', function(event) {
           });
         }, 10000);
 
-      }, 2000);
+      }, 30000);
       break;
   }    
 });

@@ -205,6 +205,12 @@ MessageFactory.createClientOK = function(client) {
 	}
 }
 
+MessageFactory.createClientDispatching = function(client, trip) {
+	var msg = tripToClientMessage(trip, 'OK');
+	msg.client = userToJSON(client);
+	return msg;
+}
+
 // Messages to the Driver
 MessageFactory.createDriverOK = function(driver, trip, tripPendingRating) {
 	var msg = {

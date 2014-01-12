@@ -252,9 +252,11 @@ Trip.prototype.driverArriving = function(driverContext, callback) {
 Trip.prototype.clientCancelPickup = function(clientContext, callback) {
 	this.state = Trip.CLIENT_CANCELED;
 	this._cancelDriverPickup(true);
-	this.client.cancelPickup(clientContext);
-
-	this._archive();
+	
+	this.client.cancelPickup(clientContext, function(err, result){
+		this._archive();
+		callback(err, result);
+	}.bind(this));
 }
 
 // Водитель отменил Trip после подтверждения

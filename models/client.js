@@ -83,7 +83,7 @@ Client.prototype.pickup = function(context, trip, callback) {
 	this.setTrip(trip);
 
 	this.save(function(err) {
-		callback(err, MessageFactory.createClientOK(this));
+		callback(err, MessageFactory.createClientDispatching(this, this.trip));
 	}.bind(this));
 }
 
