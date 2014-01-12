@@ -185,7 +185,7 @@ client.on('message', function(event) {
           });
         }, 10000);
 
-      }, 30000);
+      }, 2000);
       break;
   }    
 });

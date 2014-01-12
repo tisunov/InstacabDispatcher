@@ -21,9 +21,9 @@ MessageFactory.createNearbyVehicles = function(client, vehicles) {
 
 	if (!vehicles || vehicles.length === 0) {
 		// TODO: Это при PingClient из города который не обслуживаем
-		msg['nearbyVehicles'] = { sorryMsg: "Извините, нет доступных машин рядом с вами" };
+		msg['nearbyVehicles'] = { noneAvailableString: "Свободные автомобили отсутствуют" };
 		// Когда нет свободных автомобилей для заказа
-		msg['noneAvailableString'] = "Нет доступных автомобилей премиум класса";
+		msg['sorryMsg'] = "Извините, нет доступных машин рядом с вами";
 	}
 	else {
 		var minEta = _.min(vehicles, function(vehicle){ return vehicle.eta; }).eta;
