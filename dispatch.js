@@ -80,7 +80,7 @@ Dispatcher.prototype = {
 		});
 	},
 
-	RateDriver: function(context, callback) {
+	RatingDriver: function(context, callback) {
 		tripRepository.get(context.message.tripId, function(err, trip){
 			if (err) return callback(err);
 
@@ -181,7 +181,7 @@ Dispatcher.prototype = {
 		});
 	},
 
-	RateClient: function(context, callback) {
+	RatingClient: function(context, callback) {
 		tripRepository.get(context.message.tripId, function(err, trip){
 			if (err) return callback(err);
 

@@ -118,9 +118,4 @@ User.prototype.changeState = function(state) {
 	this.state = state;
 };
 
-// Supposes that initial rating is set to maximum possible
-User.prototype.updateRating = function(rating) {
-	this.rating = (this.rating + rating) / 2.0;
-}
-
 module.exports = User;

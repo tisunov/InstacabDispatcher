@@ -120,7 +120,7 @@ function driveToClient(tripId, pickupLocation) {
     }
 
     i++;
-  }, 1000);
+  }, 200);
 }
 
 function driveClient(tripId, callback) {
@@ -140,7 +140,7 @@ function driveClient(tripId, callback) {
       clearInterval(timerId);
       callback();
     }
-  }, 1000);
+  }, 200);
 
 }
 
@@ -183,7 +183,7 @@ client.on('message', function(event) {
             endTrip.tripId = response.trip.id;
             client.sendWithLog(endTrip);
           });
-        }, 10000);
+        }, 2000);
 
       }, 2000);
       break;

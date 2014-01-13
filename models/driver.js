@@ -152,16 +152,11 @@ Driver.prototype.end = function(context, callback) {
 
 Driver.prototype.rateClient = function(context, callback) {
   this.updateLocation(context);
-  this.changeState(Driver.AVAILABLE);
   
-  this.save(function(err) {
-    callback(err, MessageFactory.createDriverOK(this));
+  require('../backend').rateClient(this.trip.id, context.message.rating, function() {
+    this.changeState(Driver.AVAILABLE);
+    this.save(callback);
   }.bind(this));
-}
-
-Driver.prototype.updateRating = function(rating, callback) {
-  User.prototype.updateRating.call(this, rating);
-  this.save(callback);  
 }
 
 Driver.prototype._distanceTo = function(location) {

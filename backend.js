@@ -20,32 +20,32 @@ function login(url, email, password, constructor, callback) {
 		// network error
 		if (error) return callback(error);
 		
-		var data;
+		var properties;
 		try {
-			data = JSON.parse(body);
+			properties = JSON.parse(body);
 		}
 		catch (e) {
 			return callback(new Error('Error parsing login response: ' + e.message + ' in ' + body));
 		}
 
-		util.inspect(data, {colors: true});
+		util.inspect(properties, {colors: true});
 
 		// authentication error
-		if (response.statusCode !== 200) return callback(new Error(data['error'] || body));
+		if (response.statusCode !== 200) return callback(new Error(properties['error'] || body));
 
 		// set user properties
 		var user = new constructor();
-		initProperties.call(user, data)
+		initProperties.call(user, properties)
 
 		callback(null, user);
 	});
 }
 
-Backend.loginDriver = function(email, password, callback) {
+Backend.prototype.loginDriver = function(email, password, callback) {
 	login(backendUrl + '/api/v1/drivers/sign_in', email, password, Driver, callback);
 }
 
-Backend.loginClient = function(email, password, callback) {
+Backend.prototype.loginClient = function(email, password, callback) {
 	login(backendUrl + '/api/v1/sign_in', email, password, Client, callback);
 }
 
@@ -61,14 +61,14 @@ function tripToJson(trip) {
 	return tripData;
 }
 
-Backend.addTrip = function(trip, callback) {
+Backend.prototype.addTrip = function(trip, callback) {
 	request.post(backendUrl + '/api/v1/trips', { json: {trip: tripToJson(trip)} }, function (error, response, body) {		
 		callback(error);
 	});	
 }
 
-Backend.billTrip = function(trip, callback) {
-	request.post(backendUrl + '/api/v1/trips/complete', { json: {trip: tripToJson(trip)} }, function (error, response, body) {
+Backend.prototype.billTrip = function(trip, callback) {
+	request.post(backendUrl + '/api/v1/trips/bill', { json: {trip: tripToJson(trip)} }, function (error, response, body) {
 		// network error
 		if (error) return callback(error);
 
@@ -79,4 +79,28 @@ Backend.billTrip = function(trip, callback) {
 	});
 }
 
-module.exports = Backend;
+Backend.prototype.rateDriver = function(tripId, rating, callback) {
+	var payload = {
+		trip: {
+			rating: rating
+		}
+	};
+
+	request.put(backendUrl + '/api/v1/trips/' + tripId + '/rate_driver', { json: payload }, function (error, response, body) {
+		callback();
+	});
+}
+
+Backend.prototype.rateClient = function(tripId, rating, callback) {
+	var payload = {
+		trip: {
+			rating: rating
+		}
+	};
+
+	request.put(backendUrl + '/api/v1/trips/' + tripId + '/rate_client', { json: payload }, function (error, response, body) {
+		callback();
+	});
+}
+
+module.exports = new Backend();

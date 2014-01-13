@@ -161,7 +161,7 @@ function sendMessage(user, message) {
 }
 
 Trip.prototype.getSchema = function() {
-	return ['id', 'clientId', 'driverId', 'state', 'pickupLocation', 'dropoffLocation', 'pickupTimestamp', 'dropoffTimestamp', 'driverRating', 'clientRating', 'fareBilledToCard', 'canceledDriverIds', 'route', 'eta', 'timeToPickupSeconds', 'confirmTimestamp', 'arrivalTimestamp'];
+	return ['id', 'clientId', 'driverId', 'state', 'pickupLocation', 'dropoffLocation', 'pickupTimestamp', 'dropoffTimestamp', 'fareBilledToCard', 'canceledDriverIds', 'route', 'eta', 'timeToPickupSeconds', 'confirmTimestamp', 'arrivalTimestamp'];
 }
 
 Trip.prototype._setClient = function(value) {
@@ -329,32 +329,16 @@ Trip.prototype.driverEnd = function(driverContext, callback) {
 }
 
 Trip.prototype.clientRateDriver = function(clientContext, callback) {
-	this.driverRating = clientContext.rating;
-
-	async.parallel([
-		this.client.rateDriver.bind(this.client, clientContext),
-		this.driver.updateRating.bind(this.driver, clientContext.rating),
-		this._save.bind(this)
-	], 
-		function(err) {
-			callback(err, MessageFactory.createClientOK(this.client));
-		}.bind(this)
-	);
+	this.client.rateDriver(clientContext, function(err) {
+		callback(err, MessageFactory.createClientOK(this.client));
+	}.bind(this));
 }
 
 // At this point driver goes back on duty
 Trip.prototype.driverRateClient = function(driverContext, callback) {
-	this.clientRating = driverContext.rating;
-
-	async.parallel({
-		driverResult: this.driver.rateClient.bind(this.driver, driverContext),
-		ignore1: this.client.updateRating.bind(this.client, driverContext.rating),
-		ignore2: this._save.bind(this)
-	}, 
-		function(err, results) {
-			callback(null, results && results.driverResult);
-		}.bind(this)
-	);
+	this.driver.rateClient(driverContext, function(err) {
+		callback(err, MessageFactory.createDriverOK(this.driver));
+	}.bind(this));
 }
 
 function timestamp() {

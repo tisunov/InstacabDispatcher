@@ -155,18 +155,16 @@ Client.prototype.save = function(callback) {
 	callback = callback || function(err) {
 		if (err) console.log(err);
 	};
-	repository.save(this, callback);	
+	repository.save(this, callback);
 }
 
 Client.prototype.rateDriver = function(context, callback) {
 	this.updateLocation(context);
-	this.changeState(Client.LOOKING);
-	this.save(callback);
-}
 
-Client.prototype.updateRating = function(rating, callback) {
-	User.prototype.updateRating.call(this, rating);
-	this.save(callback);
+	require('../backend').rateDriver(this.trip.id, context.message.rating, function() {
+		this.changeState(Client.LOOKING);
+		this.save(callback);
+	}.bind(this));
 }
 
 Client.findByToken = function(context, callback) {
