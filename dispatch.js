@@ -1,7 +1,7 @@
 var async = require('async'),
 	util = require('util'),
 	inspect = require('util').inspect,
-	Backend = require('./backend'),
+	apiBackend = require('./backend'),
 	Trip = require("./models/trip").Trip,
 	tripRepository = require('./models/trip').repository,
 	driverRepository = require('./models/driver').repository,
@@ -18,7 +18,18 @@ Dispatcher.prototype = {
 	Login: function(context, callback) {
 		async.waterfall([
 			function(nextFn) {
-				Backend.loginClient(context.message.email, context.message.password, nextFn);
+				apiBackend.loginClient(context.message.email, context.message.password, nextFn);
+			},
+			function(client, nextFn) {
+				client.login(context, nextFn);
+			}
+		], callback);
+	},
+
+	SignUpClient: function(context, callback) {
+		async.waterfall([
+			function(nextFn) {
+				apiBackend.signupClient(context.message, nextFn);
 			},
 			function(client, nextFn) {
 				client.login(context, nextFn);
@@ -91,7 +102,7 @@ Dispatcher.prototype = {
 	LoginDriver: function(context, callback) {
 		async.waterfall([
 			function(nextFn) {
-				Backend.loginDriver(context.message.email, context.message.password, nextFn);
+				apiBackend.loginDriver(context.message.email, context.message.password, nextFn);
 			},
 			function(driver, nextFn) {
 				this._subscribeToDriverEvents(driver);
@@ -187,6 +198,10 @@ Dispatcher.prototype = {
 
 			trip.driverRateClient(context, callback);
 		});
+	},
+
+	ApiCommand: function(context, callback) {
+		apiBackend.apiCommand(context.message, callback);
 	}
 }
 

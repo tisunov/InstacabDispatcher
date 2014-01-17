@@ -3,7 +3,7 @@ var MessageFactory = require("../messageFactory"),
 	util = require('util'),
 	Uuid = require("uuid-lib"),
 	Driver = require('./driver').Driver,
-	Backend = require('../backend'),
+	apiBackend = require('../backend'),
 	Repository = require('../lib/repository');
 
 function Trip() {
@@ -83,7 +83,7 @@ Trip.prototype._archive = function(callback) {
 	  if (err) console.log(err);
 	};
 
-	Backend.addTrip(this, callback)
+	apiBackend.addTrip(this, callback)
 }
 
 Trip.prototype._save = function(callback) {
@@ -317,7 +317,7 @@ Trip.prototype.driverEnd = function(driverContext, callback) {
 		longitude: driverContext.message.longitude
 	};
 
-	Backend.billTrip(this, function(err, fare) {
+	apiBackend.billTrip(this, function(err, fare) {
 		console.log('Trip ' + this.id + ' fare is ' + fare + ' руб.');
 		this.fareBilledToCard = fare;
 		

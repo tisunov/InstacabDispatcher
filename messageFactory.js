@@ -176,7 +176,7 @@ MessageFactory.createDriverTripCanceled = function(driver, reason) {
 
 MessageFactory.createClientLoginOK = function(client) {
 	return {
-		messageType: "Login",
+		messageType: "LoginResponse",
 		client: userToJSONWithToken(client)
 	};
 };
