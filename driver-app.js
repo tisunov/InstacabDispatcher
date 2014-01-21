@@ -158,6 +158,19 @@ client.on('message', function(event) {
   }
   
   switch (response.messageType) {
+    case 'OK':
+      if (response.driver.state === 'PendingRating') {
+        client.sendWithLog({ 
+          messageType: 'RatingClient', 
+          id: response.driver.id, 
+          tripId: response.driver.tripPendingRating.id,
+          rating: 5.0,
+          app: 'driver',
+          token: response.token,
+        });
+      }
+      break;
+
     case 'PickupCanceled': 
       clearTimeout(timer);
       break;
