@@ -31,11 +31,10 @@ function login(url, email, password, constructor, repository, callback) {
 
 		// set user properties
 		repository.get(properties.id, function(err, user) {
-			if (err) return callback(err);
+			if (err) {
+				user = new constructor();
+			}
 
-			if (user) console.log('Found existing user for id ' + properties.id + ', using that one');
-
-			user = user || new constructor();
 			initProperties.call(user, properties)
 
 			callback(null, user);

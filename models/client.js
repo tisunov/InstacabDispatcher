@@ -19,7 +19,7 @@ var repository = new Repository(Client);
 
 ['Looking', 'Dispatching', 'WaitingForPickup', 'OnTrip', 'PendingRating'].forEach(function (readableState, index) {
 	var state = readableState.toUpperCase();
-    Client.prototype[state] = Client[state] = readableState;
+  Client.prototype[state] = Client[state] = readableState;
 });
 
 Client.prototype.login = function(context, cb) {
