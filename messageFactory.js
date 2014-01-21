@@ -21,10 +21,10 @@ function tripForClientToJSON(trip) {
 	}
 }
 
-MessageFactory.createClientOK = function(client, trip, tripPendingRating, vehicles) {
+MessageFactory.createClientOK = function(client, includeToken, trip, tripPendingRating, vehicles) {
 	var msg = {
 		messageType: "OK",
-		client: userToJSON(client),
+		client: userToJSON(client, includeToken)
 	}
 
 	if (tripPendingRating) {
@@ -94,28 +94,25 @@ function clientPropertiesForDriver(client) {
 	}
 }
 
-function userToJSON(user) {
-	return {
+function userToJSON(user, includeToken) {
+	var json = {
 		id: user.id,
 		firstName: user.firstName,
 		mobile: user.mobile,
 		rating: user.rating,
 		state: user.state
-	}
-}
+	};
 
-function driverToJSON(driver, includeToken) {
-	var json = userToJSON(driver);
-	json.vehicle = driver.vehicle;
 	if (includeToken) {
-		json.token = driver.token;
+		json.token = user.token;
 	}
+
 	return json;
 }
 
-function userToJSONWithToken(user) {
-	var json = userToJSON(user);
-	json.token = user.token;
+function driverToJSON(driver, includeToken) {
+	var json = userToJSON(driver, includeToken);
+	json.vehicle = driver.vehicle;
 	return json;
 }
 

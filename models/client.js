@@ -24,7 +24,11 @@ var repository = new Repository(Client);
 
 Client.prototype.login = function(context, callback) {
 	console.log('Client ' + this.id + ' login');
-	this.ping(context, callback);
+	this.updateLocation(context);
+	
+	this.save(function(err) {
+		callback(err, MessageFactory.createClientOK(this, true));
+	}.bind(this));
 }
 
 Client.prototype.logout = function(context, callback) {
@@ -42,12 +46,12 @@ Client.prototype.ping = function(context, callback) {
 	this.save();
 
 	if (this.trip) {
-		callback(null, MessageFactory.createClientOK(this, this.trip, this.state === Client.PENDINGRATING));
+		callback(null, MessageFactory.createClientOK(this, false, this.trip, this.state === Client.PENDINGRATING));
 	}
 	else if (this.state === Client.LOOKING)
 	{
 		Driver.findAllAvaiable(this, function(err, vehicles) {
-			callback(err, MessageFactory.createClientOK(this, null, false, vehicles));
+			callback(err, MessageFactory.createClientOK(this, false, null, false, vehicles));
 		}.bind(this));
 	}
 }
