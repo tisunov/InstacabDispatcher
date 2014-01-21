@@ -1,5 +1,6 @@
 var async = require('async'),
 	util = require('util'),
+	_ = require('underscore'),
 	inspect = require('util').inspect,
 	apiBackend = require('./backend'),
 	Trip = require("./models/trip").Trip,
@@ -11,7 +12,7 @@ var async = require('async'),
 	MessageFactory = require("./messageFactory");
 
 function Dispatcher() {
-	
+	this.driverEventCallback = this._clientsUpdateNearbyDrivers.bind(this);
 }
 
 Dispatcher.prototype = {
@@ -106,6 +107,7 @@ Dispatcher.prototype = {
 			},
 			function(driver, nextFn) {
 				this._subscribeToDriverEvents(driver);
+
 				driver.login(context, nextFn);
 			}.bind(this),
 		], callback);
@@ -249,13 +251,12 @@ Dispatcher.prototype._clientsUpdateNearbyDrivers = function(clientRequestedPicku
 	});
 }
 
+// Subscribe to driver events (1 time)
 Dispatcher.prototype._subscribeToDriverEvents = function(driver) {
-	var eventCallback = this._clientsUpdateNearbyDrivers.bind(this);
-	driver
-		.on('connect', eventCallback)
-		.on('disconnect', eventCallback)
-		.on('available', eventCallback)
-		.on('unavailable', eventCallback);
+	_.each(['connect', 'disconnect', 'available', 'unavailable'], function(eventName){
+		driver.removeListener(eventName, this.driverEventCallback);
+		driver.on(eventName, this.driverEventCallback);
+	}.bind(this));
 }
 
 Dispatcher.prototype.load = function(callback) {

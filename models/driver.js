@@ -146,7 +146,7 @@ Driver.prototype.end = function(context, callback) {
   this.changeState(Driver.PENDINGRATING);
 
   this.save(function(err) {
-    callback(err, MessageFactory.createDriverOK(this, this.trip, this.state === Driver.PENDINGRATING));
+    callback(err, MessageFactory.createDriverOK(this, false, this.trip, this.state === Driver.PENDINGRATING));
   }.bind(this));
 }
 

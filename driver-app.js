@@ -167,6 +167,8 @@ client.on('message', function(event) {
           rating: 5.0,
           app: 'driver',
           token: response.token,
+          latitude: 51.66351,
+          longitude: 39.185234          
         });
       }
       break;
