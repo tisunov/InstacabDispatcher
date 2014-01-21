@@ -4,35 +4,6 @@ function MessageFactory() {
 	
 }
 
-// TODO: Реализовать SetDestination для установки DropOff destination, передачи водителю и расчета примерной стоимости для клиента
-
-// TODO: NearbyVehicles не нужно, заменить на OK и Клиент будет проверять наличие nearbyVehicles в сообщении
-// Messages to the Client
-MessageFactory.createNearbyVehicles = function(client, vehicles) {
-	var msg = {
-	  messageType: 'NearbyVehicles',
-	  client: userToJSON(client)
-	};
-
-	// В Vehicle View
-	// "etaString": "6 minutes",
-	// "etaStringShort": "6 mins",
-	// "minEta": 6
-
-	if (!vehicles || vehicles.length === 0) {
-		// TODO: Это при PingClient из города который не обслуживаем
-		msg['nearbyVehicles'] = { noneAvailableString: "Свободные автомобили отсутствуют" };
-		// Когда нет свободных автомобилей для заказа
-		msg['sorryMsg'] = "Извините, нет доступных машин рядом с вами";
-	}
-	else {
-		var minEta = _.min(vehicles, function(vehicle){ return vehicle.eta; }).eta;
-		msg['nearbyVehicles'] = { minEta: minEta, vehiclePoints: vehicles };
-	}
-
-	return msg;
-}
-
 function tripForClientToJSON(trip) {
 	return {
 		id: trip.id,
@@ -50,9 +21,9 @@ function tripForClientToJSON(trip) {
 	}
 }
 
-MessageFactory.createClientPing = function(client, trip, tripPendingRating) {
+MessageFactory.createClientOK = function(client, trip, tripPendingRating, vehicles) {
 	var msg = {
-		messageType: "Ping",
+		messageType: "OK",
 		client: userToJSON(client),
 	}
 
@@ -62,6 +33,22 @@ MessageFactory.createClientPing = function(client, trip, tripPendingRating) {
 	else if (trip) {
 		msg.trip = tripForClientToJSON(trip);
 	}
+
+	// В Vehicle View
+	// "etaString": "6 minutes",
+	// "etaStringShort": "6 mins",
+	// "minEta": 6
+
+	if (!vehicles || vehicles.length === 0) {
+		// Когда нет свободных автомобилей для заказа в городе который подключен
+		msg.nearbyVehicles = { noneAvailableString: "Свободные автомобили отсутствуют" };
+		// TODO: Это при PingClient из города который не обслуживаем
+		// msg['sorryMsg'] = "Большое СПАСИБО за интерес к InstaCab. В вашем регионе нет машин, но пока мы постоянно расширяем нашу зону обслуживания.";
+	}
+	else {
+		var minEta = _.min(vehicles, function(vehicle){ return vehicle.eta; }).eta;
+		msg.nearbyVehicles = { minEta: minEta, vehiclePoints: vehicles };
+	}		
 
 	return msg;
 }
@@ -174,13 +161,6 @@ MessageFactory.createDriverTripCanceled = function(driver, reason) {
 	}
 }
 
-MessageFactory.createClientLoginOK = function(client) {
-	return {
-		messageType: "LoginResponse",
-		client: userToJSONWithToken(client)
-	};
-};
-
 MessageFactory.createError = function(errorText) {
 	return {
 	  messageType: 'Error',
@@ -196,13 +176,6 @@ MessageFactory.createTripStarted = function(client, trip) {
 	var msg = tripToClientMessage(trip, 'BeginTrip');
 	msg.client = userToJSON(client);
 	return msg;
-}
-
-MessageFactory.createClientOK = function(client) {
-	return {
-	  messageType: 'OK',
-	  client: userToJSON(client)
-	}
 }
 
 MessageFactory.createClientDispatching = function(client, trip) {

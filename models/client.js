@@ -22,13 +22,9 @@ var repository = new Repository(Client);
   Client.prototype[state] = Client[state] = readableState;
 });
 
-Client.prototype.login = function(context, cb) {
+Client.prototype.login = function(context, callback) {
 	console.log('Client ' + this.id + ' login');
-	this.updateLocation(context);
-
-	this.save(function(err) {
-		cb(err, MessageFactory.createClientLoginOK(this));
-	}.bind(this));
+	this.ping(context, callback);
 }
 
 Client.prototype.logout = function(context, callback) {
@@ -46,12 +42,12 @@ Client.prototype.ping = function(context, callback) {
 	this.save();
 
 	if (this.trip) {
-		callback(null, MessageFactory.createClientPing(this, this.trip, this.state === Client.PENDINGRATING));
+		callback(null, MessageFactory.createClientOK(this, this.trip, this.state === Client.PENDINGRATING));
 	}
 	else if (this.state === Client.LOOKING)
 	{
 		Driver.findAllAvaiable(this, function(err, vehicles) {
-			callback(err, MessageFactory.createNearbyVehicles(this, vehicles));
+			callback(err, MessageFactory.createClientOK(this, null, false, vehicles));
 		}.bind(this));
 	}
 }
