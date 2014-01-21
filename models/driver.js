@@ -41,7 +41,7 @@ Driver.prototype.login = function(context, callback) {
   }
 
   this.save(function(err) {
-    callback(err, MessageFactory.createDriverLoginOK(this));
+    callback(err, MessageFactory.createDriverOK(this, true, this.trip, this.state === Driver.PENDINGRATING));
   }.bind(this));
 }
 
@@ -72,10 +72,10 @@ Driver.prototype.ping = function(context) {
   this.updateLocation(context);
   this.save();
 
-  return MessageFactory.createDriverOK(this, this.trip, this.state === Driver.PENDINGRATING);
+  return MessageFactory.createDriverOK(this, false, this.trip, this.state === Driver.PENDINGRATING);
 }
 
-// TODO: Если произошла ошибка посылки водителю или ошибка сохранения, то перевести водителя в AVAILABLE
+// TODO: Если произошла ошибка посылки Заказа водителю или ошибка сохранения, то перевести водителя в AVAILABLE
 Driver.prototype.dispatch = function(client, trip, callback) {
   this.changeState(Driver.DISPATCHING, client);
   this.setTrip(trip);

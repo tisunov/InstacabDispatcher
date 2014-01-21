@@ -22,12 +22,24 @@ var repository = new Repository(Client);
   Client.prototype[state] = Client[state] = readableState;
 });
 
+function _generateOKResponse(includeToken, callback) {
+	if (this.trip) {
+		callback(null, MessageFactory.createClientOK(this, includeToken, this.trip, this.state === Client.PENDINGRATING));
+	}
+	else if (this.state === Client.LOOKING)
+	{
+		Driver.findAllAvaiable(this, function(err, vehicles) {
+			callback(err, MessageFactory.createClientOK(this, includeToken, null, false, vehicles));
+		}.bind(this));
+	}
+}
+
 Client.prototype.login = function(context, callback) {
 	console.log('Client ' + this.id + ' login');
 	this.updateLocation(context);
 	
 	this.save(function(err) {
-		callback(err, MessageFactory.createClientOK(this, true));
+		_generateOKResponse.call(this, true, callback);
 	}.bind(this));
 }
 
@@ -45,15 +57,7 @@ Client.prototype.ping = function(context, callback) {
 	this.updateLocation(context);
 	this.save();
 
-	if (this.trip) {
-		callback(null, MessageFactory.createClientOK(this, false, this.trip, this.state === Client.PENDINGRATING));
-	}
-	else if (this.state === Client.LOOKING)
-	{
-		Driver.findAllAvaiable(this, function(err, vehicles) {
-			callback(err, MessageFactory.createClientOK(this, false, null, false, vehicles));
-		}.bind(this));
-	}
+	_generateOKResponse.call(this, false, callback);
 }
 
 Client.prototype.changeState = function(state) {
@@ -73,7 +77,7 @@ Client.prototype.updateNearbyDrivers = function(callback) {
 	console.log('Update nearby drivers for client ' + this.id + ', connected: ' + this.connected + ', state: ' + this.state);
 
 	Driver.findAllAvaiable(this, function(err, vehicles) {
-		this.send(MessageFactory.createNearbyVehicles(this, vehicles), callback);
+		this.send(MessageFactory.createClientOK(this, false, null, false, vehicles), callback);
 	}.bind(this));
 }
 

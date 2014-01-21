@@ -182,10 +182,10 @@ MessageFactory.createClientDispatching = function(client, trip) {
 }
 
 // Messages to the Driver
-MessageFactory.createDriverOK = function(driver, trip, tripPendingRating) {
+MessageFactory.createDriverOK = function(driver, includeToken, trip, tripPendingRating) {
 	var msg = {
 		messageType: "OK",
-		driver: driverToJSON(driver)
+		driver: driverToJSON(driver, includeToken)
 	}
 
 	if (tripPendingRating) {
@@ -208,13 +208,6 @@ function tripForDriverToJSON(trip) {
 		client: userToJSON(trip.client)
 	};	
 }
-
-MessageFactory.createDriverLoginOK = function(driver) {
-	return {
-		messageType: "Login",
-		driver: driverToJSON(driver, true)
-	};
-};
 
 MessageFactory.createDriverPickup = function(driver, trip, client) {
 	return {
