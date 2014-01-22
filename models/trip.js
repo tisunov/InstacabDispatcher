@@ -184,6 +184,9 @@ Trip.prototype.pickup = function(driver, client, clientContext, callback) {
 	this.pickupLocation = clientContext.message.location;
 	this.requestTimestamp = timestamp(); // Unix epoch time
 
+	// save trip to generate id
+	this._save();
+
 	async.series({
 		// dispatch to nearest available driver
 		dispatchDriver: this._dispatchDriver.bind(this),
