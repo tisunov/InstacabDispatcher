@@ -93,7 +93,7 @@ Client.prototype.pickup = function(context, trip, callback) {
 
 Client.prototype.confirm = function(callback) {
 	this.changeState(Client.WAITINGFORPICKUP);
-	this.send(MessageFactory.createPickupConfirm(this, this.trip));
+	this.send(MessageFactory.createClientOK(this, false, this.trip));
 	this.save(callback);
 }
 

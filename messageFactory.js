@@ -102,12 +102,6 @@ function driverToJSON(driver, includeToken) {
 	return json;
 }
 
-MessageFactory.createPickupConfirm = function(client, trip) {
-	var message = tripToClientMessage(trip, 'ConfirmPickup');
-	message['client'] = userToJSON(client);
-	return message;
-}
-
 MessageFactory.createClientPickupCanceled = function(client, reason) {
 	return {
 		messageType: 'PickupCanceled',
