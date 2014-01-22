@@ -77,7 +77,7 @@ Driver.prototype.ping = function(context, callback) {
 
   this.save(function(err) {
     callback(err, MessageFactory.createDriverOK(this, false, this.trip, this.state === Driver.PENDINGRATING))
-  });
+  }.bind(this));
 }
 
 // TODO: Если произошла ошибка посылки Заказа водителю или ошибка сохранения, то перевести водителя в AVAILABLE
