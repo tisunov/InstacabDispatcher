@@ -223,7 +223,7 @@ Trip.prototype.driverPing = function(context) {
 	if (this.state === Trip.CLIENT_CANCELED) return;
 
 	if (this.driver.isDrivingClient()) {
-		var routePoint = {
+		var wayPoint = {
 			latitude: context.message.latitude,
 			longitude: context.message.longitude,
 			horizontalAccuracy: context.message.horizontalAccuracy,
@@ -233,7 +233,7 @@ Trip.prototype.driverPing = function(context) {
 			epoch: context.message.epoch
 		};
 
-		this.route.push(routePoint);
+		this.route.push(wayPoint);
 		this._save();
 	}
 
@@ -322,6 +322,8 @@ Trip.prototype.driverEnd = function(driverContext, callback) {
 	};
 
 	apiBackend.billTrip(this, function(err, fare) {
+		if (err) console.log(err);
+
 		console.log('Trip ' + this.id + ' fare is ' + fare + ' руб.');
 		this.fareBilledToCard = fare;
 		
