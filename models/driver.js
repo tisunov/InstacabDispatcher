@@ -68,11 +68,16 @@ Driver.prototype.logout = function(context, callback) {
 }
 
 // Update driver's position
-Driver.prototype.ping = function(context) {
+Driver.prototype.ping = function(context, callback) {
   this.updateLocation(context);
-  this.save();
+  // Track trip route
+  if (this.trip) {
+    this.trip.driverPing(context);
+  }
 
-  return MessageFactory.createDriverOK(this, false, this.trip, this.state === Driver.PENDINGRATING);
+  this.save(function(err) {
+    callback(err, MessageFactory.createDriverOK(this, false, this.trip, this.state === Driver.PENDINGRATING))
+  });
 }
 
 // TODO: Если произошла ошибка посылки Заказа водителю или ошибка сохранения, то перевести водителя в AVAILABLE

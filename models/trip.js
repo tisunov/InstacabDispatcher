@@ -218,9 +218,7 @@ Trip.prototype.confirm = function(driverContext, callback) {
 }
 
 Trip.prototype.driverPing = function(context) {
-	var result = this.driver.ping(context);
-
-	// Dumb driver simulator do not honor PickupCanceled message and keeps sending PingDriver
+	// Driver simulator does not honor PickupCanceled message and keeps sending PingDriver
 	// and since trip is canceled and is null for client, we crash in Client.driverEnroute
 	if (this.state === Trip.CLIENT_CANCELED) return;
 
@@ -240,7 +238,6 @@ Trip.prototype.driverPing = function(context) {
 	}
 
 	this.client.driverEnroute();
-	return result;
 }
 
 // Водитель совсем рядом или на месте. Известить клиента чтобы он выходил

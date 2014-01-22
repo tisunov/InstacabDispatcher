@@ -122,21 +122,11 @@ Dispatcher.prototype = {
 	},
 
 	PingDriver: function(context, callback) {
-		// find trip and keep driver gps log in trip
-		if (context.message.tripId) {
-			tripRepository.get(context.message.tripId, function(err, trip) {
-				if (err) return callback(err);
+		driverRepository.get(context.message.id, function(err, driver) {
+			if (err) return callback(err);
 
-				callback(null, trip.driverPing(context));
-			});
-		}
-		else {
-			driverRepository.get(context.message.id, function(err, driver) {
-				if (err) return callback(err);
-
-				callback(null, driver.ping(context))
-			})
-		}
+			driver.ping(context, callback);
+		});
 	},
 
 	// TODO: Сделать чтобы приложение Водителя посылало Ping/VehicleMoved переодически, либо при существенной смене позиции

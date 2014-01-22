@@ -99,11 +99,11 @@ client.on('close', function(event) {
   }, 500);
 });
 
-function driveToClient(tripId, pickupLocation) {
+function driveToClient(driverId, pickupLocation) {
   var i = 0;
   var timerId = setInterval(function() {
     // Send driver coordinates every second
-    pingDriver.tripId = tripId;
+    pingDriver.id = driverId;
     pingDriver.latitude = tripCoordinates[i][0];
     pingDriver.longitude = tripCoordinates[i][1];
     pingDriver.timestamp = Date.now();
@@ -113,7 +113,7 @@ function driveToClient(tripId, pickupLocation) {
     if (i === tripCoordinates.length - 1) {
       clearInterval(timerId);
 
-      arrivingNow.tripId = tripId;
+      arrivingNow.id = driverId;
       arrivingNow.latitude = pickupLocation.latitude;
       arrivingNow.longitude = pickupLocation.longitude;      
       client.sendWithLog(arrivingNow);
@@ -123,13 +123,13 @@ function driveToClient(tripId, pickupLocation) {
   }, 200);
 }
 
-function driveClient(tripId, callback) {
+function driveClient(driverId, callback) {
   var i = tripCoordinates.length;
   var timerId = setInterval(function() {
     i--;
 
     // Send driver coordinates every second
-    pingDriver.tripId = tripId;
+    pingDriver.id = driverId;
     pingDriver.latitude = tripCoordinates[i][0];
     pingDriver.longitude = tripCoordinates[i][1];
     pingDriver.timestamp = Math.round(Date.now() / 1000); // in seconds
@@ -184,7 +184,7 @@ client.on('message', function(event) {
         confirmPickup.longitude = 39.183383;
         client.sendWithLog(confirmPickup);
         
-        driveToClient(response.trip.id, response.trip.pickupLocation);
+        driveToClient(response.driver.id, response.trip.pickupLocation);
 
         // begin trip after 2 seconds
         timer = setTimeout(function() {
@@ -193,7 +193,7 @@ client.on('message', function(event) {
           client.sendWithLog(beginTrip);
 
           // send couple of gps points to dispatcher
-          driveClient(response.trip.id, function() {
+          driveClient(response.driver.id, function() {
             // end trip
             endTrip.tripId = response.trip.id;
             client.sendWithLog(endTrip);
