@@ -230,7 +230,7 @@ Trip.prototype.driverPing = function(context) {
 			verticalAccuracy: context.message.verticalAccuracy,
 			speed: context.message.speed,
 			course: context.message.course,
-			timestamp: context.message.timestamp
+			epoch: context.message.epoch
 		};
 
 		this.route.push(routePoint);
