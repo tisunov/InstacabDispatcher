@@ -17,7 +17,15 @@ function tripForClientToJSON(trip) {
 			state: trip.driver.state,
 			location: trip.driver.location,
 		},
-		vehicle: trip.driver.vehicle
+		vehicle: trip.driver.vehicle,
+		eta: trip.eta
+	}
+}
+
+function tripToClientMessage(trip, messageType) {
+	return {
+		messageType: messageType,
+		trip: tripForClientToJSON(trip)
 	}
 }
 
@@ -61,28 +69,6 @@ MessageFactory.createClientEndTrip = function(client, trip) {
 
 	msg.client.tripPendingRating = tripForClientToJSON(trip);
 	return msg;
-}
-
-
-function tripToClientMessage(trip, messageType) {
-	var tripJson = {
-		id: trip.id,
-		pickupLocation: trip.pickupLocation,
-		driver: {
-			firstName: trip.driver.firstName,
-			mobile: trip.driver.mobile,
-			rating: trip.driver.rating,
-			state: trip.driver.state,
-			location: trip.driver.location
-		},
-		vehicle: trip.driver.vehicle,
-		eta: trip.eta
-	};
-
-	return {
-		messageType: messageType,
-		trip: tripJson
-	}
 }
 
 function clientPropertiesForDriver(client) {

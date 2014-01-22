@@ -185,12 +185,12 @@ Trip.prototype.pickup = function(driver, client, clientContext, callback) {
 	this.requestTimestamp = timestamp(); // Unix epoch time
 
 	async.series({
-		// save trip
-		saveTrip: this._save.bind(this),
 		// dispatch to nearest available driver
 		dispatchDriver: this._dispatchDriver.bind(this),
 		// update and save client
-		replyToClient: this.client.pickup.bind(this.client, clientContext, this)
+		replyToClient: this.client.pickup.bind(this.client, clientContext, this),
+		// save trip with eta (it's updated in dispatchDriver)
+		saveTrip: this._save.bind(this)
 	}, function(err, result){
 		callback(err, result.replyToClient);
 	});
