@@ -165,7 +165,7 @@ Client.prototype.save = function(callback) {
 Client.prototype.rateDriver = function(context, callback) {
 	this.updateLocation(context);
 
-	require('../backend').rateDriver(this.trip.id, context.message.rating, function() {
+	require('../backend').rateDriver(this.trip.id, context.message.rating, context.message.feedback, function() {
 		this.changeState(Client.LOOKING);
 		this.save(callback);
 	}.bind(this));

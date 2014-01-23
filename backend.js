@@ -105,9 +105,9 @@ Backend.prototype.billTrip = function(trip, callback) {
 	});
 }
 
-Backend.prototype.rateDriver = function(tripId, rating, callback) {
+Backend.prototype.rateDriver = function(tripId, rating, feedback, callback) {
 	var payload = {
-		trip: { rating: rating }
+		trip: { rating: rating, feedback: feedback }
 	};
 
 	request.put(backendUrl + '/api/v1/trips/' + tripId + '/rate_driver', { json: payload }, function (error, response, body) {
