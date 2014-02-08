@@ -161,7 +161,7 @@ function sendMessage(user, message) {
 }
 
 Trip.prototype.getSchema = function() {
-	return ['id', 'clientId', 'driverId', 'state', 'pickupLocation', 'dropoffLocation', 'pickupTimestamp', 'dropoffTimestamp', 'fareBilledToCard', 'canceledDriverIds', 'route', 'eta', 'timeToPickupSeconds', 'confirmTimestamp', 'arrivalTimestamp'];
+	return ['id', 'clientId', 'driverId', 'state', 'cancelReason', 'pickupLocation', 'dropoffLocation', 'pickupTimestamp', 'dropoffTimestamp', 'fareBilledToCard', 'canceledDriverIds', 'route', 'eta', 'timeToPickupSeconds', 'confirmTimestamp', 'arrivalTimestamp'];
 }
 
 Trip.prototype._setClient = function(value) {
@@ -270,6 +270,7 @@ Trip.prototype.clientCancelPickup = function(clientContext, callback) {
 // Водитель отменил Trip после подтверждения
 Trip.prototype.driverCancel = function(driverContext, callback) {
 	this.state = Trip.DRIVER_CANCELED;
+	this.cancelReason = driverContext.message.reason;
 
 	async.parallel({
 		notifyClient: this.client.tripCanceled.bind(this.client),
