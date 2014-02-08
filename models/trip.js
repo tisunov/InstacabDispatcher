@@ -217,24 +217,28 @@ Trip.prototype.confirm = function(driverContext, callback) {
 	);
 }
 
+Trip.prototype._addRouteWayPoint = function(context) {
+	var wayPoint = {
+		latitude: context.message.latitude,
+		longitude: context.message.longitude,
+		horizontalAccuracy: context.message.horizontalAccuracy,
+		verticalAccuracy: context.message.verticalAccuracy,
+		speed: context.message.speed,
+		course: context.message.course,
+		epoch: context.message.epoch
+	};
+
+	this.route.push(wayPoint);
+	this._save();	
+}
+
 Trip.prototype.driverPing = function(context) {
 	// Driver simulator does not honor PickupCanceled message and keeps sending PingDriver
 	// and since trip is canceled and is null for client, we crash in Client.driverEnroute
 	if (this.state === Trip.CLIENT_CANCELED) return;
 
 	if (this.driver.isDrivingClient()) {
-		var wayPoint = {
-			latitude: context.message.latitude,
-			longitude: context.message.longitude,
-			horizontalAccuracy: context.message.horizontalAccuracy,
-			verticalAccuracy: context.message.verticalAccuracy,
-			speed: context.message.speed,
-			course: context.message.course,
-			epoch: context.message.epoch
-		};
-
-		this.route.push(wayPoint);
-		this._save();
+		this._addRouteWayPoint(context);
 	}
 
 	this.client.driverEnroute();
@@ -320,6 +324,8 @@ Trip.prototype.driverEnd = function(driverContext, callback) {
 		latitude: driverContext.message.latitude,
 		longitude: driverContext.message.longitude
 	};
+
+	this._addRouteWayPoint(driverContext);
 
 	apiBackend.billTrip(this, function(err, fare) {
 		if (err) console.log(err);
