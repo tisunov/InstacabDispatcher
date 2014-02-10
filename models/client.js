@@ -111,7 +111,9 @@ Client.prototype.start = function(callback) {
 }
 
 Client.prototype.driverEnroute = function(callback) {
-	this.send(MessageFactory.createClientDriverEnroute(this.trip));
+	if (this.trip) {
+		this.send(MessageFactory.createClientDriverEnroute(this.trip));
+	}
 }
 
 Client.prototype.end = function(callback) {
