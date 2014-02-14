@@ -1,0 +1,12 @@
+default:
+  BackendApiHost: localhost
+  BackendApiPort: 3000
+
+development:
+
+production: &production
+  BackendApiHost: www.instacab.ru
+  BackendApiPort: 80
+
+staging:
+    <<: *production

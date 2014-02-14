@@ -4,12 +4,12 @@ var Driver = require("./models/driver").Driver,
 		clientRepository = require('./models/client').repository,		
 		request = require("request"),
 		util = require("util"),
-		CONFIG = require('config').Backend;
+		config = require('konfig')();
 
 function Backend() { 
 }
 
-var backendUrl = 'http://' + CONFIG.host + ':' + CONFIG.port;
+var backendUrl = 'http://' + config.app.BackendApiHost + ':' + config.app.BackendApiPort;
 var backendApiUrl = backendUrl + '/api/v1';
 
 function initProperties(sourceProps) {
