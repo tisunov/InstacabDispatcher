@@ -70,6 +70,12 @@ User.prototype.send = function(message, callback) {
 	});
 }
 
+User.prototype.disconnect = function() {
+	if (this.connection && this.connection.readyState === WebSocket.OPEN) {
+		this.connection.close();
+	}
+}
+
 User.prototype._connectionClosed = function() {
 	console.log(this.constructor.name + ' ' + this.id + ' disconnected');
 	

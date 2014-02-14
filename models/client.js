@@ -46,6 +46,7 @@ Client.prototype.login = function(context, callback) {
 Client.prototype.logout = function(context, callback) {
 	console.log('Client ' + this.id + ' logout');
 	this.updateLocation(context);
+	this.disconnect();
 
 	this.save(function(err) {
 		callback(err, MessageFactory.createClientOK(this));

@@ -34,6 +34,10 @@ function login(url, email, password, constructor, repository, callback) {
 			if (err) {
 				user = new constructor();
 			}
+			// case of a 2nd login with same credentials
+			else if (user.connected) {
+				return callback(new Error("Повторный вход с указанными параметрами запрещен"));
+			}
 
 			initProperties.call(user, properties)
 
