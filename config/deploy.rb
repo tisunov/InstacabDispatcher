@@ -47,7 +47,7 @@ namespace :deploy do
   desc 'Restart application'
   task :restart do
     on roles(:app), in: :sequence, wait: 5 do
-      execute '/etc/init.d/forever', "forever restart"
+      execute '/etc/init.d/forever', "restart"
     end
   end
   after :publishing, :restart
