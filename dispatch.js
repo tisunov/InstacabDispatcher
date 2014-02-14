@@ -206,6 +206,7 @@ Dispatcher.prototype._parseJSONData = function(data, connection) {
 	var message;
 	try {
 	  message = JSON.parse(data);
+	  console.log(util.inspect(message, {depth: 3, colors: true}));
 	}
 	catch(e) {
 	  console.log(e);
@@ -290,8 +291,6 @@ Dispatcher.prototype.processMessage = function(data, connection) {
 
 	var message;
 	if (!(message = this._parseJSONData(data, connection))) return;
-
-	console.log(util.inspect(message, {depth: 3, colors: true}));
 
 	// Find message handler
 	var messageHandler;
