@@ -2,8 +2,7 @@ var Dispatcher = require('./dispatch'),
     WebSocketServer = require('ws').Server,
     express = require('express'),
     inspect = require('util').inspect,
-    bugsnag = require("bugsnag"),
-    CONFIG = require('config').Server;
+    bugsnag = require("bugsnag");
 
 // Register the bugsnag notifier
 if (process.env.NODE_ENV === "production") {
