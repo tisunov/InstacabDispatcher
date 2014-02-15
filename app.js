@@ -39,12 +39,6 @@ dispatcher.load(function(err) {
 
 })
 
-// Enable keep alive
-// server.on('connection', (socket) ->
-//   console.log("A new connection was made by a client.")
-//   socket.setTimeout(30 * 1000) // 30 second timeout
-// )
-
 // Middleware
 // app.use(express.bodyParser())
 // app.use(app.router)

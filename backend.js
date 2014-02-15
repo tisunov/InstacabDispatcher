@@ -7,6 +7,7 @@ var Driver = require("./models/driver").Driver,
 		config = require('konfig')();
 
 function Backend() { 
+	
 }
 
 var backendUrl = 'http://' + config.app.BackendApiHost + ':' + config.app.BackendApiPort;
@@ -36,7 +37,8 @@ function login(url, email, password, constructor, repository, callback) {
 			}
 			// case of a 2nd login with same credentials
 			else if (user.connected) {
-				return callback(new Error("Повторный вход с указанными параметрами запрещен"));
+				user.disconnect();
+				// return callback(new Error("Повторный вход с указанными параметрами запрещен"));
 			}
 
 			initProperties.call(user, properties)
