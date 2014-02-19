@@ -12,7 +12,6 @@ set :deploy_to, "/home/deploy/apps/dispatcher"
 
 set :user, "deploy"
 
-set :deploy_via, :remote_cache
 set :scm, :git
 
 # Default value for :format is :pretty

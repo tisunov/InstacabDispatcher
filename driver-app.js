@@ -3,8 +3,10 @@ var login1 = {
   app: "driver",
   email: 'mike@mail.ru',
   password: 'securepassword',
-  latitude: 51.66351,
-  longitude: 39.185234
+  latitude: 51.674789,
+  longitude: 39.211527
+  // latitude: 51.66351,
+  // longitude: 39.185234
 };
 
 var login2 = {

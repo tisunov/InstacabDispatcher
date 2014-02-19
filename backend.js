@@ -160,4 +160,18 @@ Backend.prototype.apiCommand = function(message, callback) {
 	);
 }
 
+Backend.prototype.smsTripStatusToClient = function(trip, client) {
+	var payload = {
+		driver_name: trip.driver.firstName,
+		driver_rating: trip.driver.rating,
+		trip_state: trip.state.toLowerCase(),
+		eta_minutes: trip.eta
+	};
+
+	request.post(backendUrl + '/api/v1/clients/' + client.id + '/sms', { json: payload }, function (error, response, body) {
+		if (error) console.log(error);
+
+	});
+}
+
 module.exports = new Backend();

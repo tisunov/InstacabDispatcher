@@ -14,7 +14,7 @@ function Trip() {
 var PICKUP_TIMEOUT = 15000; // 15 secs
 var repository = new Repository(Trip);
 
-['dispatcher_canceled', 'client_canceled', 'driver_canceled', 'started', 'finished'].forEach(function (readableState, index) {
+['dispatcher_canceled', 'client_canceled', 'driver_confirmed', 'driver_canceled', 'driver_arriving', 'started', 'finished'].forEach(function (readableState, index) {
   var state = readableState.toUpperCase();
     Trip.prototype[state] = Trip[state] = readableState;
 });
@@ -192,7 +192,7 @@ Trip.prototype.pickup = function(driver, client, clientContext, callback) {
 		dispatchDriver: this._dispatchDriver.bind(this),
 		// update and save client
 		replyToClient: this.client.pickup.bind(this.client, clientContext, this),
-		// save trip with eta (it's updated in dispatchDriver)
+		// save trip with eta (it was updated in dispatchDriver)
 		saveTrip: this._save.bind(this)
 	}, function(err, result){
 		callback(err, result.replyToClient);
@@ -203,8 +203,11 @@ Trip.prototype.pickup = function(driver, client, clientContext, callback) {
 Trip.prototype.confirm = function(driverContext, callback) {
 	if (this.driver.state !== Driver.DISPATCHING) return callback(new Error('Unexpected Pickup confirmation'));
 
+	this.state = Trip.DRIVER_CONFIRMED;
 	this.confirmTimestamp = timestamp();
 	this._clearPickupTimeout();
+
+	apiBackend.smsTripStatusToClient(this, this.client);
 
 	async.series({
 		driverResult: this.driver.confirm.bind(this.driver, driverContext),
@@ -213,8 +216,7 @@ Trip.prototype.confirm = function(driverContext, callback) {
 	},
 		function(err, results) {
 			callback(null, results && results.driverResult);
-		}
-	);
+		}.bind(this));
 }
 
 Trip.prototype._addRouteWayPoint = function(context) {
@@ -244,10 +246,13 @@ Trip.prototype.driverPing = function(context) {
 	this.client.driverEnroute();
 }
 
-// Водитель совсем рядом или на месте. Известить клиента чтобы он выходил
+// Водитель подъезжает. Известить клиента чтобы он выходил
 Trip.prototype.driverArriving = function(driverContext, callback) {
+	this.state = Trip.DRIVER_ARRIVING;
 	this.arrivalTimestamp = timestamp();
 	this.timeToPickupSeconds = this.arrivedTimestamp - this.confirmTimestamp;
+
+	apiBackend.smsTripStatusToClient(this, this.client);
 
 	this.driver.arriving(driverContext, function(err, result) {
 		sendMessage(this.client, MessageFactory.createArrivingNow(this));
@@ -271,6 +276,8 @@ Trip.prototype.clientCancelPickup = function(clientContext, callback) {
 Trip.prototype.driverCancel = function(driverContext, callback) {
 	this.state = Trip.DRIVER_CANCELED;
 	this.cancelReason = driverContext.message.reason;
+
+	apiBackend.smsTripStatusToClient(this, this.client);
 
 	async.parallel({
 		notifyClient: this.client.tripCanceled.bind(this.client),
