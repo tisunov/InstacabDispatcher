@@ -1,7 +1,8 @@
 var WebSocket = require('ws'),
 	util = require('util'),
 	events = require('events'),
-	assert = require('assert');
+	assert = require('assert'),
+	publisher = require('../publisher');
 
 // Create a new object, that prototypally inherits from the Error constructor
 function NetworkError(message, socketError) {
@@ -20,6 +21,7 @@ NetworkError.prototype.constructor = NetworkError;
 function User(defaultState) {
 	this.connected = false;
 	this.state = defaultState;
+	this.channelName = 'channel:' + this.constructor.name.toLowerCase() + 's';
 }
 
 util.inherits(User, require('events').EventEmitter);
@@ -80,7 +82,12 @@ User.prototype._connectionClosed = function() {
 	console.log(this.constructor.name + ' ' + this.id + ' disconnected');
 	
 	this.connected = false;
-	this.emit('disconnect');
+	this.emit('disconnect', this);
+	this.publish();
+}
+
+User.prototype.publish = function() {
+	publisher.publish(this.channelName, JSON.stringify(this));
 }
 
 User.prototype._connectionError = function() {
@@ -102,7 +109,8 @@ User.prototype._setConnection = function(connection) {
 		this.connection.once('close', this._connectionClosed.bind(this));
 		this.connection.once('error', this._connectionError.bind(this));
 
-		this.emit('connect');
+		this.emit('connect', this);
+		this.publish();
 	}	
 }
 
@@ -119,7 +127,8 @@ User.prototype.updateLocation = function(context) {
 
 	// Notify observers when location changed
 	if (!this.location || !isEqualLocations(this.location, newLocation)) {
-		this.emit('locationChange', newLocation);
+		this.emit('locationUpdate', this, newLocation);
+		this.publish();
 	}
 	this.location = newLocation;
 	this._setConnection(context.connection);
@@ -127,9 +136,24 @@ User.prototype.updateLocation = function(context) {
 
 User.prototype.changeState = function(state) {
 	assert(state, 'Can not change state to ' + state);
-
 	console.log('Change ' + this.constructor.name + ' ' + this.id + ' state from ' + this.state + ' to ' + state);
+	
+	var oldState = this.state;
 	this.state = state;
+
+	if (oldState !== state) {
+		this.publish();
+	}
 };
+
+User.prototype.toJSON = function() {
+  return {
+    id: this.id,
+    name: this.firstName,
+    location: this.location,
+    state: this.state,
+    connected: this.connected
+  };
+}
 
 module.exports = User;

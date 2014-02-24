@@ -4,17 +4,25 @@ var MessageFactory = require("../messageFactory"),
 	Uuid = require("uuid-lib"),
 	Driver = require('./driver').Driver,
 	apiBackend = require('../backend'),
+	publisher = require('../publisher'),
 	Repository = require('../lib/repository');
 
-function Trip() {
-	this.canceledDriverIds = [];
+function Trip(id, client, driver) {
+	this.rejectedDriverIds = [];
 	this.route = [];
+
+	if (id) {
+		this.id = id;
+		this._setClient(client);
+		this._setDriver(driver);
+		this.createdAt = timestamp();
+	}	
 }
 
 var PICKUP_TIMEOUT = 15000; // 15 secs
 var repository = new Repository(Trip);
 
-['dispatcher_canceled', 'client_canceled', 'driver_confirmed', 'driver_canceled', 'driver_arriving', 'started', 'finished'].forEach(function (readableState, index) {
+['dispatcher_canceled', 'client_canceled', 'driver_confirmed', 'driver_canceled', 'driver_rejected', 'driver_arriving', 'started', 'finished', 'dispatching'].forEach(function (readableState, index) {
   var state = readableState.toUpperCase();
     Trip.prototype[state] = Trip[state] = readableState;
 });
@@ -42,7 +50,7 @@ Trip.prototype._passPickupToNextAvailableDriver = function() {
 	this._cancelDriverPickup(false);
 
 	function hasDriverCanceledPickup(driver) {
-		return this.canceledDriverIds.indexOf(driver.id) !== -1;
+		return this.rejectedDriverIds.indexOf(driver.id) !== -1;
 	};
 
 	var self = this;
@@ -73,6 +81,8 @@ Trip.prototype._passPickupToNextAvailableDriver = function() {
 	}.bind(this));
 }
 
+// TODO: Remove from cache once driver and client rated it
+// TODO: And keep it in Redis until that
 Trip.prototype._archive = function(callback) {
 	// remove from redis db
 	repository.remove(this, function(err) {
@@ -83,7 +93,7 @@ Trip.prototype._archive = function(callback) {
 	  if (err) console.log(err);
 	};
 
-	apiBackend.addTrip(this, callback)
+	apiBackend.addTrip(this, callback);
 }
 
 Trip.prototype._save = function(callback) {
@@ -102,7 +112,7 @@ Trip.prototype._onDriverDisconnect = function() {
 }
 
 Trip.prototype._cancelClientPickup = function(reasonString) {
-	this.state = Trip.DISPATCHER_CANCELED;
+	this._changeState(Trip.DISPATCHER_CANCELED);
 	this._archive();
 	this.client.pickupCanceled(reasonString);
 }
@@ -110,11 +120,11 @@ Trip.prototype._cancelClientPickup = function(reasonString) {
 Trip.prototype._cancelDriverPickup = function(clientCanceled) {
 	if (clientCanceled) {
 		this._clearPickupTimeout();
-		this.state = Trip.CLIENT_CANCELED;
+		this._changeState(Trip.CLIENT_CANCELED);
 	}
 	else {
-		this.canceledDriverIds.push(this.driver.id);
-		this.state = Trip.DRIVER_CANCELED;
+		this.rejectedDriverIds.push(this.driver.id);
+		this._changeState(Trip.DRIVER_REJECTED);
 	}
 
 	var reason = clientCanceled ? 'Клиент отменил запрос' : 'Истекло время для подтверждения'
@@ -133,12 +143,15 @@ Trip.prototype._clearPickupTimeout = function() {
 }
 
 Trip.prototype._dispatchDriver = function(callback) {
-	// Estimate time required to pickup the client
+	// Estimate time to client
 	this.driver.queryETAForClient(this.client, function(err, eta) {
 		// Keep ETA for client and driver apps
 		this.eta = eta;
+		// Give driver 15 seconds to confirm
 		this._pickupTimer = setTimeout(this._passPickupToNextAvailableDriver.bind(this), PICKUP_TIMEOUT);
+		this._changeState(Trip.DISPATCHING);
 
+		// Send dispatch request
 		this.driver.dispatch(this.client, this, function(err){
 			// TODO: Если ошибка посылки Pickup запроса, то сразу отменять таймер и передавать следующему ближайшему водителю
 			// Иначе пройдет 15 секунд и только после этого запрос передастся другому водителю
@@ -161,7 +174,7 @@ function sendMessage(user, message) {
 }
 
 Trip.prototype.getSchema = function() {
-	return ['id', 'clientId', 'driverId', 'state', 'cancelReason', 'pickupLocation', 'dropoffLocation', 'pickupTimestamp', 'dropoffTimestamp', 'fareBilledToCard', 'canceledDriverIds', 'route', 'eta', 'timeToPickupSeconds', 'confirmTimestamp', 'arrivalTimestamp'];
+	return ['id', 'clientId', 'driverId', 'state', 'cancelReason', 'pickupLocation', 'dropoffLocation', 'pickupAt', 'dropoffAt', 'createdAt', 'fareBilledToCard', 'rejectedDriverIds', 'route', 'eta', 'secondsToArrival', 'confirmedAt', 'arrivedAt'];
 }
 
 Trip.prototype._setClient = function(value) {
@@ -177,15 +190,8 @@ Trip.prototype._setDriver = function(driver) {
 }
 
 // Клиент запросил машину
-Trip.prototype.pickup = function(driver, client, clientContext, callback) {
-	this._setClient(client);
-	this._setDriver(driver);
-
+Trip.prototype.pickup = function(clientContext, callback) {
 	this.pickupLocation = clientContext.message.location;
-	this.requestTimestamp = timestamp(); // Unix epoch time
-
-	// save trip to generate id
-	this._save();
 
 	async.series({
 		// dispatch to nearest available driver
@@ -203,8 +209,8 @@ Trip.prototype.pickup = function(driver, client, clientContext, callback) {
 Trip.prototype.confirm = function(driverContext, callback) {
 	if (this.driver.state !== Driver.DISPATCHING) return callback(new Error('Unexpected Pickup confirmation'));
 
-	this.state = Trip.DRIVER_CONFIRMED;
-	this.confirmTimestamp = timestamp();
+	this.confirmedAt = timestamp();
+	this._changeState(Trip.DRIVER_CONFIRMED);
 	this._clearPickupTimeout();
 
 	apiBackend.smsTripStatusToClient(this, this.client);
@@ -248,9 +254,9 @@ Trip.prototype.driverPing = function(context) {
 
 // Водитель подъезжает. Известить клиента чтобы он выходил
 Trip.prototype.driverArriving = function(driverContext, callback) {
-	this.state = Trip.DRIVER_ARRIVING;
-	this.arrivalTimestamp = timestamp();
-	this.timeToPickupSeconds = this.arrivedTimestamp - this.confirmTimestamp;
+	this.arrivedAt = timestamp();
+	this.secondsToArrival = this.arrivedAt - this.confirmedAt;
+	this._changeState(Trip.DRIVER_ARRIVING);
 
 	apiBackend.smsTripStatusToClient(this, this.client);
 
@@ -263,7 +269,7 @@ Trip.prototype.driverArriving = function(driverContext, callback) {
 }
 
 Trip.prototype.clientCancelPickup = function(clientContext, callback) {
-	this.state = Trip.CLIENT_CANCELED;
+	this._changeState(Trip.CLIENT_CANCELED);
 	this._cancelDriverPickup(true);
 	
 	this.client.cancelPickup(clientContext, function(err, result){
@@ -274,8 +280,8 @@ Trip.prototype.clientCancelPickup = function(clientContext, callback) {
 
 // Водитель отменил Trip после подтверждения
 Trip.prototype.driverCancel = function(driverContext, callback) {
-	this.state = Trip.DRIVER_CANCELED;
 	this.cancelReason = driverContext.message.reason;
+	this._changeState(Trip.DRIVER_CANCELED);
 
 	apiBackend.smsTripStatusToClient(this, this.client);
 
@@ -293,7 +299,7 @@ Trip.prototype.driverCancel = function(driverContext, callback) {
 
 // Клиент отменил Trip после подтверждения Водителем
 Trip.prototype.clientCancel = function(clientContext, callback) {
-	this.state = Trip.CLIENT_CANCELED;
+	this._changeState(Trip.CLIENT_CANCELED);
 	
 	async.parallel({
 		notifyDriver: this.driver.tripCanceled.bind(this.driver),
@@ -309,8 +315,8 @@ Trip.prototype.clientCancel = function(clientContext, callback) {
 
 // Водитель начал поездку. Известить клиента что поездка началась
 Trip.prototype.driverBegin = function(driverContext, callback) {
-	this.state = Trip.STARTED;
-	this.pickupTimestamp = timestamp();
+	this.pickupAt = timestamp();
+	this._changeState(Trip.STARTED);
 
 	async.series({
 		driverResult: this.driver.begin.bind(this.driver, driverContext),
@@ -325,15 +331,13 @@ Trip.prototype.driverBegin = function(driverContext, callback) {
 
 // Водитель завершил поездку. Известить клиента что поездка была завершена
 Trip.prototype.driverEnd = function(driverContext, callback) {
-	this.state = Trip.FINISHED;
-	this.dropoffTimestamp = timestamp();
-	
+	this.dropoffAt = timestamp();	
 	this.dropoffLocation = {
 		latitude: driverContext.message.latitude,
 		longitude: driverContext.message.longitude
 	};
-
 	this._addRouteWayPoint(driverContext);
+	this._changeState(Trip.FINISHED);
 
 	apiBackend.billTrip(this, function(err, fare) {
 		if (err) console.log(err);
@@ -343,6 +347,8 @@ Trip.prototype.driverEnd = function(driverContext, callback) {
 		
 		this.client.end();
 		this.driver.end(driverContext, callback);
+
+		this.publish();
 		this._save();
 
 	}.bind(this));
@@ -359,6 +365,44 @@ Trip.prototype.driverRateClient = function(driverContext, callback) {
 	this.driver.rateClient(driverContext, function(err) {
 		callback(err, MessageFactory.createDriverOK(this.driver));
 	}.bind(this));
+}
+
+Trip.prototype._changeState = function(state) {
+	if (this.state !== state) {
+		this.state = state;
+		this.publish();
+	}
+}
+
+Trip.prototype.publish = function() {
+	publisher.publish('channel:trips', JSON.stringify(this));
+}
+
+Trip.prototype.toJSON = function() {
+  return {
+    id: this.id,
+    client: this.client,
+    driver: this.driver,
+    state: this.state,
+    pickupLocation: this.pickupLocation,
+    dropoffLocation: this.dropoffLocation,
+    fareBilledToCard: this.fareBilledToCard,
+    eta: this.eta,
+    pickupAt: this.pickupAt,
+    dropoffAt: this.dropoffAt
+  };
+}
+
+Trip.create = function(client, driver, callback) {
+	repository.generateNextId(function(err, id){
+		callback(err, new Trip(id, client, driver));
+	});
+}
+
+Trip.publishAll = function() {
+  repository.all(function(err, trips) {
+  	publisher.publish('channel:trips', JSON.stringify({trips: trips}));
+  });
 }
 
 function timestamp() {

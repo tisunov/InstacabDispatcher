@@ -78,7 +78,7 @@ Client.prototype.changeState = function(state) {
   }
 }
 
-// LATER: Обновилась позиция всего одного водителя и не нужно пересчитывать расстояние и время прибытия
+// TODO: Обновилась позиция всего одного водителя и не нужно пересчитывать расстояние и время прибытия
 // всех остальных
 //  Notify client about changes in nearby vehicles
 Client.prototype.updateNearbyDrivers = function(callback) {
@@ -190,6 +190,14 @@ Client.prototype.rateDriver = function(context, callback) {
 		}.bind(this));
 
 	}.bind(this));
+}
+
+Client.publishAll = function() {
+  repository.all(function(err, user) {
+    user.forEach(function(user) {
+      user.publish();
+    });
+  });
 }
 
 // export Client constructor

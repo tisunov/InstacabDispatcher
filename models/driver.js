@@ -49,11 +49,11 @@ Driver.prototype.changeState = function(state, client) {
   User.prototype.changeState.call(this, state);
   
   if (this.state === Driver.AVAILABLE) {
-    this.emit('available');
+    this.emit('available', this);
     this.clearTrip();
   }
   else {
-    this.emit('unavailable', client);
+    this.emit('unavailable', this, client);
   }
 }
 
@@ -204,6 +204,17 @@ Driver.prototype.queryETAForClient = function(client, callback) {
   });
 }
 
+Driver.prototype.toJSON = function() {
+  var obj = User.prototype.toJSON.call(this);
+  if (this.trip) {
+    obj.trip = {
+      id: this.trip.id,
+      pickupLocation: this.trip.pickupLocation
+    }
+  }
+  return obj;
+}
+
 function vehicleLocationsWithTimeToClient(client, drivers, callback) {
   async.map(drivers, function(driver, next) {
     driver.queryETAForClient(client, function(err, eta) {
@@ -265,6 +276,14 @@ Driver.findFirstAvailable = function(client, callback) {
     if (driversWithDistance.length === 0) return callback(new Error('No available drivers'));
 
     callback(null, driversWithDistance[0].driver);
+  });
+}
+
+Driver.publishAll = function() {
+  repository.all(function(err, drivers) {
+    drivers.forEach(function(driver) {
+      driver.publish();
+    });
   });
 }
 

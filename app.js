@@ -1,4 +1,5 @@
 var Dispatcher = require('./dispatch'),
+    // agent = require('webkit-devtools-agent'),
     WebSocketServer = require('ws').Server,
     express = require('express'),
     inspect = require('util').inspect,
@@ -23,7 +24,7 @@ dispatcher.load(function(err) {
 
   wss.on('connection', function(connection) {
     console.log('socket client connected');
-    
+
     connection.on('message', function(data) {
       dispatcher.processMessage(data, connection);
     });

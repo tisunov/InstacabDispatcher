@@ -9,10 +9,33 @@ var async = require('async'),
 	clientRepository = require('./models/client').repository,
 	Driver = require("./models/driver").Driver,
 	Client = require("./models/client").Client,
+	subscriber = require("redis").createClient(),
 	MessageFactory = require("./messageFactory");
 
 function Dispatcher() {
 	this.driverEventCallback = this._clientsUpdateNearbyDrivers.bind(this);
+	this.channelClients = {};
+	
+	subscriber.subscribe('channel:drivers');
+	subscriber.subscribe('channel:clients');
+	subscriber.subscribe('channel:trips');
+
+	// Broadcast message to clients
+	subscriber.on('message', function(channel, message) {
+		channel = channel.split(':')[1];
+		if (!this.channelClients[channel]) return;
+
+		this.channelClients[channel].forEach(function(connection){
+			data = JSON.stringify({channel: channel, data: JSON.parse(message)});
+			
+			try {
+				// console.log('Broadcast: ' + data);
+				connection.send(data);				
+			}
+			catch(e) {};
+		}, this);
+
+	}.bind(this));	
 }
 
 Dispatcher.prototype = {
@@ -60,16 +83,21 @@ Dispatcher.prototype = {
 
 	Pickup: function(context, callback) {
 		async.waterfall([
+			// Find client
 			clientRepository.get.bind(clientRepository, context.message.id),
-
+			// Find available driver
 			function(client, next) {
 				Driver.findFirstAvailable(client, function(err, driver){
 					next(err, client, driver);
 				});
 			},
+			// Create trip
 			function(client, driver, next) {
-				var trip = new Trip();
-				trip.pickup(driver, client, context, next);
+				Trip.create(client, driver, next);
+			},
+			// Dispatch
+			function(trip, next) {
+				trip.pickup(context, next);
 			}
 		], callback);
 	},
@@ -129,21 +157,6 @@ Dispatcher.prototype = {
 		});
 	},
 
-	// TODO: Сделать чтобы приложение Водителя посылало Ping/VehicleMoved переодически, либо при существенной смене позиции
-	//  Это нужно чтобы клиенты видели положение автомобилей и время прибытия ближайшего водителя
-	// TODO: У меня уже есть Ping сообщение оно может исполнять эту роль и посылаться в Available при смещении машины больше чем на 1 метр
-	// var message = MessageFactory.createVehicleMoved({
-	// 		id: driver.id,
-	// 		longitude: driver.lon,
-	// 		latitude: driver.lat
-	// 	});
-
-	// Client.forEach(function updateVehiclePosition(client){
-	// 	client.send(message, function(err){
-	// 		if (err) console.log(err);
-	// 	});
-	// })
-
 	ConfirmPickup: function(context, callback) {
 		tripRepository.get(context.message.tripId, function(err, trip){
 			if (err) return callback(err);
@@ -194,6 +207,30 @@ Dispatcher.prototype = {
 
 	ApiCommand: function(context, callback) {
 		apiBackend.apiCommand(context.message, callback);
+	},
+
+	Subscribe: function(context, callback) {
+		if (!context.message.channel) return callback(new Error('channel could not be empty'));
+
+		// Client subscriptions management
+		this.channelClients[context.message.channel] = this.channelClients[context.message.channel] || [];
+		var clients = this.channelClients[context.message.channel];
+		clients.push(context.connection);
+		
+		// Remove disconnected clients
+		context.connection.once('close', function() {
+			index = clients.indexOf(context.connection);
+			if (index > -1) clients.splice(index, 1);
+		});
+
+		// Push initial state
+		if (context.message.channel === 'drivers') {
+			Driver.publishAll();
+		} else if (context.message.channel === 'clients') {
+			Client.publishAll();
+		} else if (context.message.channel === 'trips') {
+			Trip.publishAll();
+		}		
 	}
 }
 
@@ -217,7 +254,7 @@ Dispatcher.prototype._parseJSONData = function(data, connection) {
 }
 
 Dispatcher.prototype._findMessageHandler = function(message, connection) {
-	if (message.app !== 'client' && message.app !== 'driver') {
+	if (message.app !== 'client' && message.app !== 'driver' && message.app !== 'god') {
 		return responseWithError.call(connection, 'Unknown client app: ' + message.app);
 	}
 
@@ -230,7 +267,7 @@ Dispatcher.prototype._findMessageHandler = function(message, connection) {
 }
 
 // Update all clients except the one requested pickup
-Dispatcher.prototype._clientsUpdateNearbyDrivers = function(clientRequestedPickup) {
+Dispatcher.prototype._clientsUpdateNearbyDrivers = function(driver, clientRequestedPickup) {
 	var skipClientId = clientRequestedPickup ? clientRequestedPickup.id : null;
 
 	clientRepository.each(function(client) {
