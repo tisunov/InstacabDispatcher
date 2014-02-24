@@ -101,7 +101,7 @@ client.on('close', function(event) {
   }, 500);
 });
 
-function driveToClient(driverId, pickupLocation) {
+function driveToClient(driverId, tripId, pickupLocation) {
   var i = 0;
   var timerId = setInterval(function() {
     // Send driver coordinates every second
@@ -116,6 +116,7 @@ function driveToClient(driverId, pickupLocation) {
       clearInterval(timerId);
 
       arrivingNow.id = driverId;
+      arrivingNow.tripId = tripId;
       arrivingNow.latitude = pickupLocation.latitude;
       arrivingNow.longitude = pickupLocation.longitude;      
       client.sendWithLog(arrivingNow);
@@ -175,7 +176,7 @@ client.on('message', function(event) {
       }
       break;
 
-    case 'PickupCanceled': 
+    case 'PickupCanceled':
       clearTimeout(timer);
       break;
 
@@ -186,9 +187,9 @@ client.on('message', function(event) {
         confirmPickup.longitude = 39.183383;
         client.sendWithLog(confirmPickup);
         
-        driveToClient(response.driver.id, response.trip.pickupLocation);
+        driveToClient(response.driver.id, response.trip.id, response.trip.pickupLocation);
 
-        // begin trip after 2 seconds
+        // begin trip after 3 seconds
         timer = setTimeout(function() {
           // let the Trip begin
           beginTrip.tripId = response.trip.id;
@@ -200,9 +201,9 @@ client.on('message', function(event) {
             endTrip.tripId = response.trip.id;
             client.sendWithLog(endTrip);
           });
-        }, 2000);
+        }, 3000);
 
-      }, 2000);
+      }, 1000);
       break;
   }    
 });

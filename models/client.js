@@ -28,10 +28,16 @@ function _generateOKResponse(includeToken, callback) {
 	}
 	else if (this.state === Client.LOOKING)
 	{
-		Driver.findAllAvaiable(this, function(err, vehicles) {
+		Driver.findAllAvailableNearLocation(this.location, function(err, vehicles) {
 			callback(err, MessageFactory.createClientOK(this, includeToken, null, false, vehicles));
 		}.bind(this));
 	}
+}
+
+Client.prototype.getSchema = function() {
+  var props = User.prototype.getSchema.call(this);
+  props.push('paymentProfile');
+  return props;
 }
 
 Client.prototype.login = function(context, callback) {
@@ -86,7 +92,7 @@ Client.prototype.updateNearbyDrivers = function(callback) {
 	
 	console.log('Update nearby drivers for client ' + this.id + ', connected: ' + this.connected + ', state: ' + this.state);
 
-	Driver.findAllAvaiable(this, function(err, vehicles) {
+	Driver.findAllAvailableNearLocation(this.location, function(err, vehicles) {
 		this.send(MessageFactory.createClientOK(this, false, null, false, vehicles), callback);
 	}.bind(this));
 }

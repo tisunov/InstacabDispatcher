@@ -1,6 +1,6 @@
 var WebSocket = require('ws'),
 	util = require('util'),
-	events = require('events'),
+	EventEmitter = require('events').EventEmitter,
 	assert = require('assert'),
 	publisher = require('../publisher');
 
@@ -19,12 +19,14 @@ NetworkError.prototype.constructor = NetworkError;
  */
 
 function User(defaultState) {
+	EventEmitter.call(this);
+	
 	this.connected = false;
 	this.state = defaultState;
 	this.channelName = 'channel:' + this.constructor.name.toLowerCase() + 's';
 }
 
-util.inherits(User, require('events').EventEmitter);
+util.inherits(User, EventEmitter);
 
 User.prototype.getSchema = function() {
 	return ['id', 'firstName', 'email', 'token', 'mobile', 'rating', 'state', 'location', 'tripId'];

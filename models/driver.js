@@ -178,8 +178,8 @@ function isAvailable(driver, callback) {
   callback(driver.connected && driver.state === Driver.AVAILABLE);
 }
 
-function userLocationToString(user) {
-  return user.location.latitude + ',' + user.location.longitude
+function locationToString(location) {
+  return location.latitude + ',' + location.longitude
 }
 
 function findAvailableDrivers(callback) {
@@ -187,12 +187,12 @@ function findAvailableDrivers(callback) {
   repository.filter(isAvailable, callback.bind(null, null));
 }
 
-// TODO: Нужно кэшировать полученные расстояния когда координаты origin и destination входят в небольшой bounding box
+// TODO: Нужно кэшировать полученные расстояния когда координаты origin и destination входят в небольшой bounding box или geofence с радиусом
 // Иначе очень быстро исчерпаются временной и дневной лимиты на запросы к Google Maps Distance Matrix API
-Driver.prototype.queryETAForClient = function(client, callback) {
+Driver.prototype.queryETAToLocation = function(location, callback) {
   DistanceMatrix.get({
-    origin: userLocationToString(this),
-    destination: userLocationToString(client)
+    origin: locationToString(this.location),
+    destination: locationToString(location)
   }, function(err, data) {
     if (err) {
       data = { durationSeconds: DEFAULT_PICKUP_TIME_SECONDS };
@@ -215,9 +215,9 @@ Driver.prototype.toJSON = function() {
   return obj;
 }
 
-function vehicleLocationsWithTimeToClient(client, drivers, callback) {
+function vehicleLocationsWithTimeToLocation(location, drivers, callback) {
   async.map(drivers, function(driver, next) {
-    driver.queryETAForClient(client, function(err, eta) {
+    driver.queryETAToLocation(location, function(err, eta) {
       var v = {
         id: driver.vehicle.id,
         longitude: driver.location.longitude, 
@@ -230,14 +230,14 @@ function vehicleLocationsWithTimeToClient(client, drivers, callback) {
   }, callback);
 }
 
-Driver.findAllAvaiable = function(client, callback) {
+Driver.findAllAvailableNearLocation = function(location, callback) {
   async.waterfall([
     findAvailableDrivers,
-    vehicleLocationsWithTimeToClient.bind(null, client)
+    vehicleLocationsWithTimeToLocation.bind(null, location)
   ], callback);
 }
 
-Driver.findAllAvailableOrderByDistance = function(client, callback) {
+Driver.findAllAvailableOrderByDistance = function(pickupLocation, callback) {
   async.waterfall([
     findAvailableDrivers,
     // find distance to each driver
@@ -249,7 +249,7 @@ Driver.findAllAvailableOrderByDistance = function(client, callback) {
         availableDrivers,
         function(driver, cb) {
           // distance from client in km
-          var distanceToClient = driver._distanceTo(client.location);
+          var distanceToClient = driver._distanceTo(pickupLocation);
           cb(null, { driver: driver, distanceToClient: distanceToClient });
         }, 
         nextFn
@@ -266,11 +266,11 @@ Driver.findAllAvailableOrderByDistance = function(client, callback) {
   ], callback);
 }
 
-Driver.findFirstAvailable = function(client, callback) {
-  Driver.findAllAvailableOrderByDistance(client, function(err, driversWithDistance){
+Driver.findOneAvailableNearPickupLocation = function(pickupLocation, callback) {
+  Driver.findAllAvailableOrderByDistance(pickupLocation, function(err, driversWithDistance){
     if (err) return callback(err);
 
-    console.log('Drivers in ascending order by distance from the client:');
+    console.log('Drivers in ascending order by distance from client pickup location:');
     console.log(util.inspect(driversWithDistance,{colors:true}));
 
     if (driversWithDistance.length === 0) return callback(new Error('No available drivers'));

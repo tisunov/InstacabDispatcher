@@ -93,6 +93,10 @@ function userToJSON(user, includeToken) {
 		json.token = user.token;
 	}
 
+	if (user.paymentProfile) {
+		json.paymentProfile = user.paymentProfile;
+	}
+
 	return json;
 }
 

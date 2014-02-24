@@ -1,6 +1,16 @@
 default:
   BackendApiHost: localhost
   BackendApiPort: 3000
+  Geofences: [
+    {
+      name: 'Воронеж',
+      # array of [latitude, longitude] coordinates
+      polygon: []
+    },
+    {
+      name: 'Град',
+      polygon: []
+    }]
 
 development:
 

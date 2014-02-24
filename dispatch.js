@@ -87,7 +87,7 @@ Dispatcher.prototype = {
 			clientRepository.get.bind(clientRepository, context.message.id),
 			// Find available driver
 			function(client, next) {
-				Driver.findFirstAvailable(client, function(err, driver){
+				Driver.findOneAvailableNearPickupLocation(context.message.location, function(err, driver){
 					next(err, client, driver);
 				});
 			},

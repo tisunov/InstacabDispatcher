@@ -49,20 +49,20 @@ Trip.prototype._passPickupToNextAvailableDriver = function() {
 	console.log('Driver ' + this.driver.id + ' unable or unwilling to pickup. Finding next one...');
 	this._cancelDriverPickup(false);
 
-	function hasDriverCanceledPickup(driver) {
+	function hasDriverRejectedPickupBefore(driver) {
 		return this.rejectedDriverIds.indexOf(driver.id) !== -1;
 	};
 
 	var self = this;
 	async.waterfall([
-		Driver.findAllAvailableOrderByDistance.bind(null, this.client),
+		Driver.findAllAvailableOrderByDistance.bind(null, this.pickupLocation),
 
 		function(driversWithDistance, next) {
 			// find first driver that hasn't rejected Pickup before
 			async.detect(
 				driversWithDistance,
 				function(item, callback) {
-					callback(hasDriverCanceledPickup.call(self, item.driver));
+					callback(hasDriverRejectedPickupBefore.call(self, item.driver));
 				},
 				next
 			);
@@ -139,7 +139,7 @@ Trip.prototype._clearPickupTimeout = function() {
 
 Trip.prototype._dispatchDriver = function(callback) {
 	// Estimate time to client
-	this.driver.queryETAForClient(this.client, function(err, eta) {
+	this.driver.queryETAToLocation(this.pickupLocation, function(err, eta) {
 		// Keep ETA for client and driver apps
 		this.eta = eta;
 		// Give driver 15 seconds to confirm
