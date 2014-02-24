@@ -55,6 +55,7 @@ Backend.prototype.loginClient = function(email, password, callback) {
 	login(backendUrl + '/api/v1/sign_in', email, password, Client, clientRepository, callback);
 }
 
+// TODO: Сделать через AMQP
 Backend.prototype.signupClient = function(signupInfo, callback) {
 	request.post(backendUrl + '/api/v1/sign_up', { form: signupInfo }, function (error, response, body) {
 		// network error
@@ -92,12 +93,14 @@ function tripToJson(trip) {
 	return tripData;
 }
 
+// TODO: Сделать через AMQP
 Backend.prototype.addTrip = function(trip, callback) {
-	request.post(backendUrl + '/api/v1/trips', { json: {trip: tripToJson(trip)} }, function (error, response, body) {		
+	request.post(backendUrl + '/api/v1/trips', { json: {trip: tripToJson(trip)} }, function (error, response, body) {
 		callback(error);
 	});	
 }
 
+// TODO: Сделать через AMQP
 Backend.prototype.billTrip = function(trip, callback) {
 	request.post(backendUrl + '/api/v1/trips/bill', { json: {trip: tripToJson(trip)} }, function (error, response, body) {
 		// network error
@@ -110,6 +113,7 @@ Backend.prototype.billTrip = function(trip, callback) {
 	});
 }
 
+// TODO: Сделать через AMQP
 Backend.prototype.rateDriver = function(tripId, rating, feedback, callback) {
 	var payload = {
 		trip: { rating: rating, feedback: feedback }
@@ -120,6 +124,7 @@ Backend.prototype.rateDriver = function(tripId, rating, feedback, callback) {
 	});
 }
 
+// TODO: Сделать через AMQP
 Backend.prototype.rateClient = function(tripId, rating, callback) {
 	var payload = {
 		trip: { rating: rating }
@@ -130,6 +135,7 @@ Backend.prototype.rateClient = function(tripId, rating, callback) {
 	});
 }
 
+// TODO: Сделать через AMQP
 // apiParameters:
 //    { password: 'fwfweewfwe',
 //      mobile: '+7 (920) 213-30-56',
@@ -160,6 +166,7 @@ Backend.prototype.apiCommand = function(message, callback) {
 	);
 }
 
+// TODO: Сделать через AMQP
 Backend.prototype.smsTripStatusToClient = function(trip, client) {
 	var payload = {
 		driver_name: trip.driver.firstName,

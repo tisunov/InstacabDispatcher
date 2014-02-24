@@ -84,22 +84,17 @@ Trip.prototype._passPickupToNextAvailableDriver = function() {
 // TODO: Remove from cache once driver and client rated it
 // TODO: And keep it in Redis until that
 Trip.prototype._archive = function(callback) {
-	// remove from redis db
-	repository.remove(this, function(err) {
-		if (err) console.log(err);
-	})
+	callback = callback || this._defaultCallback;
 
-	callback = callback || function(err) {
-	  if (err) console.log(err);
-	};
-
-	apiBackend.addTrip(this, callback);
+	apiBackend.addTrip(this, function(err) {
+		if (err) return callback(err);
+			
+		repository.remove(this);
+	}.bind(this));
 }
 
 Trip.prototype._save = function(callback) {
-	callback = callback || function(err) {
-	  if (err) console.log(err);
-	};
+	callback = callback || this._defaultCallback;
 
 	repository.save(this, callback);
 }
@@ -372,6 +367,10 @@ Trip.prototype._changeState = function(state) {
 		this.state = state;
 		this.publish();
 	}
+}
+
+Trip.prototype._defaultCallback = function(err) {
+	if (err) console.log(err);
 }
 
 Trip.prototype.publish = function() {
