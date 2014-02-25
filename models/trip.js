@@ -186,7 +186,7 @@ Trip.prototype._setDriver = function(driver) {
 
 // Клиент запросил машину
 Trip.prototype.pickup = function(clientContext, callback) {
-	this.pickupLocation = clientContext.message.location;
+	this.pickupLocation = clientContext.message.pickupLocation;
 
 	async.series({
 		// dispatch to nearest available driver
