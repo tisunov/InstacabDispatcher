@@ -216,11 +216,17 @@ Dispatcher.prototype = {
 		this.channelClients[context.message.channel] = this.channelClients[context.message.channel] || [];
 		var clients = this.channelClients[context.message.channel];
 		clients.push(context.connection);
+
+		console.log("Subscribe to " + context.message.channel);
+		console.log("Channel " + context.message.channel + " has " + clients.length + " subscribers");
 		
 		// Remove disconnected clients
 		context.connection.once('close', function() {
 			index = clients.indexOf(context.connection);
-			if (index > -1) clients.splice(index, 1);
+			if (index > -1) {
+				console.log('Remove subscriber from ' + context.message.channel);
+				clients.splice(index, 1);
+			}
 		});
 
 		// Push initial state

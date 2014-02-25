@@ -157,7 +157,7 @@ User.prototype.toJSON = function() {
     name: this.firstName,
     location: this.location,
     state: this.state,
-    connected: this.connected
+    connected: this.connected,
   };
 }
 

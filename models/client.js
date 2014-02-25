@@ -98,9 +98,10 @@ Client.prototype.updateNearbyDrivers = function(callback) {
 }
 
 Client.prototype.pickup = function(context, trip, callback) {
-	this.updateLocation(context);
-	this.changeState(Client.DISPATCHING);
+	this.updateLocation(context);	
 	this.setTrip(trip);
+	// Change state causes event to be published which reads this.trip, so it has to be set prior to that
+	this.changeState(Client.DISPATCHING);
 
 	this.save(function(err) {
 		callback(err, MessageFactory.createClientDispatching(this, this.trip));
@@ -196,6 +197,14 @@ Client.prototype.rateDriver = function(context, callback) {
 		}.bind(this));
 
 	}.bind(this));
+}
+
+Client.prototype.toJSON = function() {
+  var obj = User.prototype.toJSON.call(this);
+  if (this.trip) {
+    obj.pickupLocation = this.trip.pickupLocation;
+  }
+  return obj;
 }
 
 Client.publishAll = function() {

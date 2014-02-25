@@ -51,7 +51,7 @@ MessageFactory.createClientOK = function(client, includeToken, trip, tripPending
 		// Когда нет свободных автомобилей для заказа в городе который подключен
 		msg.nearbyVehicles = { noneAvailableString: "Свободные автомобили отсутствуют" };
 		// TODO: Это при PingClient из города который не обслуживаем
-		// msg['sorryMsg'] = "Большое СПАСИБО за интерес к InstaCab. В вашем регионе нет машин, но пока мы постоянно расширяем нашу зону обслуживания.";
+		// msg.nearbyVehicles = { sorryMsg: "К сожалению мы еще не работаем в вашем регионе" };
 	}
 	else {
 		var minEta = _.min(vehicles, function(vehicle){ return vehicle.eta; }).eta;
