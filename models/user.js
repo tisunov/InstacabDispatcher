@@ -127,12 +127,15 @@ User.prototype.validateToken = function(context, callback) {
 User.prototype.updateLocation = function(context) {
 	var newLocation = { latitude: context.message.latitude, longitude: context.message.longitude };
 
+	var locationChanged = !this.location || !isEqualLocations(this.location, newLocation);
+	this.location = newLocation;
+
 	// Notify observers when location changed
-	if (!this.location || !isEqualLocations(this.location, newLocation)) {
+	if (locationChanged) {
 		this.emit('locationUpdate', this, newLocation);
 		this.publish();
 	}
-	this.location = newLocation;
+	
 	this._setConnection(context.connection);
 }
 
