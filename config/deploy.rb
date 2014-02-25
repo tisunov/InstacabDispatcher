@@ -51,6 +51,16 @@ namespace :deploy do
   end
   after :publishing, :restart
 
+  desc 'Restart fake driver application'
+  task :restart_fake_driver do
+    on roles(:app), in: :sequence do
+      within release_path do
+        execute '/usr/local/bin/forever', "restart driver-app.js"
+      end
+    end
+  end
+  after :publishing, :restart_fake_driver
+
   desc "Install node modules non-globally"
   task :npm_install do
     on roles(:app), in: :sequence, wait: 5 do
