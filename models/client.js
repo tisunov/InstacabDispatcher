@@ -3,7 +3,8 @@ var util = require("util"),
 	Driver = require("./driver").Driver,
 	Cache = require('../lib/cache'),
 	Repository = require('../lib/repository'),
-	MessageFactory = require("../messageFactory");
+	MessageFactory = require("../messageFactory"),
+	geofence = require("../lib/geofence");
 
 function Client() {
 	User.call(this, Client.LOOKING);	
@@ -24,13 +25,15 @@ var repository = new Repository(Client);
 
 function _generateOKResponse(includeToken, callback) {
 	if (this.trip) {
-		callback(null, MessageFactory.createClientOK(this, includeToken, this.trip, this.state === Client.PENDINGRATING));
+		var options = {
+			includeToken: includeToken,
+			trip: this.trip,
+			tripPendingRating: this.state === Client.PENDINGRATING
+		}
+		callback(null, MessageFactory.createClientOK(this, options));
 	}
-	else if (this.state === Client.LOOKING)
-	{
-		Driver.findAllAvailableNearLocation(this.location, function(err, vehicles) {
-			callback(err, MessageFactory.createClientOK(this, includeToken, null, false, vehicles));
-		}.bind(this));
+	else if (this.state === Client.LOOKING) {
+		this._updateNearbyDrivers({includeToken: includeToken}, callback);
 	}
 }
 
@@ -91,9 +94,20 @@ Client.prototype.updateNearbyDrivers = function(callback) {
 	if (!this.connected || this.state !== Client.LOOKING) return;
 	
 	console.log('Update nearby drivers for client ' + this.id + ', connected: ' + this.connected + ', state: ' + this.state);
+	this._updateNearbyDrivers({}, function(err, response) {
+		this.send(response, callback);
+	}.bind(this));
+}
+
+Client.prototype._updateNearbyDrivers = function(options, callback) {
+	if (!Client.canRequestToLocation(this.location)) {
+		options.restrictedArea = true;
+		return callback(null, MessageFactory.createClientOK(this, options));
+	}
 
 	Driver.findAllAvailableNearLocation(this.location, function(err, vehicles) {
-		this.send(MessageFactory.createClientOK(this, false, null, false, vehicles), callback);
+		options.vehicles = vehicles;
+		callback(err, MessageFactory.createClientOK(this, options));
 	}.bind(this));
 }
 
@@ -110,7 +124,7 @@ Client.prototype.pickup = function(context, trip, callback) {
 
 Client.prototype.confirm = function(callback) {
 	this.changeState(Client.WAITINGFORPICKUP);
-	this.send(MessageFactory.createClientOK(this, false, this.trip));
+	this.send(MessageFactory.createClientOK(this, { trip: this.trip} ));
 	this.save(callback);
 }
 
@@ -213,6 +227,10 @@ Client.publishAll = function() {
       user.publish();
     });
   });
+}
+
+Client.canRequestToLocation = function(location) {
+	return geofence.isLocationAllowed(location);
 }
 
 // export Client constructor

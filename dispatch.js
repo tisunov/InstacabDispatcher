@@ -82,6 +82,9 @@ Dispatcher.prototype = {
 	},
 
 	Pickup: function(context, callback) {
+		if (!Client.canRequestToLocation(context.message.pickupLocation))
+			return callback(null, MessageFactory.createError("К сожалению мы еще не работаем в вашем регионе. Но мы постоянно расширяем наш сервис, следите за обновлениями вступив в группу http://vk.com/instacab"));
+
 		async.waterfall([
 			// Find client
 			clientRepository.get.bind(clientRepository, context.message.id),

@@ -29,17 +29,25 @@ function tripToClientMessage(trip, messageType) {
 	}
 }
 
-MessageFactory.createClientOK = function(client, includeToken, trip, tripPendingRating, vehicles) {
+MessageFactory.createClientOK = function(client, options) {
+	options = options || {};
+
 	var msg = {
 		messageType: "OK",
-		client: userToJSON(client, includeToken)
+		client: userToJSON(client, options.includeToken)
 	}
 
-	if (tripPendingRating) {
-		msg.client.tripPendingRating = tripForClientToJSON(trip);
+	// Для географической области вызовы в которую не обслуживаем
+	if (options.restrictedArea) {
+		msg.nearbyVehicles = { sorryMsg: "К сожалению мы еще не работаем в вашем регионе" };
+		return msg;
 	}
-	else if (trip) {
-		msg.trip = tripForClientToJSON(trip);
+
+	if (options.tripPendingRating) {
+		msg.client.tripPendingRating = tripForClientToJSON(options.trip);
+	}
+	else if (options.trip) {
+		msg.trip = tripForClientToJSON(options.trip);
 	}
 
 	// В Vehicle View
@@ -47,15 +55,13 @@ MessageFactory.createClientOK = function(client, includeToken, trip, tripPending
 	// "etaStringShort": "6 mins",
 	// "minEta": 6
 
-	if (!vehicles || vehicles.length === 0) {
+	if (!options.vehicles || options.vehicles.length === 0) {
 		// Когда нет свободных автомобилей для заказа в городе который подключен
 		msg.nearbyVehicles = { noneAvailableString: "Свободные автомобили отсутствуют" };
-		// TODO: Это при PingClient из города который не обслуживаем
-		// msg.nearbyVehicles = { sorryMsg: "К сожалению мы еще не работаем в вашем регионе" };
 	}
 	else {
-		var minEta = _.min(vehicles, function(vehicle){ return vehicle.eta; }).eta;
-		msg.nearbyVehicles = { minEta: minEta, vehiclePoints: vehicles };
+		var minEta = _.min(options.vehicles, function(vehicle){ return vehicle.eta; }).eta;
+		msg.nearbyVehicles = { minEta: minEta, vehiclePoints: options.vehicles };
 	}		
 
 	return msg;
@@ -145,7 +151,7 @@ MessageFactory.createDriverTripCanceled = function(driver, reason) {
 MessageFactory.createError = function(errorText) {
 	return {
 	  messageType: 'Error',
-	  errorDescription: errorText,
+	  errorText: errorText,
 	}
 }
 
