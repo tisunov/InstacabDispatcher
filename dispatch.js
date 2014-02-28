@@ -152,6 +152,22 @@ Dispatcher.prototype = {
 		});
 	},
 
+	OffDutyDriver: function(context, callback) {
+		driverRepository.get(context.message.id, function(err, driver) {
+			if (err) return callback(err, null);
+
+			driver.offDuty(context, callback);
+		});
+	},
+
+	OnDutyDriver: function(context, callback) {
+		driverRepository.get(context.message.id, function(err, driver) {
+			if (err) return callback(err, null);
+
+			driver.onDuty(context, callback);
+		});
+	},
+
 	PingDriver: function(context, callback) {
 		driverRepository.get(context.message.id, function(err, driver) {
 			if (err) return callback(err);

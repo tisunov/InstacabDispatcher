@@ -58,7 +58,27 @@ Driver.prototype.changeState = function(state, client) {
 }
 
 Driver.prototype.logout = function(context, callback) {
-  console.log('Driver ' + this.id + ' went off duty');
+  console.log('Driver ' + this.id + ' logged out');
+  this.updateLocation(context);
+  this.changeState(Driver.OFFDUTY);
+
+  this.save(function(err) {
+    callback(err, MessageFactory.createDriverOK(this));
+  }.bind(this));
+}
+
+Driver.prototype.onDuty = function(context, callback) {
+  console.log('Driver ' + this.id + ' on duty');
+  this.updateLocation(context);
+  this.changeState(Driver.AVAILABLE);
+
+  this.save(function(err) {
+    callback(err, MessageFactory.createDriverOK(this));
+  }.bind(this));
+}
+
+Driver.prototype.offDuty = function(context, callback) {
+  console.log('Driver ' + this.id + ' off duty');
   this.updateLocation(context);
   this.changeState(Driver.OFFDUTY);
 
