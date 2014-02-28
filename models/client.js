@@ -230,7 +230,8 @@ Client.publishAll = function() {
 }
 
 Client.canRequestToLocation = function(location) {
-	return geofence.isLocationAllowed(location);
+	return true;
+	//return geofence.isLocationAllowed(location);
 }
 
 // export Client constructor

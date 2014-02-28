@@ -188,6 +188,14 @@ MessageFactory.createDriverOK = function(driver, includeToken, trip, tripPending
 	return msg;
 };
 
+MessageFactory.createDriverVehicleList = function(driver, vehicles) {
+	return {
+		messageType: "OK",
+		driver: driverToJSON(driver),
+		vehicles: vehicles
+	}
+}
+
 function tripForDriverToJSON(trip) {
 	return {
 		id: trip.id,

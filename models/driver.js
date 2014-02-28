@@ -215,6 +215,22 @@ Driver.prototype.toJSON = function() {
   return obj;
 }
 
+Driver.prototype.listVehicles = function(callback) {
+  console.log("+ Driver.prototype.listVehicles");
+  require('../backend').listVehicles(this, function(err, vehicles) {
+    callback(err, MessageFactory.createDriverVehicleList(this, vehicles));
+  }.bind(this));
+}
+
+Driver.prototype.selectVehicle = function(context, callback) {
+  require('../backend').selectVehicle(this, context.message.vehicleId, function(err, vehicle) {
+    if (err) return callback(err);
+
+    this.vehicle = vehicle;
+    callback(null, MessageFactory.createDriverOK(this));
+  }.bind(this));
+}
+
 function vehicleLocationsWithTimeToLocation(location, drivers, callback) {
   async.map(drivers, function(driver, next) {
     driver.queryETAToLocation(location, function(err, eta) {

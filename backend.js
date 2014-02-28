@@ -28,9 +28,9 @@ function login(url, email, password, constructor, repository, callback) {
 			var properties = JSON.parse(body);
 			util.inspect(properties, {colors: true});
 		} catch (e) {
+			console.log(e.message);
 			return callback(new Error("Техническая ошибка входа. Уже работаем над ней."));
 		}
-
 
 		// authentication error
 		if (response.statusCode !== 200) return callback(new Error(properties['error'] || body));
@@ -67,9 +67,13 @@ Backend.prototype.signupClient = function(signupInfo, callback) {
 		if (error) return callback(error);
 
 		console.log(body);
-		
-		var properties = JSON.parse(body);
-		util.inspect(properties, {colors: true});
+		try {
+			var properties = JSON.parse(body);
+			util.inspect(properties, {colors: true});
+		} catch (e) {
+			console.log(e.message);
+			return callback(new Error("Техническая ошибка входа. Уже работаем над ней."));
+		}
 
 		console.log('Response statusCode = ' + response.statusCode);
 
@@ -183,6 +187,31 @@ Backend.prototype.smsTripStatusToClient = function(trip, client) {
 	request.post(backendUrl + '/api/v1/clients/' + client.id + '/sms', { json: payload }, function (error, response, body) {
 		if (error) console.log(error);
 
+	});
+}
+
+Backend.prototype.listVehicles = function(driver, callback) {
+	request.get(backendUrl + '/api/v1/drivers/' + driver.id + '/vehicles', function (error, response, body) {
+		if (error) console.log(error);
+
+		try {
+			var response = JSON.parse(body);
+			util.inspect(response, {colors: true});
+		} catch (e) {
+			console.log(e.message);
+			return callback(new Error("Техническая ошибка. Уже работаем над ней."));
+		}
+
+		callback(null, response.vehicles);
+	});
+}
+
+Backend.prototype.selectVehicle = function(driver, vehicleId, callback) {
+	request.put(backendUrl + '/api/v1/drivers/' + driver.id + '/select_vehicle', { json: { vehicle_id: vehicleId } }, function (error, response, body) {
+		// network error
+		if (error) return callback(error);
+
+		callback(null, body.vehicle);
 	});
 }
 

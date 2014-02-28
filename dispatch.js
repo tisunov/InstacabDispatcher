@@ -200,6 +200,24 @@ Dispatcher.prototype = {
 		});
 	},
 
+	ListVehicles: function(context, callback) {
+		driverRepository.get(context.message.id, function(err, driver) {
+			if (err) return callback(err);
+
+			console.log("+ ListVehicles");
+			console.log(util.inspect(driver, {colors: true}));
+			driver.listVehicles(callback);
+		});
+	},
+
+	SelectVehicle: function(context, callback) {
+		driverRepository.get(context.message.id, function(err, driver) {
+			if (err) return callback(err);
+
+			driver.selectVehicle(context, callback);
+		});
+	},
+
 	RatingClient: function(context, callback) {
 		tripRepository.get(context.message.tripId, function(err, trip){
 			if (err) return callback(err);
