@@ -296,16 +296,16 @@ Trip.prototype.driverCancel = function(driverContext, callback) {
 Trip.prototype.clientCancel = function(clientContext, callback) {
 	this._changeState(Trip.CLIENT_CANCELED);
 	
-	async.parallel({
-		notifyDriver: this.driver.tripCanceled.bind(this.driver),
-		clientResponse: this.client.cancelTrip.bind(this.client, clientContext),
-		archive: this._archive.bind(this)
-	},
-		function(err, results) {
-			if (err) return callback(err);
-			callback(null, results.clientResponse);
-		}
-	);	
+	// notify driver
+	this.driver.tripCanceled(function(err) {
+		// change client state 
+		this.client.cancelTrip.bind(clientContext, function(err, response) {
+			
+			if (!err) this._archive();
+			callback(err, response);
+
+		}.bind(this));
+	}.bind(this));
 }
 
 // Водитель начал поездку. Известить клиента что поездка началась
