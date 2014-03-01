@@ -116,13 +116,13 @@ User.prototype._setConnection = function(connection) {
 	}	
 }
 
-User.prototype.isTokenMatches = function(context) {
+User.prototype.isTokenValid = function(context) {
 	return context.message.token && context.message.token === this.token;
 }
 
-User.prototype.validateToken = function(context, callback) {
-	callback(this.isTokenMatches(context) ? null : new Error("Неверный token"));
-}
+// User.prototype.validateToken = function(context, callback) {
+// 	callback(this.isTokenValid(context) ? null : new Error("Неверный token"));
+// }
 
 User.prototype.updateLocation = function(context) {
 	var newLocation = { latitude: context.message.latitude, longitude: context.message.longitude };

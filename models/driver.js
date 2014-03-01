@@ -31,14 +31,9 @@ Driver.prototype.getSchema = function() {
 }
 
 Driver.prototype.login = function(context, callback) {
-  this.updateLocation(context);
-
   console.log('Driver ' + this.id + ' logged in: ' + this.state + ' connected: ' + this.connected);
-  // Update state to Available only if driver has signed out before
-  var offDuty = !this.state || this.state === Driver.OFFDUTY
-  if (offDuty) {
-    this.changeState(Driver.AVAILABLE);
-  }
+  this.updateLocation(context);
+  this.changeState(Driver.OFFDUTY);
 
   this.save(function(err) {
     callback(err, MessageFactory.createDriverOK(this, true, this.trip, this.state === Driver.PENDINGRATING));

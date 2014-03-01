@@ -376,6 +376,11 @@ Dispatcher.prototype.processMessage = function(data, connection) {
 	var messageHandler;
 	if (!(messageHandler = this._findMessageHandler(message, connection))) return;
 
+	// Validate token
+	// TODO: Сделать посылку RPC обработчики только для Driver & Client, 
+	// а они в свою очередь будут делегировать работу Trip.
+	// Тогда просто будет проверять token
+
 	// Handle message
 	// returns: RPC response message
 	messageHandler.call(this, {message: message, connection: connection}, function(err, result) {

@@ -53,30 +53,21 @@ Client.prototype.login = function(context, callback) {
 }
 
 Client.prototype.logout = function(context, callback) {
-	Client.super_.prototype.validateToken.call(this, context, function(err) {
-		if (err) return callback(err);
+	console.log('Client ' + this.id + ' logout');
+	this.updateLocation(context);
+	this.token = null;
 
-		console.log('Client ' + this.id + ' logout');
-		this.updateLocation(context);
-		this.token = null;
-
-		this.save(function(err) {
-			callback(err, MessageFactory.createClientOK(this));
-		}.bind(this));
-
+	this.save(function(err) {
+		callback(err, MessageFactory.createClientOK(this));
 	}.bind(this));
 }
 
 // Return client state and trip if any or available vehicles nearby
 Client.prototype.ping = function(context, callback) {
-	Client.super_.prototype.validateToken.call(this, context, function(err) {
-		if (err) return callback(err);
+	this.updateLocation(context);
+	this.save();
 
-		this.updateLocation(context);
-		this.save();
-
-		_generateOKResponse.call(this, false, callback);
-	}.bind(this));
+	_generateOKResponse.call(this, false, callback);
 }
 
 Client.prototype.changeState = function(state) {
@@ -149,16 +140,11 @@ Client.prototype.end = function(callback) {
 
 // Client explicitly canceled pickup
 Client.prototype.cancelPickup = function(context, callback) {
-	Client.super_.prototype.validateToken.call(this, context, function(err) {
-		if (err) return callback(err);
+	this.updateLocation(context);
+	this.changeState(Client.LOOKING);
 
-		this.updateLocation(context);
-		this.changeState(Client.LOOKING);
-
-		this.save(function(err) {
-			callback(err, MessageFactory.createClientOK(this));
-		}.bind(this));
-
+	this.save(function(err) {
+		callback(err, MessageFactory.createClientOK(this));
 	}.bind(this));
 }
 
@@ -173,15 +159,10 @@ Client.prototype.pickupCanceled = function(reason) {
 
 // Client explicitly canceled trip
 Client.prototype.cancelTrip = function(context, callback) {
-	Client.super_.prototype.validateToken.call(this, context, function(err) {
-		if (err) return callback(err);
-
-		this.updateLocation(context);
-		this.changeState(Client.LOOKING);
-		this.save(function(err) {
-			callback(err, MessageFactory.createClientOK(this));
-		}.bind(this));
-
+	this.updateLocation(context);
+	this.changeState(Client.LOOKING);
+	this.save(function(err) {
+		callback(err, MessageFactory.createClientOK(this));
 	}.bind(this));
 }
 
@@ -200,16 +181,11 @@ Client.prototype.save = function(callback) {
 }
 
 Client.prototype.rateDriver = function(context, callback) {
-	Client.super_.prototype.validateToken.call(this, context, function(err) {
-		if (err) return callback(err);
+	this.updateLocation(context);
 
-		this.updateLocation(context);
-
-		require('../backend').rateDriver(this.trip.id, context.message.rating, context.message.feedback, function() {
-			this.changeState(Client.LOOKING);
-			this.save(callback);
-		}.bind(this));
-
+	require('../backend').rateDriver(this.trip.id, context.message.rating, context.message.feedback, function() {
+		this.changeState(Client.LOOKING);
+		this.save(callback);
 	}.bind(this));
 }
 
