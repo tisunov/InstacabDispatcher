@@ -94,8 +94,6 @@ Trip.prototype._archive = function(callback) {
 }
 
 Trip.prototype._save = function(callback) {
-	callback = callback || this._defaultCallback;
-
 	repository.save(this, callback);
 }
 

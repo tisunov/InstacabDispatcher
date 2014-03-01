@@ -174,9 +174,6 @@ Client.prototype.tripCanceled = function(callback) {
 }
 
 Client.prototype.save = function(callback) {
-	callback = callback || function(err) {
-		if (err) console.log(err);
-	};
 	repository.save(this, callback);
 }
 
