@@ -288,7 +288,7 @@ Trip.prototype.driverCancel = function(driverContext, callback) {
 			if (!err) this._archive();
 			callback(err, response);
 
-		}.bind(this)),
+		}.bind(this));
 	}.bind(this));
 }
 
