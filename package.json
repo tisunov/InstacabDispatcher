@@ -14,7 +14,8 @@
 		"konfig": "~> 0.1.1",
 		"js-yaml": "~> 3.0.0",
 		"bugsnag": "~> 1.1.0",
-		"in-n-out": "~> 0.0.10" 
+		"in-n-out": "~> 0.0.10",
+		"faye-websocket": "~>0.7.2"
 	},
 	"engines": {
 		"node": "0.10.x",
