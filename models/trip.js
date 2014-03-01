@@ -278,18 +278,15 @@ Trip.prototype.driverCancel = function(driverContext, callback) {
 
 	apiBackend.smsTripStatusToClient(this, this.client);
 
-	async.parallel({
-		notifyClient: this.client.tripCanceled.bind(this.client),
-		driverResponse: this.driver.cancelTrip.bind(this.driver, driverContext),
-		archive: this._archive.bind(this)
-	},
-		function(err, results) {
-			console.log("FUCK!!!!!");
-			console.log(util.inspect(results));
+	async.waterfall([
+		this.client.tripCanceled.bind(this.client),
+		this.driver.cancelTrip.bind(this.driver, driverContext),
+	],
+		function(err, response) {
+			if (!err) this._archive();
 
-			if (err) return callback(err);
-			callback(null, results.driverResponse);
-		}
+			callback(err, response);
+		}.bind(this)
 	);
 }
 

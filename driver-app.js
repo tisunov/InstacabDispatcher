@@ -9,6 +9,11 @@ var login1 = {
   // longitude: 39.185234
 };
 
+var onduty = {
+  messageType: "OnDutyDriver",
+  app: "driver",  
+}
+
 var login2 = {
   messageType: "LoginDriver",
   app: "driver",
@@ -169,10 +174,16 @@ client.on('message', function(event) {
           tripId: response.driver.tripPendingRating.id,
           rating: 5.0,
           app: 'driver',
-          token: response.token,
+          token: response.driver.token,
           latitude: 51.66351,
           longitude: 39.185234          
         });
+      }
+
+      if (response.driver.state === 'OffDuty') {
+        onduty.id = response.driver.id;
+        onduty.token = response.driver.token;
+        client.sendWithLog(onduty);
       }
       break;
 
