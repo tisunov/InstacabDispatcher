@@ -53,24 +53,17 @@ User.prototype.clearTrip = function() {
 	this.tripId = null;
 }
 
-User.prototype.send = function(message, callback) {
-	callback = callback || function(err) {
-		if (err) console.log(err);
-	};
-
+User.prototype.send = function(message) {
 	if (!this.connection || this.connection.readyState !== WebSocket.OPEN) {
-		return callback(new Error(this.constructor.name + ' ' + this.id + ' is not connected'));
+		console.log(this.constructor.name + ' ' + this.id + ' is not connected');
+		return;
 	}
 
 	console.log('Sending ' + message.messageType + ' to ' + this.constructor.name + ' ' + this.id);
 	console.log(util.inspect(message, {depth: 3, colors: true}));
 
 	this.connection.send(JSON.stringify(message), function(err) {
-		if (err) {
-			return callback(new NetworkError('Failed to send message to ' + this.constructor.name + ' ' + this.id, err));
-		}
-
-		callback(null);
+		if (err) console.log(err);
 	});
 }
 

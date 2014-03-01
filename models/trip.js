@@ -107,7 +107,7 @@ Trip.prototype._onDriverDisconnect = function() {
 Trip.prototype._cancelClientPickup = function(reasonString) {
 	this._changeState(Trip.DISPATCHER_CANCELED);
 	this._archive();
-	this.client.pickupCanceled(reasonString);
+	this.client.notifyPickupCanceled(reasonString);
 }
 
 Trip.prototype._cancelDriverPickup = function(clientCanceled) {
@@ -143,6 +143,7 @@ Trip.prototype._dispatchDriver = function(callback) {
 		// Give driver 15 seconds to confirm
 		this._pickupTimer = setTimeout(this._passPickupToNextAvailableDriver.bind(this), PICKUP_TIMEOUT);
 		this._changeState(Trip.DISPATCHING);
+		this._save();
 
 		// Send dispatch request
 		this.driver.dispatch(this.client, this, function(err){
@@ -155,19 +156,8 @@ Trip.prototype._dispatchDriver = function(callback) {
 	}.bind(this));
 }
 
-function sendMessage(user, message) {
-	if (!user.connected) {
-		return console.log("Can't send message " + message.messageType + " right away to user id " + user.id);
-	}
-
-	user.send(message, function(err) {
-		// TODO: Возможно стоит насильно закрывать соединение если была ошибка посылки
-		if (err) console.log(err);
-	});
-}
-
 Trip.prototype.getSchema = function() {
-	return ['id', 'clientId', 'driverId', 'state', 'cancelReason', 'pickupLocation', 'dropoffLocation', 'pickupAt', 'dropoffAt', 'createdAt', 'fareBilledToCard', 'rejectedDriverIds', 'route', 'eta', 'secondsToArrival', 'confirmedAt', 'arrivedAt'];
+	return ['id', 'clientId', 'driverId', 'state', 'cancelReason', 'pickupLocation', 'dropoffLocation', 'pickupAt', 'dropoffAt', 'createdAt', 'fareBilledToCard', 'rejectedDriverIds', 'route', 'eta', 'secondsToArrival', 'confirmedAt', 'arrivedAt', 'driverRating', 'feedback'];
 }
 
 Trip.prototype._setClient = function(value) {
@@ -184,18 +174,16 @@ Trip.prototype._setDriver = function(driver) {
 
 // Клиент запросил машину
 Trip.prototype.pickup = function(clientContext, callback) {
-	this.pickupLocation = clientContext.message.pickupLocation;
 
-	async.series({
+	if (this.state !== Trip.DISPATCHING) {
+		this.pickupLocation = clientContext.message.pickupLocation;
+		this._save();
+
 		// dispatch to nearest available driver
-		dispatchDriver: this._dispatchDriver.bind(this),
-		// update and save client
-		replyToClient: this.client.pickup.bind(this.client, clientContext, this),
-		// save trip with eta (it was updated in dispatchDriver)
-		saveTrip: this._save.bind(this)
-	}, function(err, result){
-		callback(err, result.replyToClient);
-	});
+		this._dispatchDriver();		
+	}
+
+	callback(null, this.client.pickup(clientContext, this));
 }
 
 // Водитель подтвердил заказ. Известить клиента что водитель в пути
@@ -206,16 +194,11 @@ Trip.prototype.confirm = function(driverContext, callback) {
 	this._changeState(Trip.DRIVER_CONFIRMED);
 	this._clearPickupTimeout();
 
-	apiBackend.smsTripStatusToClient(this, this.client);
+	var response = this.driver.confirm(driverContext);
+	this.client.notifyDriverConfirmed();
+	this._save();
 
-	async.series({
-		driverResult: this.driver.confirm.bind(this.driver, driverContext),
-		ignore1: this.client.confirm.bind(this.client),
-		ignore2: this._save.bind(this)
-	},
-		function(err, results) {
-			callback(null, results && results.driverResult);
-		}.bind(this));
+	callback(null, response);
 }
 
 Trip.prototype._addRouteWayPoint = function(context) {
@@ -234,15 +217,11 @@ Trip.prototype._addRouteWayPoint = function(context) {
 }
 
 Trip.prototype.driverPing = function(context) {
-	// Driver simulator does not honor PickupCanceled message and keeps sending PingDriver
-	// and since trip is canceled and is null for client, we crash in Client.driverEnroute
-	if (this.state === Trip.CLIENT_CANCELED) return;
-
 	if (this.driver.isDrivingClient()) {
 		this._addRouteWayPoint(context);
 	}
 
-	this.client.driverEnroute();
+	this.client.notifyDriverEnroute();
 }
 
 // Водитель подъезжает. Известить клиента чтобы он выходил
@@ -251,10 +230,8 @@ Trip.prototype.driverArriving = function(driverContext, callback) {
 	this.secondsToArrival = this.arrivedAt - this.confirmedAt;
 	this._changeState(Trip.DRIVER_ARRIVING);
 
-	apiBackend.smsTripStatusToClient(this, this.client);
-
 	this.driver.arriving(driverContext, function(err, result) {
-		sendMessage(this.client, MessageFactory.createArrivingNow(this));
+		this.client.notifyDriverArriving();
 		this._save();
 
 		callback(null, result);	
@@ -264,32 +241,22 @@ Trip.prototype.driverArriving = function(driverContext, callback) {
 Trip.prototype.clientCancelPickup = function(clientContext, callback) {
 	this._changeState(Trip.CLIENT_CANCELED);
 	this._cancelDriverPickup(true);
+	this._archive();
 	
-	this.client.cancelPickup(clientContext, function(err, result){
-		this._archive();
-		callback(err, result);
-	}.bind(this));
+	callback(null, this.client.cancelPickup(clientContext));
 }
 
 // Водитель отменил Trip после подтверждения
 Trip.prototype.driverCancel = function(driverContext, callback) {
 	this.cancelReason = driverContext.message.reason;
 	this._changeState(Trip.DRIVER_CANCELED);
-
-	apiBackend.smsTripStatusToClient(this, this.client);
+	this._archive();
 
 	// notify client
-	this.client.tripCanceled(function(err) {
-		if (err) return callback(err);
+	this.client.notifyTripCanceled();
 
-		// change driver state 
-		this.driver.cancelTrip(driverContext, function(err, response) {
-			
-			if (!err) this._archive();
-			callback(err, response);
-
-		}.bind(this));
-	}.bind(this));
+	// change driver state 
+	callback(null, this.driver.cancelTrip(driverContext));
 }
 
 // Клиент отменил Trip после подтверждения Водителем
@@ -297,37 +264,33 @@ Trip.prototype.clientCancel = function(clientContext, callback) {
 	this._changeState(Trip.CLIENT_CANCELED);
 	
 	// notify driver
-	this.driver.tripCanceled(function(err) {
-		if (err) return callback(err);
-		
-		// change client state 
-		this.client.cancelTrip.bind(clientContext, function(err, response) {
-			
-			if (!err) this._archive();
-			callback(err, response);
+	this.driver.notifyTripCanceled();
 
-		}.bind(this));
-	}.bind(this));
+	this._archive();
+
+	// change client state 
+	callback(null, this.client.cancelTrip(clientContext));
 }
 
 // Водитель начал поездку. Известить клиента что поездка началась
 Trip.prototype.driverBegin = function(driverContext, callback) {
-	this.pickupAt = timestamp();
-	this._changeState(Trip.STARTED);
 
-	async.series({
-		driverResult: this.driver.begin.bind(this.driver, driverContext),
-		ignore1: this.client.start.bind(this.client),
-		ignore2: this._save.bind(this)
-	}, 
-		function(err, results) {
-			callback(null, results && results.driverResult);
-		}.bind(this)
-	);
+	if (this.state === Trip.DRIVER_ARRIVING) {
+		this.pickupAt = timestamp();
+		this._changeState(Trip.STARTED);
+		this._save();
+	}
+
+	var response = this.driver.begin(driverContext);
+	this.client.notifyTripStarted();
+
+	callback(null, response);
 }
 
 // Водитель завершил поездку. Известить клиента что поездка была завершена
 Trip.prototype.driverEnd = function(driverContext, callback) {
+	if (!this.driver.isDrivingClient()) return callback(null, MessageFactory.createDriverOK(this.driver));
+
 	this.dropoffAt = timestamp();	
 	this.dropoffLocation = {
 		latitude: driverContext.message.latitude,
@@ -342,26 +305,39 @@ Trip.prototype.driverEnd = function(driverContext, callback) {
 		console.log('Trip ' + this.id + ' fare is ' + fare + ' руб.');
 		this.fareBilledToCard = fare;
 		
-		this.client.end();
-		this.driver.end(driverContext, callback);
+		this.client.notifyTripFinished();
+		var response = this.driver.finishTrip(driverContext);
 
 		this.publish();
 		this._save();
 
+		callback(null, response);
+
 	}.bind(this));
 }
 
-Trip.prototype.clientRateDriver = function(clientContext, callback) {
-	this.client.rateDriver(clientContext, function(err) {
-		callback(err, MessageFactory.createClientOK(this.client));
-	}.bind(this));
+Trip.prototype.clientRateDriver = function(context, callback) {
+	if (this.state !== Trip.FINISHED) {
+		this.driverRating = context.message.rating;
+		this.feedback = context.message.feedback;
+		this._save();
+	}
+
+	this.client.rateDriver(context, function(err, response) {
+		callback(err, response);
+	});
 }
 
 // At this point driver goes back on duty
-Trip.prototype.driverRateClient = function(driverContext, callback) {
-	this.driver.rateClient(driverContext, function(err) {
-		callback(err, MessageFactory.createDriverOK(this.driver));
-	}.bind(this));
+Trip.prototype.driverRateClient = function(context, callback) {
+	if (this.state !== Trip.FINISHED) {
+		this.clientRating = context.message.rating;
+		this._save();		
+	}
+
+	this.driver.rateClient(context, function(err, response) {
+		callback(err, response);
+	});
 }
 
 Trip.prototype._changeState = function(state) {

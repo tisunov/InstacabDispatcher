@@ -23,7 +23,154 @@ var repository = new Repository(Client);
   Client.prototype[state] = Client[state] = readableState;
 });
 
-function _generateOKResponse(includeToken, callback) {
+/////////////////////////////////////////////////////
+// Requests
+
+Client.prototype.login = function(context, callback) {
+	console.log('Client ' + this.id + ' login');
+	this.updateLocation(context);
+	this.save();
+
+	this._generateOKResponse(true, callback);
+}
+
+Client.prototype.logout = function(context) {
+	console.log('Client ' + this.id + ' logout');
+	this.updateLocation(context);
+	this.token = null;
+	this.save();
+
+	return MessageFactory.createClientOK(this);
+}
+
+// Return client state and trip if any or available vehicles nearby
+Client.prototype.ping = function(context, callback) {
+	this.updateLocation(context);
+	this.save();
+
+	this._generateOKResponse(false, callback);
+}
+
+Client.prototype.pickup = function(context, trip) {
+	if (this.state === Client.DISPATCHING) return MessageFactory.createClientDispatching(this, this.trip);
+
+	this.updateLocation(context);	
+	this.setTrip(trip);
+
+	// Change state causes event to be published which reads this.trip, so it has to be set prior to that
+	this.changeState(Client.DISPATCHING);
+
+	this.save();
+
+	return MessageFactory.createClientDispatching(this, this.trip);
+}
+
+// Client explicitly canceled pickup
+Client.prototype.cancelPickup = function(context) {
+	this.updateLocation(context);
+	this.changeState(Client.LOOKING);
+	this.save();
+
+	return MessageFactory.createClientOK(this);
+}
+
+// Client explicitly canceled trip
+Client.prototype.cancelTrip = function(context) {
+	this.updateLocation(context);
+	this.changeState(Client.LOOKING);
+	this.save();
+
+	return MessageFactory.createClientOK(this);
+}
+
+Client.prototype.rateDriver = function(context, callback) {
+	if (this.state !== Client.PENDINGRATING) return callback(null, MessageFactory.createClientOK(this));
+
+	this.updateLocation(context);
+
+	require('../backend').rateDriver(this.trip.id, context.message.rating, context.message.feedback, function() {
+		this.changeState(Client.LOOKING);
+		this.save();
+
+		callback(null, MessageFactory.createClientOK(this));
+	}.bind(this));
+}
+
+/////////////////////////////////////////////////////
+// Notifications
+
+Client.prototype.notifyDriverConfirmed = function() {
+	if (this.state !== Client.WAITINGFORPICKUP) {
+		this.changeState(Client.WAITINGFORPICKUP);
+		this.save();
+		
+		require('../backend').smsTripStatusToClient(this.trip, this);		
+	}
+	
+	this.send(MessageFactory.createClientOK(this, { trip: this.trip }));
+}
+
+// Driver pressed 'Begin Trip' to start trip
+Client.prototype.notifyTripStarted = function() {
+	if (this.state !== Client.ONTRIP) {
+		this.changeState(Client.ONTRIP);
+		this.save();
+	}
+
+	this.send(MessageFactory.createTripStarted(this, this.trip));
+}
+
+Client.prototype.notifyDriverEnroute = function() {
+	if (this.trip)
+		this.send(MessageFactory.createClientDriverEnroute(this.trip));
+}
+
+// Notify client that driver canceled trip
+Client.prototype.notifyTripCanceled = function() {
+	if (this.state !== Client.WAITINGFORPICKUP) return;
+
+	require('../backend').smsTripStatusToClient(this.trip, this);
+
+	// nulls out this.trip
+	this.changeState(Client.LOOKING);	
+
+	this.send(MessageFactory.createClientTripCanceled(this, "Водитель вынужден был отменить ваш заказ."));
+
+	this.save();
+}
+
+Client.prototype.notifyDriverArriving = function() {
+	if (this.state !== Client.WAITINGFORPICKUP) return;
+	
+	this.send(MessageFactory.createArrivingNow(this.trip));
+
+	require('../backend').smsTripStatusToClient(this.trip, this);
+}
+
+Client.prototype.notifyTripFinished = function() {
+	if (this.state === Client.PENDINGRATING) return;
+
+	this.changeState(Client.PENDINGRATING);
+	this.save();
+
+	this.send(MessageFactory.createClientEndTrip(this, this.trip))
+}
+
+// Notify client that pickup request was canceled
+Client.prototype.notifyPickupCanceled = function(reason) {
+	if (this.state !== Client.DISPATCHING) return;
+
+ 	console.log('Cancel client ' + this.id + ' pickup');
+
+	this.changeState(Client.LOOKING);
+	this.save();
+	this.send(MessageFactory.createClientPickupCanceled(this, reason));
+}
+
+//////////////////////////////////////////
+// Utility methods
+
+Client.prototype._generateOKResponse = function(includeToken, callback) {
 	if (this.trip) {
 		var options = {
 			includeToken: includeToken,
@@ -43,31 +190,8 @@ Client.prototype.getSchema = function() {
   return props;
 }
 
-Client.prototype.login = function(context, callback) {
-	console.log('Client ' + this.id + ' login');
-	this.updateLocation(context);
-	
-	this.save(function(err) {
-		_generateOKResponse.call(this, true, callback);
-	}.bind(this));
-}
-
-Client.prototype.logout = function(context, callback) {
-	console.log('Client ' + this.id + ' logout');
-	this.updateLocation(context);
-	this.token = null;
-
-	this.save(function(err) {
-		callback(err, MessageFactory.createClientOK(this));
-	}.bind(this));
-}
-
-// Return client state and trip if any or available vehicles nearby
-Client.prototype.ping = function(context, callback) {
-	this.updateLocation(context);
-	this.save();
-
-	_generateOKResponse.call(this, false, callback);
+Client.prototype.save = function(callback) {
+	repository.save(this, callback);
 }
 
 Client.prototype.changeState = function(state) {
@@ -99,92 +223,6 @@ Client.prototype._updateNearbyDrivers = function(options, callback) {
 	Driver.findAllAvailableNearLocation(this.location, function(err, vehicles) {
 		options.vehicles = vehicles;
 		callback(err, MessageFactory.createClientOK(this, options));
-	}.bind(this));
-}
-
-Client.prototype.pickup = function(context, trip, callback) {
-	this.updateLocation(context);	
-	this.setTrip(trip);
-	// Change state causes event to be published which reads this.trip, so it has to be set prior to that
-	this.changeState(Client.DISPATCHING);
-
-	this.save(function(err) {
-		callback(err, MessageFactory.createClientDispatching(this, this.trip));
-	}.bind(this));
-}
-
-Client.prototype.confirm = function(callback) {
-	this.changeState(Client.WAITINGFORPICKUP);
-	this.send(MessageFactory.createClientOK(this, { trip: this.trip} ));
-	this.save(callback);
-}
-
-// Driver pressed 'Begin Trip' to start trip
-Client.prototype.start = function(callback) {
-	this.changeState(Client.ONTRIP);
-	this.send(MessageFactory.createTripStarted(this, this.trip));
-	this.save(callback);
-}
-
-Client.prototype.driverEnroute = function(callback) {
-	if (this.trip) {
-		this.send(MessageFactory.createClientDriverEnroute(this.trip));
-	}
-}
-
-Client.prototype.end = function(callback) {
-	this.changeState(Client.PENDINGRATING);
-	this.send(MessageFactory.createClientEndTrip(this, this.trip))
-	this.save(callback);
-}
-
-// Client explicitly canceled pickup
-Client.prototype.cancelPickup = function(context, callback) {
-	this.updateLocation(context);
-	this.changeState(Client.LOOKING);
-
-	this.save(function(err) {
-		callback(err, MessageFactory.createClientOK(this));
-	}.bind(this));
-}
-
-// Notify client that pickup request was canceled
-Client.prototype.pickupCanceled = function(reason) {
- 	console.log('Cancel client ' + this.id + ' pickup');
-
-	this.changeState(Client.LOOKING);
-	this.save();
-	this.send(MessageFactory.createClientPickupCanceled(this, reason));
-}
-
-// Client explicitly canceled trip
-Client.prototype.cancelTrip = function(context, callback) {
-	this.updateLocation(context);
-	this.changeState(Client.LOOKING);
-
-	var response = MessageFactory.createClientOK(this);
-	this.save(function(err) {
-		callback(err, response);
-	});
-}
-
-// Notify client that driver canceled trip
-Client.prototype.tripCanceled = function(callback) {
-	this.changeState(Client.LOOKING);
-	this.send(MessageFactory.createClientTripCanceled(this, "Водитель вынужден был отменить ваш заказ."));
-	this.save(callback);
-}
-
-Client.prototype.save = function(callback) {
-	repository.save(this, callback);
-}
-
-Client.prototype.rateDriver = function(context, callback) {
-	this.updateLocation(context);
-
-	require('../backend').rateDriver(this.trip.id, context.message.rating, context.message.feedback, function() {
-		this.changeState(Client.LOOKING);
-		this.save(callback);
 	}.bind(this));
 }
 

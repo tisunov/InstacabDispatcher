@@ -112,34 +112,38 @@ Driver.prototype.save = function(callback) {
 
 // Notify driver that Dispatcher/Client canceled pickup
 Driver.prototype.pickupCanceled = function(reason, callback) {
-  this.changeState(Driver.AVAILABLE);
+  if (!this.trip) return;
 
+  this.changeState(Driver.AVAILABLE);
   this.send(MessageFactory.createDriverPickupCanceled(this, reason));
   this.save(callback);
 }
 
-Driver.prototype.tripCanceled = function(callback) {
+Driver.prototype.notifyTripCanceled = function() {
+  if (!this.trip) return;
+
   this.changeState(Driver.AVAILABLE);
   this.send(MessageFactory.createDriverTripCanceled(this, "Клиент отменил заказ."));
-  this.save(callback);  
+  this.save();
 }
 
 // Driver explicitly canceled trip
-Driver.prototype.cancelTrip = function(context, callback) {
+Driver.prototype.cancelTrip = function(context) {
   this.updateLocation(context);
   this.changeState(Driver.AVAILABLE);
+  this.save();
 
-  this.save(function(err) {
-    callback(err, MessageFactory.createDriverOK(this));
-  }.bind(this));
+  return MessageFactory.createDriverOK(this);
 }
 
-Driver.prototype.confirm = function(context, callback) {
+Driver.prototype.confirm = function(context) {
+  if (this.state === Driver.ACCEPTED) return MessageFactory.createDriverOK(this);
+
   this.updateLocation(context);
   this.changeState(Driver.ACCEPTED);
-  this.save(function(err) {
-    callback(err, MessageFactory.createDriverOK(this));
-  }.bind(this));
+  this.save();
+
+  return MessageFactory.createDriverOK(this);
 }
 
 Driver.prototype.arriving = function(context, callback) {
@@ -150,29 +154,31 @@ Driver.prototype.arriving = function(context, callback) {
   }.bind(this));
 }
 
-Driver.prototype.begin = function(context, callback) {
+Driver.prototype.begin = function(context) {
   this.updateLocation(context);
   this.changeState(Driver.DRIVINGCLIENT);
-  this.save(function(err) {
-    callback(err, MessageFactory.createDriverOK(this));
-  }.bind(this));
+  this.save();
+  return MessageFactory.createDriverOK(this);
 }
 
-Driver.prototype.end = function(context, callback) {
+Driver.prototype.finishTrip = function(context) {
   this.updateLocation(context);
   this.changeState(Driver.PENDINGRATING);
+  this.save();
 
-  this.save(function(err) {
-    callback(err, MessageFactory.createDriverOK(this, false, this.trip, this.state === Driver.PENDINGRATING));
-  }.bind(this));
+  return MessageFactory.createDriverOK(this, false, this.trip, true);
 }
 
 Driver.prototype.rateClient = function(context, callback) {
+  if (this.state !== Driver.PENDINGRATING) return callback(null, MessageFactory.createDriverOK(this));
+
   this.updateLocation(context);
   
   require('../backend').rateClient(this.trip.id, context.message.rating, function() {
     this.changeState(Driver.AVAILABLE);
-    this.save(callback);
+    this.save();
+
+    callback(null, MessageFactory.createDriverOK(this));
   }.bind(this));
 }
 

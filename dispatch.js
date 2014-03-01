@@ -62,23 +62,19 @@ Dispatcher.prototype = {
 	},
 	
 	LogoutClient: function(context, callback) {
-		async.waterfall([
-			clientRepository.get.bind(clientRepository, context.message.id),
+		clientRepository.get(context.message.id, function(err, client) {
+			if (err) return callback(err);
 
-			function(client, nextFn) {
-				client.logout(context, nextFn);
-			}
-		], callback);
+			callback(null, client.logout(context));
+		});
 	},
 
 	PingClient: function(context, callback) {
-		async.waterfall([
-			clientRepository.get.bind(clientRepository, context.message.id),
+		clientRepository.get(context.message.id, function(err, client) {
+			if (err) return callback(err);
 
-			function(client, nextFn) {
-				client.ping(context, nextFn);
-			}
-		], callback);
+			client.ping(context, callback);
+		});
 	},
 
 	Pickup: function(context, callback) {
