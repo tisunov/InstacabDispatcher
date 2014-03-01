@@ -286,6 +286,9 @@ Trip.prototype.driverCancel = function(driverContext, callback) {
 		archive: this._archive.bind(this)
 	},
 		function(err, results) {
+			console.log("FUCK!!!!!");
+			console.log(util.inspect(results));
+
 			if (err) return callback(err);
 			callback(null, results.driverResponse);
 		}
