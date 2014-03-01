@@ -126,13 +126,10 @@ Driver.prototype.tripCanceled = function(callback) {
 
 // Driver explicitly canceled trip
 Driver.prototype.cancelTrip = function(context, callback) {
-  console.log('+ Driver.prototype.cancelTrip');
-
   this.updateLocation(context);
   this.changeState(Driver.AVAILABLE);
 
   this.save(function(err) {
-    console.log('+ Driver.prototype.cancelTrip: saved');
     callback(err, MessageFactory.createDriverOK(this));
   }.bind(this));
 }

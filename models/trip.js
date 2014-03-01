@@ -278,16 +278,18 @@ Trip.prototype.driverCancel = function(driverContext, callback) {
 
 	apiBackend.smsTripStatusToClient(this, this.client);
 
-	async.waterfall([
-		this.client.tripCanceled.bind(this.client),
-		this.driver.cancelTrip.bind(this.driver, driverContext),
-	],
-		function(err, response) {
-			if (!err) this._archive();
+	// notify client
+	this.client.tripCanceled(function(err) {
+		if (err) return callback(err);
 
+		// change driver state 
+		this.driver.cancelTrip(driverContext, function(err, response) {
+			
+			if (!err) this._archive();
 			callback(err, response);
-		}.bind(this)
-	);
+
+		}.bind(this)),
+	}.bind(this));
 }
 
 // Клиент отменил Trip после подтверждения Водителем
