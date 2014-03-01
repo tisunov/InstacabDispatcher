@@ -161,9 +161,11 @@ Client.prototype.pickupCanceled = function(reason) {
 Client.prototype.cancelTrip = function(context, callback) {
 	this.updateLocation(context);
 	this.changeState(Client.LOOKING);
+
+	var response = MessageFactory.createClientOK(this);
 	this.save(function(err) {
-		callback(err, MessageFactory.createClientOK(this));
-	}.bind(this));
+		callback(err, response);
+	});
 }
 
 // Notify client that driver canceled trip

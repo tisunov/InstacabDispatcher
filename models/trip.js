@@ -298,6 +298,8 @@ Trip.prototype.clientCancel = function(clientContext, callback) {
 	
 	// notify driver
 	this.driver.tripCanceled(function(err) {
+		if (err) return callback(err);
+		
 		// change client state 
 		this.client.cancelTrip.bind(clientContext, function(err, response) {
 			
