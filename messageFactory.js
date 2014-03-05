@@ -57,7 +57,7 @@ MessageFactory.createClientOK = function(client, options) {
 
 	if (!options.vehicles || options.vehicles.length === 0) {
 		// Когда нет свободных автомобилей для заказа в городе который подключен
-		msg.nearbyVehicles = { noneAvailableString: "Свободные автомобили отсутствуют" };
+		msg.nearbyVehicles = { noneAvailableString: "Нет свободных автомобилей" };
 	}
 	else {
 		var minEta = _.min(options.vehicles, function(vehicle){ return vehicle.eta; }).eta;
