@@ -8,6 +8,8 @@ var MessageFactory = require("../messageFactory"),
 
 function Driver() {
   User.call(this, Driver.OFFDUTY);
+  this.tripsRejected = this.tripsRejected || 0; 
+  this.tripsAccepted = this.tripsRejected || 0;
 }
 
 util.inherits(Driver, User);
@@ -27,6 +29,8 @@ var DEFAULT_PICKUP_TIME_SECONDS = 20 * 60;
 Driver.prototype.getSchema = function() {
   var props = User.prototype.getSchema.call(this);
   props.push('vehicle');
+  props.push('tripsAccepted');
+  props.push('tripsRejected');
   return props;
 }
 
@@ -110,13 +114,18 @@ Driver.prototype.save = function(callback) {
   repository.save(this, callback);  
 }
 
-// Notify driver that Dispatcher/Client canceled pickup
-Driver.prototype.pickupCanceled = function(reason, callback) {
+// Notify driver that Client canceled pickup or pickup timed out
+Driver.prototype.notifyPickupCanceled = function(reason) {
   if (!this.trip) return;
 
   this.changeState(Driver.AVAILABLE);
   this.send(MessageFactory.createDriverPickupCanceled(this, reason));
-  this.save(callback);
+  this.save();
+}
+
+Driver.prototype.notifyPickupTimeout = function() {
+  this.tripsRejected += 1;
+  this.notifyPickupCanceled();
 }
 
 Driver.prototype.notifyTripCanceled = function() {
@@ -139,6 +148,7 @@ Driver.prototype.cancelTrip = function(context) {
 Driver.prototype.confirm = function(context) {
   if (this.state === Driver.ACCEPTED) return MessageFactory.createDriverOK(this);
 
+  this.tripsAccepted += 1;
   this.updateLocation(context);
   this.changeState(Driver.ACCEPTED);
   this.save();

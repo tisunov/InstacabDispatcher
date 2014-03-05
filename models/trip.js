@@ -10,6 +10,7 @@ var MessageFactory = require("../messageFactory"),
 function Trip(id, client, driver) {
 	this.rejectedDriverIds = [];
 	this.route = [];
+	this.boundOnDriverDisconnect = this._onDriverDisconnect.bind(this);
 
 	if (id) {
 		this.id = id;
@@ -114,17 +115,15 @@ Trip.prototype._cancelDriverPickup = function(clientCanceled) {
 	if (clientCanceled) {
 		this._clearPickupTimeout();
 		this._changeState(Trip.CLIENT_CANCELED);
+		this.driver.notifyPickupCanceled('Клиент отменил запрос');
 	}
 	else {
 		this.rejectedDriverIds.push(this.driver.id);
 		this._changeState(Trip.DRIVER_REJECTED);
+		this.driver.notifyPickupTimeout();
 	}
-
-	var reason = clientCanceled ? 'Клиент отменил запрос' : 'Истекло время для подтверждения'
-
-	this.driver.pickupCanceled(reason);
-	this.driver.removeListener('disconnect', this._onDriverDisconnect.bind(this));
-
+	
+	this.driver.removeListener('disconnect', this.boundOnDriverDisconnect);
 	this._save();
 }
 
@@ -169,7 +168,7 @@ Trip.prototype._setDriver = function(driver) {
 	console.log('Set trip ' + this.id + ' driver to ' + driver.id);
 	this.driver = driver;
 	this.driverId = driver.id;
-	this.driver.once('disconnect', this._onDriverDisconnect.bind(this));
+	this.driver.once('disconnect', this.boundOnDriverDisconnect);
 }
 
 // Клиент запросил машину
