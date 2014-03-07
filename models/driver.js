@@ -145,7 +145,7 @@ Driver.prototype.finishTrip = function(context) {
     this.save();
   }
 
-  return MessageFactory.createDriverOK(this, false, this.trip, true);
+  return MessageFactory.createDriverOK(this, false, this.trip, this.state === Driver.PENDINGRATING);
 }
 
 Driver.prototype.rateClient = function(context, callback) {
@@ -210,6 +210,8 @@ Driver.prototype.notifyTripCanceled = function() {
 }
 
 Driver.prototype.notifyTripBilled = function() {
+  if (!this.trip) return; // fake driver sends rating without waiting for fare
+
   this.send(MessageFactory.createDriverOK(this, false, this.trip, true));
 }
 

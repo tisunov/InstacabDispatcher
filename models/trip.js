@@ -5,6 +5,7 @@ var MessageFactory = require("../messageFactory"),
 	Driver = require('./driver').Driver,
 	apiBackend = require('../backend'),
 	publisher = require('../publisher'),
+	googlemaps = require('googlemaps')
 	Repository = require('../lib/repository');
 
 function Trip(id, client, driver) {
@@ -134,19 +135,19 @@ Trip.prototype._clearPickupTimeout = function() {
 	}
 }
 
-Trip.prototype._dispatchDriver = function(callback) {
+Trip.prototype._dispatchDriver = function() {
 	// Estimate time to client
 	this.driver.queryETAToLocation(this.pickupLocation, function(err, eta) {
 		// Keep ETA for client and driver apps
 		this.eta = eta;
 		// Give driver 15 seconds to confirm
 		this._pickupTimer = setTimeout(this._passPickupToNextAvailableDriver.bind(this), PICKUP_TIMEOUT);
-		this._changeState(Trip.DISPATCHING);
 		this._save();
 
 		// Send dispatch request
 		this.driver.dispatch(this.client, this);
 
+		this.publish();
 	}.bind(this));
 }
 
@@ -168,8 +169,10 @@ Trip.prototype._setDriver = function(driver) {
 
 // Клиент запросил машину
 Trip.prototype.pickup = function(clientContext, callback) {
+	var response = this.client.pickup(clientContext, this);
 
 	if (this.state !== Trip.DISPATCHING) {
+		this._changeState(Trip.DISPATCHING);
 		this.pickupLocation = clientContext.message.pickupLocation;
 		this._save();
 
@@ -177,20 +180,21 @@ Trip.prototype.pickup = function(clientContext, callback) {
 		this._dispatchDriver();		
 	}
 
-	callback(null, this.client.pickup(clientContext, this));
+	callback(null, response);
 }
 
 // Водитель подтвердил заказ. Известить клиента что водитель в пути
 Trip.prototype.confirm = function(driverContext, callback) {
-	if (this.driver.state !== Driver.DISPATCHING) return callback(new Error('Unexpected Pickup confirmation'));
-
-	this.confirmedAt = timestamp();
-	this._changeState(Trip.DRIVER_CONFIRMED);
-	this._clearPickupTimeout();
-
 	var response = this.driver.confirm(driverContext);
-	this.client.notifyDriverConfirmed();
-	this._save();
+
+	if (this.state !== Trip.DRIVER_CONFIRMED) {
+		this.confirmedAt = timestamp();
+		this._changeState(Trip.DRIVER_CONFIRMED);
+		this._clearPickupTimeout();
+		this._save();
+
+		this.client.notifyDriverConfirmed();
+	}
 
 	callback(null, response);
 }
@@ -220,119 +224,137 @@ Trip.prototype.driverPing = function(context) {
 
 // Водитель подъезжает. Известить клиента чтобы он выходил
 Trip.prototype.driverArriving = function(driverContext, callback) {
-	this.arrivedAt = timestamp();
-	this.secondsToArrival = this.arrivedAt - this.confirmedAt;
-	this._changeState(Trip.DRIVER_ARRIVING);
-	this._save();
+	var response = this.driver.arriving(driverContext);
 
-	this.client.notifyDriverArriving();
+	if (this.state === Trip.DRIVER_CONFIRMED) {
+		this.arrivedAt = timestamp();
+		this.secondsToArrival = this.arrivedAt - this.confirmedAt;
+		this._changeState(Trip.DRIVER_ARRIVING);
+		this._save();
 
-	callback(null, this.driver.arriving(driverContext));
+		this.client.notifyDriverArriving();
+	}
+
+	callback(null, response);
 }
 
+// Client canceled pickup before any Driver confirmed
 Trip.prototype.clientCancelPickup = function(clientContext, callback) {
-	this._changeState(Trip.CLIENT_CANCELED);
-	this._cancelDriverPickup(true);
-	this._archive();
+	var response = this.client.cancelPickup(clientContext);
+
+	if (this.state !== Trip.CLIENT_CANCELED) {
+		this._changeState(Trip.CLIENT_CANCELED);
+		this._cancelDriverPickup(true);
+		this._archive();
+	}
 	
-	callback(null, this.client.cancelPickup(clientContext));
+	callback(null, response);
 }
 
-// Водитель отменил Trip после подтверждения
+// Driver canceled trip after confirmation or arrival
 Trip.prototype.driverCancel = function(driverContext, callback) {
-	this.cancelReason = driverContext.message.reason;
-	this._changeState(Trip.DRIVER_CANCELED);
-	this._archive();
+	var response = this.driver.cancelTrip(driverContext);
 
-	// notify client
-	this.client.notifyTripCanceled();
+	if (this.state !== Trip.DRIVER_CANCELED) {
+		this.cancelReason = driverContext.message.reason;
+		this._changeState(Trip.DRIVER_CANCELED);
+		this._archive();
 
-	// change driver state 
-	callback(null, this.driver.cancelTrip(driverContext));
+		this.client.notifyTripCanceled();		
+	}
+
+	callback(null, response);
 }
 
 // Клиент отменил Trip после подтверждения Водителем
 Trip.prototype.clientCancel = function(clientContext, callback) {
-	this._changeState(Trip.CLIENT_CANCELED);
-	
-	// notify driver
-	this.driver.notifyTripCanceled();
+	var response = this.client.cancelTrip(clientContext);
 
-	this._archive();
+	if (this.state !== Trip.CLIENT_CANCELED) {
+		this._changeState(Trip.CLIENT_CANCELED);
+		this._archive();
 
-	// change client state 
-	callback(null, this.client.cancelTrip(clientContext));
+		this.driver.notifyTripCanceled();
+	}
+
+	callback(null, response);
 }
 
 // Водитель начал поездку. Известить клиента что поездка началась
 Trip.prototype.driverBegin = function(driverContext, callback) {
+	var response = this.driver.beginTrip(driverContext);
 
 	if (this.state === Trip.DRIVER_ARRIVING) {
 		this.pickupAt = timestamp();
 		this._changeState(Trip.STARTED);
 		this._save();
-	}
 
-	var response = this.driver.beginTrip(driverContext);
-	this.client.notifyTripStarted();
+		this.client.notifyTripStarted();
+	}
 
 	callback(null, response);
 }
 
 // Водитель завершил поездку. Известить клиента что поездка была завершена
 Trip.prototype.driverEnd = function(driverContext, callback) {
-	if (!this.driver.isDrivingClient()) return callback(null, MessageFactory.createDriverOK(this.driver));
+	var response = this.driver.finishTrip(driverContext);
 
-	this.dropoffAt = timestamp();
-	this.dropoffLocation = {
-		latitude: driverContext.message.latitude,
-		longitude: driverContext.message.longitude
-	};
-	this._addRouteWayPoint(driverContext);
-	this._changeState(Trip.FINISHED);
-	this._save();
+	// Keep stats
+	if (this.state === Trip.STARTED) {
+		this.dropoffAt = timestamp();
+		this.dropoffLocation = {
+			latitude: driverContext.message.latitude,
+			longitude: driverContext.message.longitude
+		};
+		this._addRouteWayPoint(driverContext);
+		this._changeState(Trip.FINISHED);
 
-	this.client.notifyTripFinished();
-	var response = this.driver.finishTrip(driverContext);	
-	callback(null, response);
+		this._save();
 
+		this.client.notifyTripFinished();
+	}
+	
+	// Bill trip
 	apiBackend.billTrip(this, function(err, fare) {
 		if (err) console.log(err);
 
 		console.log('Trip ' + this.id + ' fare is ' + fare + ' руб.');
 		this.fareBilledToCard = fare;
-
-		this.client.notifyTripBilled();
-		this.driver.notifyTripBilled();			
-
 		this.publish();
 		this._save();
 
-	}.bind(this));	
+		this.client.notifyTripBilled();
+		this.driver.notifyTripBilled();		
+
+	}.bind(this));
+
+	callback(null, response);
 }
 
 Trip.prototype.clientRateDriver = function(context, callback) {
-	if (this.state !== Trip.FINISHED) {
+	if (this.state === Trip.FINISHED && !this.driverRating) {
 		this.driverRating = context.message.rating;
 		this.feedback = context.message.feedback;
+
+		// TODO: Push trip to Backend if driver rated
+		// Даже лучше пусть заведен таймер и раз в 15 минут все поездки с оценками перемещаются в архив
 		this._save();
 	}
 
-	this.client.rateDriver(context, function(err, response) {
-		callback(err, response);
-	});
+	this.client.rateDriver(context, callback);
 }
 
 // At this point driver goes back on duty
 Trip.prototype.driverRateClient = function(context, callback) {
-	if (this.state !== Trip.FINISHED) {
+	if (this.state === Trip.FINISHED && !this.clientRating) {
 		this.clientRating = context.message.rating;
-		this._save();		
+
+		// TODO: Push trip to Backend if client rated
+		// Даже лучше пусть заведен таймер и раз в 15 минут все поездки с оценками перемещаются в архив
+		this._save();
 	}
 
-	this.driver.rateClient(context, function(err, response) {
-		callback(err, response);
-	});
+	this.driver.rateClient(context, callback);
 }
 
 Trip.prototype._changeState = function(state) {
@@ -385,3 +407,4 @@ function timestamp() {
 // export Trip constructor
 module.exports.Trip = Trip;
 module.exports.repository = repository;
+

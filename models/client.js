@@ -57,10 +57,10 @@ Client.prototype.pickup = function(context, trip) {
 		this.setTrip(trip);
 		// Change state causes event to be published which reads this.trip, so it has to be set prior to that
 		this.changeState(Client.DISPATCHING);
-		this.save();		
+		this.save();
 	}	
 
-	return MessageFactory.createClientDispatching(this, this.trip);
+	return this._createOK(false);
 }
 
 // Client explicitly canceled pickup

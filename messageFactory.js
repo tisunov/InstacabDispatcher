@@ -43,26 +43,24 @@ MessageFactory.createClientOK = function(client, options) {
 		return msg;
 	}
 
-	if (options.tripPendingRating) {
-		msg.client.tripPendingRating = tripForClientToJSON(options.trip);
-	}
-	else if (options.trip) {
-		msg.trip = tripForClientToJSON(options.trip);
-	}
-
-	// В Vehicle View
-	// "etaString": "6 minutes",
-	// "etaStringShort": "6 mins",
-	// "minEta": 6
-
-	if (!options.vehicles || options.vehicles.length === 0) {
-		// Когда нет свободных автомобилей для заказа в городе который подключен
-		msg.nearbyVehicles = { noneAvailableString: "Нет свободных автомобилей" };
+	if (options.trip) {
+		var jsonTrip = tripForClientToJSON(options.trip);
+		if (options.tripPendingRating) {
+			msg.client.tripPendingRating = jsonTrip;	
+		}
+		else
+			msg.trip = jsonTrip;
 	}
 	else {
-		var minEta = _.min(options.vehicles, function(vehicle){ return vehicle.eta; }).eta;
-		msg.nearbyVehicles = { minEta: minEta, vehiclePoints: options.vehicles };
-	}		
+		if (!options.vehicles || options.vehicles.length === 0) {
+			// Когда нет свободных автомобилей для заказа в городе который подключен
+			msg.nearbyVehicles = { noneAvailableString: "Нет свободных автомобилей" };
+		}
+		else {
+			var minEta = _.min(options.vehicles, function(vehicle){ return vehicle.eta; }).eta;
+			msg.nearbyVehicles = { minEta: minEta, vehiclePoints: options.vehicles };
+		}		
+	}
 
 	return msg;
 }
@@ -165,12 +163,6 @@ MessageFactory.createTripStarted = function(client, trip) {
 	return msg;
 }
 
-MessageFactory.createClientDispatching = function(client, trip) {
-	var msg = tripToClientMessage(trip, 'OK');
-	msg.client = userToJSON(client);
-	return msg;
-}
-
 // Messages to the Driver
 MessageFactory.createDriverOK = function(driver, includeToken, trip, tripPendingRating) {
 	var msg = {
@@ -178,11 +170,12 @@ MessageFactory.createDriverOK = function(driver, includeToken, trip, tripPending
 		driver: driverToJSON(driver, includeToken)
 	}
 
-	if (tripPendingRating) {
-		msg.driver.tripPendingRating = tripForDriverToJSON(trip);
-	} 
-	else if (trip) {
-		msg.trip = tripForDriverToJSON(trip);
+	if (trip) {
+		var jsonTrip = tripForDriverToJSON(trip);
+		if (tripPendingRating)
+			msg.driver.tripPendingRating = jsonTrip;
+		else
+			msg.trip = jsonTrip;	
 	}
 
 	return msg;
