@@ -9,7 +9,7 @@ function tripForClientToJSON(trip) {
 		id: trip.id,
 		pickupLocation: trip.pickupLocation,
 		fareBilledToCard: trip.fareBilledToCard,
-		dropoffTimestamp: trip.dropoffAt,
+		dropoffAt: trip.dropoffAt,
 		driver: {
 			firstName: trip.driver.firstName,
 			mobile: trip.driver.mobile,

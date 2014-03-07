@@ -283,29 +283,32 @@ Trip.prototype.driverBegin = function(driverContext, callback) {
 Trip.prototype.driverEnd = function(driverContext, callback) {
 	if (!this.driver.isDrivingClient()) return callback(null, MessageFactory.createDriverOK(this.driver));
 
-	this.dropoffAt = timestamp();	
+	this.dropoffAt = timestamp();
 	this.dropoffLocation = {
 		latitude: driverContext.message.latitude,
 		longitude: driverContext.message.longitude
 	};
 	this._addRouteWayPoint(driverContext);
 	this._changeState(Trip.FINISHED);
+	this._save();
+
+	this.client.notifyTripFinished();
+	var response = this.driver.finishTrip(driverContext);	
+	callback(null, response);
 
 	apiBackend.billTrip(this, function(err, fare) {
 		if (err) console.log(err);
 
 		console.log('Trip ' + this.id + ' fare is ' + fare + ' руб.');
 		this.fareBilledToCard = fare;
-		
-		this.client.notifyTripFinished();
-		var response = this.driver.finishTrip(driverContext);
+
+		this.client.notifyTripBilled();
+		this.driver.notifyTripBilled();			
 
 		this.publish();
 		this._save();
 
-		callback(null, response);
-
-	}.bind(this));
+	}.bind(this));	
 }
 
 Trip.prototype.clientRateDriver = function(context, callback) {

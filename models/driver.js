@@ -55,7 +55,7 @@ Driver.prototype.logout = function(context) {
   return MessageFactory.createDriverOK(this);
 }
 
-Driver.prototype.onDuty = function(context, callback) {
+Driver.prototype.onDuty = function(context) {
   this.updateLocation(context);
 
   if (this.state !== Driver.AVAILABLE) {
@@ -209,6 +209,9 @@ Driver.prototype.notifyTripCanceled = function() {
   this.save();
 }
 
+Driver.prototype.notifyTripBilled = function() {
+  this.send(MessageFactory.createDriverOK(this, false, this.trip, true));
+}
 
 Driver.prototype._distanceTo = function(location) {
   // FIXME: Оптимизировать позже
@@ -261,8 +264,8 @@ Driver.prototype.toJSON = function() {
   return obj;
 }
 
-Driver.prototype.save = function(callback) {
-  repository.save(this, callback);  
+Driver.prototype.save = function() {
+  repository.save(this);
 }
 
 Driver.prototype.changeState = function(state, client) {

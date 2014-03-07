@@ -157,7 +157,7 @@ Dispatcher.prototype = {
 		driverRepository.get(context.message.id, function(err, driver) {
 			if (err) return callback(err, null);
 
-			driver.onDuty(context, callback);
+			callback(null, driver.onDuty(context));
 		});
 	},
 

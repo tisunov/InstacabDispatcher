@@ -174,17 +174,26 @@ Client.prototype.notifyPickupCanceled = function(reason) {
 	this.send(MessageFactory.createClientPickupCanceled(this, reason));
 }
 
+Client.prototype.notifyTripBilled = function() {
+	this.send(this._createOK(false));
+}
+
 //////////////////////////////////////////
 // Utility methods
 
+Client.prototype._createOK = function(includeToken) {
+	var options = {
+		includeToken: includeToken,
+		trip: this.trip,
+		tripPendingRating: this.state === Client.PENDINGRATING
+	}
+
+	return MessageFactory.createClientOK(this, options);
+}
+
 Client.prototype._generateOKResponse = function(includeToken, callback) {
 	if (this.trip) {
-		var options = {
-			includeToken: includeToken,
-			trip: this.trip,
-			tripPendingRating: this.state === Client.PENDINGRATING
-		}
-		callback(null, MessageFactory.createClientOK(this, options));
+		callback(null, this._createOK(includeToken));
 	}
 	else if (this.state === Client.LOOKING) {
 		this._updateNearbyDrivers({includeToken: includeToken}, callback);
