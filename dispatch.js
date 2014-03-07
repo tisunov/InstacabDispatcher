@@ -128,31 +128,28 @@ Dispatcher.prototype = {
 	},
 
 	LoginDriver: function(context, callback) {
-		async.waterfall([
-			function(nextFn) {
-				apiBackend.loginDriver(context.message.email, context.message.password, nextFn);
-			},
-			function(driver, nextFn) {
-				this._subscribeToDriverEvents(driver);
+		apiBackend.loginDriver(context.message.email, context.message.password, function(err, driver){
+			if (err) return callback(err);
 
-				driver.login(context, nextFn);
-			}.bind(this),
-		], callback);
+			this._subscribeToDriverEvents(driver);
+
+			callback(null, driver.login(context));	
+		}.bind(this));
 	},
 
 	LogoutDriver: function(context, callback) {
 		driverRepository.get(context.message.id, function(err, driver) {
-			if (err) return callback(err, null);
+			if (err) return callback(err);
 
-			driver.logout(context, callback);
+			callback(null, driver.logout(context));
 		});
 	},
 
 	OffDutyDriver: function(context, callback) {
 		driverRepository.get(context.message.id, function(err, driver) {
-			if (err) return callback(err, null);
+			if (err) return callback(err);
 
-			driver.offDuty(context, callback);
+			callback(null, driver.offDuty(context));
 		});
 	},
 
@@ -168,7 +165,7 @@ Dispatcher.prototype = {
 		driverRepository.get(context.message.id, function(err, driver) {
 			if (err) return callback(err);
 
-			driver.ping(context, callback);
+			callback(null, driver.ping(context));
 		});
 	},
 

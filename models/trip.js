@@ -145,12 +145,7 @@ Trip.prototype._dispatchDriver = function(callback) {
 		this._save();
 
 		// Send dispatch request
-		this.driver.dispatch(this.client, this, function(err){
-			// TODO: Если ошибка посылки Pickup запроса, то сразу отменять таймер и передавать следующему ближайшему водителю
-			// Иначе пройдет 15 секунд и только после этого запрос передастся другому водителю
-			if (err) console.log(err);
-			if (typeof callback === 'function') callback(err);
-		});
+		this.driver.dispatch(this.client, this);
 
 	}.bind(this));
 }
@@ -228,13 +223,11 @@ Trip.prototype.driverArriving = function(driverContext, callback) {
 	this.arrivedAt = timestamp();
 	this.secondsToArrival = this.arrivedAt - this.confirmedAt;
 	this._changeState(Trip.DRIVER_ARRIVING);
+	this._save();
 
-	this.driver.arriving(driverContext, function(err, result) {
-		this.client.notifyDriverArriving();
-		this._save();
+	this.client.notifyDriverArriving();
 
-		callback(null, result);	
-	}.bind(this));
+	callback(null, this.driver.arriving(driverContext));
 }
 
 Trip.prototype.clientCancelPickup = function(clientContext, callback) {
@@ -280,7 +273,7 @@ Trip.prototype.driverBegin = function(driverContext, callback) {
 		this._save();
 	}
 
-	var response = this.driver.begin(driverContext);
+	var response = this.driver.beginTrip(driverContext);
 	this.client.notifyTripStarted();
 
 	callback(null, response);

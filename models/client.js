@@ -46,21 +46,19 @@ Client.prototype.logout = function(context) {
 // Return client state and trip if any or available vehicles nearby
 Client.prototype.ping = function(context, callback) {
 	this.updateLocation(context);
-	this.save();
 
 	this._generateOKResponse(false, callback);
 }
 
 Client.prototype.pickup = function(context, trip) {
-	if (this.state === Client.DISPATCHING) return MessageFactory.createClientDispatching(this, this.trip);
+	this.updateLocation(context);
 
-	this.updateLocation(context);	
-	this.setTrip(trip);
-
-	// Change state causes event to be published which reads this.trip, so it has to be set prior to that
-	this.changeState(Client.DISPATCHING);
-
-	this.save();
+	if (this.state === Client.LOOKING) {
+		this.setTrip(trip);
+		// Change state causes event to be published which reads this.trip, so it has to be set prior to that
+		this.changeState(Client.DISPATCHING);
+		this.save();		
+	}	
 
 	return MessageFactory.createClientDispatching(this, this.trip);
 }
@@ -68,56 +66,65 @@ Client.prototype.pickup = function(context, trip) {
 // Client explicitly canceled pickup
 Client.prototype.cancelPickup = function(context) {
 	this.updateLocation(context);
-	this.changeState(Client.LOOKING);
-	this.save();
+	
+	if (this.state === Client.DISPATCHING) {
+		this.changeState(Client.LOOKING);
+		this.save();
+	}
 
 	return MessageFactory.createClientOK(this);
 }
 
 // Client explicitly canceled trip
 Client.prototype.cancelTrip = function(context) {
-	this.updateLocation(context);
-	this.changeState(Client.LOOKING);
-	this.save();
+	this.updateLocation(context);	
 
+	if (this.state === Client.WAITINGFORPICKUP) {
+		this.changeState(Client.LOOKING);
+		this.save();
+	}
+	
 	return MessageFactory.createClientOK(this);
 }
 
 Client.prototype.rateDriver = function(context, callback) {
-	if (this.state !== Client.PENDINGRATING) return callback(null, MessageFactory.createClientOK(this));
-
 	this.updateLocation(context);
 
-	require('../backend').rateDriver(this.trip.id, context.message.rating, context.message.feedback, function() {
-		this.changeState(Client.LOOKING);
-		this.save();
+	if (this.state === Client.PENDINGRATING) {
+		require('../backend').rateDriver(this.trip.id, context.message.rating, context.message.feedback, function() {
+			this.changeState(Client.LOOKING);
+			this.save();
 
+			callback(null, MessageFactory.createClientOK(this));
+		}.bind(this));
+	}
+	else 
 		callback(null, MessageFactory.createClientOK(this));
-	}.bind(this));
 }
 
 /////////////////////////////////////////////////////
 // Notifications
 
 Client.prototype.notifyDriverConfirmed = function() {
-	if (this.state !== Client.WAITINGFORPICKUP) {
-		this.changeState(Client.WAITINGFORPICKUP);
-		this.save();
+	if (this.state !== Client.DISPATCHING) return;
 		
-		require('../backend').smsTripStatusToClient(this.trip, this);		
-	}
+	this.changeState(Client.WAITINGFORPICKUP);
+	this.save();
+	
+	require('../backend').smsTripStatusToClient(this.trip, this);		
 	
 	this.send(MessageFactory.createClientOK(this, { trip: this.trip }));
 }
 
 // Driver pressed 'Begin Trip' to start trip
 Client.prototype.notifyTripStarted = function() {
-	if (this.state !== Client.ONTRIP) {
-		this.changeState(Client.ONTRIP);
-		this.save();
-	}
+	if (this.state !== Client.WAITINGFORPICKUP) return;
+	
+	this.changeState(Client.ONTRIP);
 
 	this.send(MessageFactory.createTripStarted(this, this.trip));
+
+	this.save();
 }
 
 Client.prototype.notifyDriverEnroute = function() {
@@ -148,7 +155,7 @@ Client.prototype.notifyDriverArriving = function() {
 }
 
 Client.prototype.notifyTripFinished = function() {
-	if (this.state === Client.PENDINGRATING) return;
+	if (this.state !== Client.ONTRIP) return;
 
 	this.changeState(Client.PENDINGRATING);
 	this.save();

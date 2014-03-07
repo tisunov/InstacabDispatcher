@@ -38,143 +38,112 @@ Driver.prototype.login = function(context, callback) {
   console.log('Driver ' + this.id + ' logged in: ' + this.state + ' connected: ' + this.connected);
   this.updateLocation(context);
   this.changeState(Driver.OFFDUTY);
+  this.save();
 
-  this.save(function(err) {
-    callback(err, MessageFactory.createDriverOK(this, true, this.trip, this.state === Driver.PENDINGRATING));
-  }.bind(this));
+  return MessageFactory.createDriverOK(this, true, this.trip, false);
 }
 
-Driver.prototype.changeState = function(state, client) {
-  User.prototype.changeState.call(this, state);
-  
-  if (this.state === Driver.AVAILABLE) {
-    this.emit('available', this);
-    this.clearTrip();
-  }
-  else {
-    this.emit('unavailable', this, client);
-  }
-}
-
-Driver.prototype.logout = function(context, callback) {
+Driver.prototype.logout = function(context) {
   console.log('Driver ' + this.id + ' logged out');
   this.updateLocation(context);
-  this.changeState(Driver.OFFDUTY);
 
-  this.save(function(err) {
-    callback(err, MessageFactory.createDriverOK(this));
-  }.bind(this));
+  if (this.state !== Driver.OFFDUTY) {
+    this.changeState(Driver.OFFDUTY);
+    this.save();
+  }
+  
+  return MessageFactory.createDriverOK(this);
 }
 
 Driver.prototype.onDuty = function(context, callback) {
-  console.log('Driver ' + this.id + ' on duty');
   this.updateLocation(context);
-  this.changeState(Driver.AVAILABLE);
 
-  this.save(function(err) {
-    callback(err, MessageFactory.createDriverOK(this));
-  }.bind(this));
+  if (this.state !== Driver.AVAILABLE) {
+    console.log('Driver ' + this.id + ' on duty');
+    this.changeState(Driver.AVAILABLE);
+    this.save();
+  }
+
+  return MessageFactory.createDriverOK(this);
 }
 
-Driver.prototype.offDuty = function(context, callback) {
-  console.log('Driver ' + this.id + ' off duty');
+Driver.prototype.offDuty = function(context) {
   this.updateLocation(context);
-  this.changeState(Driver.OFFDUTY);
 
-  this.save(function(err) {
-    callback(err, MessageFactory.createDriverOK(this));
-  }.bind(this));
+  if (this.state !== Driver.OFFDUTY) {
+    console.log('Driver ' + this.id + ' off duty');
+    this.changeState(Driver.OFFDUTY);
+    this.save();
+  }
+
+  return MessageFactory.createDriverOK(this);
 }
 
 // Update driver's position
-Driver.prototype.ping = function(context, callback) {
+Driver.prototype.ping = function(context) {
   this.updateLocation(context);
+  
   // Track trip route
   if (this.trip) {
     this.trip.driverPing(context);
   }
 
-  this.save(function(err) {
-    callback(err, MessageFactory.createDriverOK(this, false, this.trip, this.state === Driver.PENDINGRATING))
-  }.bind(this));
-}
-
-// TODO: Если произошла ошибка посылки Заказа водителю или ошибка сохранения, то перевести водителя в AVAILABLE
-Driver.prototype.dispatch = function(client, trip, callback) {
-  this.changeState(Driver.DISPATCHING, client);
-  this.setTrip(trip);
-
-  async.series([
-    this.send.bind(this, MessageFactory.createDriverPickup(this, trip, client)),
-    this.save.bind(this)
-  ], callback);
-}
-
-Driver.prototype.save = function(callback) {
-  repository.save(this, callback);  
-}
-
-// Notify driver that Client canceled pickup or pickup timed out
-Driver.prototype.notifyPickupCanceled = function(reason) {
-  if (!this.trip) return;
-
-  this.changeState(Driver.AVAILABLE);
-  this.send(MessageFactory.createDriverPickupCanceled(this, reason));
-  this.save();
-}
-
-Driver.prototype.notifyPickupTimeout = function() {
-  this.tripsRejected += 1;
-  this.notifyPickupCanceled();
-}
-
-Driver.prototype.notifyTripCanceled = function() {
-  if (!this.trip) return;
-
-  this.changeState(Driver.AVAILABLE);
-  this.send(MessageFactory.createDriverTripCanceled(this, "Клиент отменил заказ."));
-  this.save();
+  return MessageFactory.createDriverOK(this, false, this.trip, this.state === Driver.PENDINGRATING);
 }
 
 // Driver explicitly canceled trip
 Driver.prototype.cancelTrip = function(context) {
   this.updateLocation(context);
-  this.changeState(Driver.AVAILABLE);
-  this.save();
+
+  if (this.state === Driver.ACCEPTED || this.state === Driver.ARRIVED) {
+    this.changeState(Driver.AVAILABLE);
+    this.save();
+  }
 
   return MessageFactory.createDriverOK(this);
 }
 
 Driver.prototype.confirm = function(context) {
-  if (this.state === Driver.ACCEPTED) return MessageFactory.createDriverOK(this);
-
-  this.tripsAccepted += 1;
   this.updateLocation(context);
-  this.changeState(Driver.ACCEPTED);
-  this.save();
+
+  if (this.state === Driver.DISPATCHING) {
+    this.tripsAccepted += 1;
+    this.changeState(Driver.ACCEPTED);
+    this.save();
+  }
 
   return MessageFactory.createDriverOK(this);
 }
 
-Driver.prototype.arriving = function(context, callback) {
+Driver.prototype.arriving = function(context) {
   this.updateLocation(context);
-  this.changeState(Driver.ARRIVED);
-  this.save(function(err) {
-    callback(err, MessageFactory.createDriverOK(this));
-  }.bind(this));
+
+  if (this.state === Driver.ACCEPTED) {
+    this.changeState(Driver.ARRIVED);
+    this.save();    
+  }
+
+  return MessageFactory.createDriverOK(this);
 }
 
-Driver.prototype.begin = function(context) {
+Driver.prototype.beginTrip = function(context) {
   this.updateLocation(context);
-  this.changeState(Driver.DRIVINGCLIENT);
-  this.save();
+
+  if (this.state === Driver.ARRIVED) {
+    this.changeState(Driver.DRIVINGCLIENT);
+    this.save();
+  }
+
   return MessageFactory.createDriverOK(this);
 }
 
 Driver.prototype.finishTrip = function(context) {
   this.updateLocation(context);
-  this.changeState(Driver.PENDINGRATING);
-  this.save();
+
+  if (this.state === Driver.DRIVINGCLIENT) {
+    this.changeState(Driver.PENDINGRATING);
+    this.save();
+  }
 
   return MessageFactory.createDriverOK(this, false, this.trip, true);
 }
@@ -191,6 +160,55 @@ Driver.prototype.rateClient = function(context, callback) {
     callback(null, MessageFactory.createDriverOK(this));
   }.bind(this));
 }
+
+Driver.prototype.listVehicles = function(callback) {
+  console.log("+ Driver.prototype.listVehicles");
+  require('../backend').listVehicles(this, function(err, vehicles) {
+    callback(err, MessageFactory.createDriverVehicleList(this, vehicles));
+  }.bind(this));
+}
+
+Driver.prototype.selectVehicle = function(context, callback) {
+  require('../backend').selectVehicle(this, context.message.vehicleId, function(err, vehicle) {
+    if (err) return callback(err);
+
+    this.vehicle = vehicle;
+    callback(null, MessageFactory.createDriverOK(this));
+  }.bind(this));
+}
+
+// TODO: Если произошла ошибка посылки Заказа водителю, то перевести водителя в AVAILABLE
+Driver.prototype.dispatch = function(client, trip) {
+  this.changeState(Driver.DISPATCHING, client);
+  this.setTrip(trip);
+
+  this.send(MessageFactory.createDriverPickup(this, trip, client));
+
+  this.save();
+}
+
+// Notify driver that Client canceled pickup or pickup timed out
+Driver.prototype.notifyPickupCanceled = function(reason) {
+  if (this.state !== Driver.DISPATCHING) return;
+
+  this.changeState(Driver.AVAILABLE);
+  this.send(MessageFactory.createDriverPickupCanceled(this, reason));
+  this.save();
+}
+
+Driver.prototype.notifyPickupTimeout = function() {
+  this.tripsRejected += 1;
+  this.notifyPickupCanceled();
+}
+
+Driver.prototype.notifyTripCanceled = function() {
+  if (this.state !== Driver.ACCEPTED && this.state !== Driver.ARRIVED) return;
+
+  this.changeState(Driver.AVAILABLE);
+  this.send(MessageFactory.createDriverTripCanceled(this, "Клиент отменил заказ."));
+  this.save();
+}
+
 
 Driver.prototype._distanceTo = function(location) {
   // FIXME: Оптимизировать позже
@@ -243,20 +261,20 @@ Driver.prototype.toJSON = function() {
   return obj;
 }
 
-Driver.prototype.listVehicles = function(callback) {
-  console.log("+ Driver.prototype.listVehicles");
-  require('../backend').listVehicles(this, function(err, vehicles) {
-    callback(err, MessageFactory.createDriverVehicleList(this, vehicles));
-  }.bind(this));
+Driver.prototype.save = function(callback) {
+  repository.save(this, callback);  
 }
 
-Driver.prototype.selectVehicle = function(context, callback) {
-  require('../backend').selectVehicle(this, context.message.vehicleId, function(err, vehicle) {
-    if (err) return callback(err);
-
-    this.vehicle = vehicle;
-    callback(null, MessageFactory.createDriverOK(this));
-  }.bind(this));
+Driver.prototype.changeState = function(state, client) {
+  User.prototype.changeState.call(this, state);
+  
+  if (this.state === Driver.AVAILABLE) {
+    this.emit('available', this);
+    this.clearTrip();
+  }
+  else {
+    this.emit('unavailable', this, client);
+  }
 }
 
 function vehicleLocationsWithTimeToLocation(location, drivers, callback) {
