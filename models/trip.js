@@ -5,7 +5,7 @@ var MessageFactory = require("../messageFactory"),
 	Driver = require('./driver').Driver,
 	apiBackend = require('../backend'),
 	publisher = require('../publisher'),
-	googlemaps = require('googlemaps')
+	GoogleMaps = require('googlemaps'),
 	Repository = require('../lib/repository');
 
 function Trip(id, client, driver) {
@@ -200,14 +200,16 @@ Trip.prototype.confirm = function(driverContext, callback) {
 }
 
 Trip.prototype._addRouteWayPoint = function(context) {
+	var payload = context.message;
+	
 	var wayPoint = {
-		latitude: context.message.latitude,
-		longitude: context.message.longitude,
-		horizontalAccuracy: context.message.horizontalAccuracy,
-		verticalAccuracy: context.message.verticalAccuracy,
-		speed: context.message.speed,
-		course: context.message.course,
-		epoch: context.message.epoch
+		latitude: payload.latitude,
+		longitude: payload.longitude,
+		horizontalAccuracy: payload.horizontalAccuracy,
+		verticalAccuracy: payload.verticalAccuracy,
+		speed: payload.speed,
+		course: payload.course,
+		epoch: payload.epoch
 	};
 
 	this.route.push(wayPoint);
@@ -302,10 +304,7 @@ Trip.prototype.driverEnd = function(driverContext, callback) {
 	// Keep stats
 	if (this.state === Trip.STARTED) {
 		this.dropoffAt = timestamp();
-		this.dropoffLocation = {
-			latitude: driverContext.message.latitude,
-			longitude: driverContext.message.longitude
-		};
+		this._reverseGeocodeDropoffLocation(driverContext.message);
 		this._addRouteWayPoint(driverContext);
 		this._changeState(Trip.FINISHED);
 
@@ -355,6 +354,28 @@ Trip.prototype.driverRateClient = function(context, callback) {
 	}
 
 	this.driver.rateClient(context, callback);
+}
+
+Trip.prototype._reverseGeocodeDropoffLocation = function(location) {
+	this.dropoffLocation = {
+		latitude: location.latitude,
+		longitude: location.longitude
+	};
+
+	// TODO: А почему бы это не поручить Водитею, водитель привез и приложение выполняет 
+	// Google Reverse Geocode для координат высадки, и сервер получает готовый адрес
+
+	// GoogleMaps.reverseGeocode(location.latitude + ',' + location.longitude, function(err, response) {
+	// 	if (err) return console.log(err);
+	// 	if (response.status !== "OK") return console.log(response);
+	// 	if (response.results[0].types[0] !== "street_address") return console.log(response);
+
+	// 	this.dropoffLocation.streetAddress = "";
+	// 	this.dropoffLocation.city = "";
+	// 	this.dropoffLocation.region = "";
+
+	// 	this.save();
+	// }.bind(this), true, 'ru');
 }
 
 Trip.prototype._changeState = function(state) {
