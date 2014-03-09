@@ -213,8 +213,6 @@ Dispatcher.prototype = {
 		driverRepository.get(context.message.id, function(err, driver) {
 			if (err) return callback(err);
 
-			console.log("+ ListVehicles");
-			console.log(util.inspect(driver, {colors: true}));
 			driver.listVehicles(callback);
 		});
 	},
@@ -282,7 +280,6 @@ Dispatcher.prototype._parseJSONData = function(data, connection) {
 	  console.log(util.inspect(message, {depth: 3, colors: true}));
 	}
 	catch(e) {
-	  console.log(e);
 	  responseWithError.call(connection, e.message);
 	}
 
@@ -323,6 +320,26 @@ Dispatcher.prototype._subscribeToDriverEvents = function(driver) {
 	}.bind(this));
 }
 
+Dispatcher.prototype._accessWithoutToken = function(methodName) {
+	return ["Login", "ApiCommand", "LoginDriver", "SignUpClient", "Subscribe"].indexOf(methodName) > -1;
+}
+
+Dispatcher.prototype._tokenValid = function(message, connection) {
+	var user;
+	if (message.app === "client") {
+		user = clientRepository.get(message.id);
+	} 
+	else if (message.app === "driver") {
+		user = driverRepository.get(message.id);
+	}
+
+	if (user && !user.isTokenValid(message)) {
+		responseWithError.call(connection, "Invalid token");
+	}
+	
+	return true;
+}
+
 Dispatcher.prototype.load = function(callback) {
 	var self = this;
 	async.parallel({
@@ -333,20 +350,20 @@ Dispatcher.prototype.load = function(callback) {
 	function(err, result){
 		async.parallel([
 			function(next) {
-				console.log('Loaded ' + result.drivers.length + ' driver(s)');
+				console.log('Cache ' + result.drivers.length + ' driver(s)');
 				async.each(result.drivers, function(driver, cb){
 					self._subscribeToDriverEvents(driver);
 					driver.load(cb);
 				}, next);
 			},
 			function(next) {
-				console.log('Loaded ' + result.clients.length + ' client(s)');
+				console.log('Cache ' + result.clients.length + ' client(s)');
 				async.each(result.clients, function(client, cb){
 					client.load(cb);
 				}, next);
 			},
 			function(next) {
-				console.log('Loaded ' + result.trips.length + ' trip(s)');
+				console.log('Cache ' + result.trips.length + ' trip(s)');
 				async.each(result.trips, function(trip, cb){
 					trip.load(function(err) {
 						if (err) console.log('Error loading trip ' + trip.id + ':' + err);
@@ -370,12 +387,9 @@ Dispatcher.prototype.processMessage = function(data, connection) {
 	if (!(messageHandler = this._findMessageHandler(message, connection))) return;
 
 	// Validate token
-	// TODO: Сделать посылку RPC обработчики только для Driver & Client, 
-	// а они в свою очередь будут делегировать работу Trip.
-	// Тогда просто будет проверять token
+	if (!this._accessWithoutToken(message.messageType) && !this._tokenValid(message, connection)) return;
 
-	// Handle message
-	// returns: RPC response message
+	// Process request and send response
 	messageHandler.call(this, {message: message, connection: connection}, function(err, result) {
 		if(err) {
 			console.log(err.stack);

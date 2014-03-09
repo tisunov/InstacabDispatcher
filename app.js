@@ -18,7 +18,7 @@ dispatcher.load(function(err) {
   var app = express();
   var port = process.env.PORT || 9000;
   var server = app.listen(port);
-  console.log('Express started on port %d', port);
+  console.log('Dispatcher started on port %d', port);
 
   var wss = new WebSocketServer({ server: server });
 
