@@ -12,6 +12,8 @@ var login1 = {
 var onduty = {
   messageType: "OnDutyDriver",
   app: "driver",  
+  latitude: 51.674789,
+  longitude: 39.211527  
 }
 
 var login2 = {
@@ -26,7 +28,6 @@ var login2 = {
 var signOut = {
   messageType: "SignOut",
   app: "driver",
-  token: 'db1eba81d9d8',
   latitude: 51.68274,
   longitude: 39.12119
 };
@@ -34,7 +35,8 @@ var signOut = {
 var pingDriver = {
   messageType: "PingDriver",
   app: 'driver',
-  token: 'db1eba81d9d8'
+  latitude: 51.674789,
+  longitude: 39.211527    
 };
 
 var confirmPickup = {
@@ -43,7 +45,6 @@ var confirmPickup = {
   latitude: 51.68274,
   longitude: 39.12119,
   app: 'driver',
-  token: 'db1eba81d9d8'
 };
 
 var arrivingNow = {
@@ -52,13 +53,11 @@ var arrivingNow = {
   latitude: 51.68274,
   longitude: 39.12119,
   app: 'driver',
-  token: 'db1eba81d9d8'
 };
 
 var beginTrip = {
   messageType: "BeginTripDriver",
   app: 'driver',
-  token: 'db1eba81d9d8',
   latitude: 51.68274,
   longitude: 39.12119  
 };
@@ -114,6 +113,7 @@ function driveToClient(driverId, tripId, pickupLocation) {
     pingDriver.latitude = tripCoordinates[i][0];
     pingDriver.longitude = tripCoordinates[i][1];
     pingDriver.timestamp = Date.now();
+    pingDriver.token = token;
     client.sendWithLog(pingDriver);
 
     // Send arriving now
@@ -121,6 +121,7 @@ function driveToClient(driverId, tripId, pickupLocation) {
       clearInterval(timerId);
 
       arrivingNow.id = driverId;
+      arrivingNow.token = token;
       arrivingNow.tripId = tripId;
       arrivingNow.latitude = pickupLocation.latitude;
       arrivingNow.longitude = pickupLocation.longitude;      
@@ -141,6 +142,7 @@ function driveClient(driverId, callback) {
     pingDriver.latitude = tripCoordinates[i][0];
     pingDriver.longitude = tripCoordinates[i][1];
     pingDriver.timestamp = Math.round(Date.now() / 1000); // in seconds
+    pingDriver.token = token;
     client.sendWithLog(pingDriver);
 
     // Send Ping
@@ -152,7 +154,7 @@ function driveClient(driverId, callback) {
 
 }
 
-var timer;
+var timer, token;
 
 client.on('message', function(event) {
   console.log("Received: " + event.data);
@@ -167,6 +169,9 @@ client.on('message', function(event) {
   
   switch (response.messageType) {
     case 'OK':
+      if (response.driver.token)
+        token = response.driver.token;
+
       if (response.driver.state === 'PendingRating') {
         client.sendWithLog({ 
           messageType: 'RatingClient', 
@@ -174,7 +179,7 @@ client.on('message', function(event) {
           tripId: response.driver.tripPendingRating.id,
           rating: 5.0,
           app: 'driver',
-          token: response.driver.token,
+          token: token,
           latitude: 51.66351,
           longitude: 39.185234          
         });
@@ -182,7 +187,7 @@ client.on('message', function(event) {
 
       if (response.driver.state === 'OffDuty') {
         onduty.id = response.driver.id;
-        onduty.token = response.driver.token;
+        onduty.token = token;
         client.sendWithLog(onduty);
       }
       break;
@@ -196,6 +201,7 @@ client.on('message', function(event) {
         confirmPickup.tripId = response.trip.id;
         confirmPickup.latitude = 51.681520;
         confirmPickup.longitude = 39.183383;
+        confirmPickup.token = token;
         client.sendWithLog(confirmPickup);
         
         driveToClient(response.driver.id, response.trip.id, response.trip.pickupLocation);
@@ -204,12 +210,14 @@ client.on('message', function(event) {
         timer = setTimeout(function() {
           // let the Trip begin
           beginTrip.tripId = response.trip.id;
+          beginTrip.token = token;
           client.sendWithLog(beginTrip);
 
           // send couple of gps points to dispatcher
           driveClient(response.driver.id, function() {
             // end trip
             endTrip.tripId = response.trip.id;
+            endTrip.token = token;
             client.sendWithLog(endTrip);
           });
         }, 3000);

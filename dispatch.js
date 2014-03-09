@@ -335,6 +335,7 @@ Dispatcher.prototype._tokenValid = function(message, connection) {
 
 	if (user && !user.isTokenValid(message)) {
 		responseWithError.call(connection, "Invalid token");
+		return false;
 	}
 	
 	return true;

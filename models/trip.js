@@ -5,7 +5,7 @@ var MessageFactory = require("../messageFactory"),
 	Driver = require('./driver').Driver,
 	apiBackend = require('../backend'),
 	publisher = require('../publisher'),
-	GoogleMaps = require('googlemaps'),
+	ReverseGeocoder = require('../lib/reverse_geocoder'),
 	Repository = require('../lib/repository');
 
 function Trip(id, client, driver) {
@@ -298,22 +298,38 @@ Trip.prototype.driverBegin = function(driverContext, callback) {
 }
 
 // Водитель завершил поездку. Известить клиента что поездка была завершена
-Trip.prototype.driverEnd = function(driverContext, callback) {
-	var response = this.driver.finishTrip(driverContext);
+Trip.prototype.driverEnd = function(context, callback) {
+	var response = this.driver.finishTrip(context);
 
-	// Keep stats
 	if (this.state === Trip.STARTED) {
 		this.dropoffAt = timestamp();
-		this._reverseGeocodeDropoffLocation(driverContext.message);
-		this._addRouteWayPoint(driverContext);
+		this.dropoffLocation = {
+			latitude: context.message.latitude,
+			longitude: context.message.longitude
+		};
+
+		this._addRouteWayPoint(context);
 		this._changeState(Trip.FINISHED);
 
+		ReverseGeocoder.reverseGeocodeLocation(this.dropoffLocation, function(err, streetName, streetNumber, city) {
+			this.dropoffLocation.streetAddress = streetName + ", " + streetNumber;
+			this.dropoffLocation.city = city;
+
+			this.publish();
+			this._save();
+
+			this._bill();
+		}.bind(this));
+		
 		this._save();
 
 		this.client.notifyTripFinished();
 	}
 	
-	// Bill trip
+	callback(null, response);
+}
+
+Trip.prototype._bill = function() {
 	apiBackend.billTrip(this, function(err, fare) {
 		if (err) console.log(err);
 
@@ -322,12 +338,13 @@ Trip.prototype.driverEnd = function(driverContext, callback) {
 		this.publish();
 		this._save();
 
+		// TODO: Что делать когда платеж по какой то причине не прошел? 
+		// Нужно послать и водителю и клиенту уведомление чтобы они показали сообщение
+		// вместо цены и уведомить службу поддержки о критической ошибке платежа по поездке
 		this.client.notifyTripBilled();
 		this.driver.notifyTripBilled();		
 
-	}.bind(this));
-
-	callback(null, response);
+	}.bind(this));	
 }
 
 Trip.prototype.clientRateDriver = function(context, callback) {
@@ -357,10 +374,6 @@ Trip.prototype.driverRateClient = function(context, callback) {
 }
 
 Trip.prototype._reverseGeocodeDropoffLocation = function(location) {
-	this.dropoffLocation = {
-		latitude: location.latitude,
-		longitude: location.longitude
-	};
 
 	// TODO: А почему бы это не поручить Водитею, водитель привез и приложение выполняет 
 	// Google Reverse Geocode для координат высадки, и сервер получает готовый адрес
