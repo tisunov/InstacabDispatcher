@@ -169,18 +169,16 @@ Trip.prototype._setDriver = function(driver) {
 
 // Клиент запросил машину
 Trip.prototype.pickup = function(clientContext, callback) {
-	var response = this.client.pickup(clientContext, this);
-
 	if (this.state !== Trip.DISPATCHING) {
-		this._changeState(Trip.DISPATCHING);
 		this.pickupLocation = clientContext.message.pickupLocation;
+		this._changeState(Trip.DISPATCHING);
 		this._save();
 
 		// dispatch to nearest available driver
 		this._dispatchDriver();		
 	}
 
-	callback(null, response);
+	callback(null, this.client.pickup(clientContext, this));
 }
 
 // Водитель подтвердил заказ. Известить клиента что водитель в пути
