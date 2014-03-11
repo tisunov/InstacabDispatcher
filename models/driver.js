@@ -36,9 +36,12 @@ Driver.prototype.getSchema = function() {
 
 Driver.prototype.login = function(context, callback) {
   console.log('Driver ' + this.id + ' logged in: ' + this.state + ' connected: ' + this.connected);
+  
   this.updateLocation(context);
-  this.changeState(Driver.OFFDUTY);
-  this.save();
+  if (!this.state) {
+    this.changeState(Driver.OFFDUTY);
+    this.save();
+  }
 
   return MessageFactory.createDriverOK(this, true, this.trip, false);
 }
@@ -47,7 +50,7 @@ Driver.prototype.logout = function(context) {
   console.log('Driver ' + this.id + ' logged out');
   this.updateLocation(context);
 
-  if (this.state !== Driver.OFFDUTY) {
+  if (this.state === Driver.AVAILABLE) {
     this.changeState(Driver.OFFDUTY);
     this.save();
   }
