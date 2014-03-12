@@ -145,7 +145,7 @@ Client.prototype.notifyTripStarted = function() {
 }
 
 Client.prototype.notifyDriverEnroute = function() {
-	if (this.trip)
+	if (this.state === Client.WAITINGFORPICKUP || this.state === Client.ONTRIP)
 		this.send(MessageFactory.createClientDriverEnroute(this.trip));
 }
 
