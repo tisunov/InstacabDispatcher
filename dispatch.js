@@ -10,6 +10,7 @@ var async = require('async'),
 	Driver = require("./models/driver").Driver,
 	Client = require("./models/client").Client,
 	subscriber = require("redis").createClient(),
+	ErrorCodes = require("error_codes"),
 	MessageFactory = require("./messageFactory");
 
 function Dispatcher() {
@@ -268,9 +269,9 @@ Dispatcher.prototype = {
 	}
 }
 
-function responseWithError(text){
+function responseWithError(text, errorCode){
 	console.log(text);
-	this.send(JSON.stringify(MessageFactory.createError(text)));
+	this.send(JSON.stringify(MessageFactory.createError(text, errorCode)));
 }
 
 Dispatcher.prototype._parseJSONData = function(data, connection) {
@@ -334,7 +335,7 @@ Dispatcher.prototype._tokenValid = function(message, connection) {
 	}
 
 	if (user && !user.isTokenValid(message)) {
-		responseWithError.call(connection, "Invalid token");
+		responseWithError.call(connection, "Ошибка доступа", ErrorCodes.INVALID_TOKEN);
 		return false;
 	}
 	

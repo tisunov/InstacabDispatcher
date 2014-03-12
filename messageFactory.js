@@ -1,9 +1,5 @@
 var _ = require('underscore');
 
-function MessageFactory() {
-	
-}
-
 function tripForClientToJSON(trip) {
 	return {
 		id: trip.id,
@@ -29,6 +25,50 @@ function tripToClientMessage(trip, messageType) {
 	}
 }
 
+function userToJSON(user, includeToken) {
+	var json = {
+		id: user.id,
+		firstName: user.firstName,
+		mobile: user.mobile,
+		rating: user.rating,
+		state: user.state
+	};
+
+	if (includeToken) {
+		json.token = user.token;
+	}
+
+	if (user.paymentProfile) {
+		json.paymentProfile = user.paymentProfile;
+	}
+
+	return json;
+}
+
+function driverToJSON(driver, includeToken) {
+	var json = userToJSON(driver, includeToken);
+	json.vehicle = driver.vehicle;
+	return json;
+}
+
+function tripForDriverToJSON(trip) {
+	return {
+		id: trip.id,
+		pickupLocation: trip.pickupLocation,
+		dropoffLocation: trip.dropoffLocation,
+		dropoffTimestamp: trip.dropoffAt,
+		fareBilledToCard: trip.fareBilledToCard,
+		client: userToJSON(trip.client)
+	};	
+}
+
+function MessageFactory() {
+	
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Factory Methods
+// 
 MessageFactory.createClientOK = function(client, options) {
 	options = options || {};
 
@@ -75,41 +115,6 @@ MessageFactory.createClientEndTrip = function(client, trip) {
 	return msg;
 }
 
-function clientPropertiesForDriver(client) {
-	return {
-		firstName: client.firstName,
-		mobile: client.mobile,
-		rating: client.rating,
-		state: client.state
-	}
-}
-
-function userToJSON(user, includeToken) {
-	var json = {
-		id: user.id,
-		firstName: user.firstName,
-		mobile: user.mobile,
-		rating: user.rating,
-		state: user.state
-	};
-
-	if (includeToken) {
-		json.token = user.token;
-	}
-
-	if (user.paymentProfile) {
-		json.paymentProfile = user.paymentProfile;
-	}
-
-	return json;
-}
-
-function driverToJSON(driver, includeToken) {
-	var json = userToJSON(driver, includeToken);
-	json.vehicle = driver.vehicle;
-	return json;
-}
-
 MessageFactory.createClientPickupCanceled = function(client, reason) {
 	return {
 		messageType: 'PickupCanceled',
@@ -146,10 +151,11 @@ MessageFactory.createDriverTripCanceled = function(driver, reason) {
 	}
 }
 
-MessageFactory.createError = function(errorText) {
+MessageFactory.createError = function(errorText, errorCode) {
 	return {
 	  messageType: 'Error',
 	  errorText: errorText,
+	  errorCode: errorCode
 	}
 }
 
@@ -189,17 +195,6 @@ MessageFactory.createDriverVehicleList = function(driver, vehicles) {
 	}
 }
 
-function tripForDriverToJSON(trip) {
-	return {
-		id: trip.id,
-		pickupLocation: trip.pickupLocation,
-		dropoffLocation: trip.dropoffLocation,
-		dropoffTimestamp: trip.dropoffAt,
-		fareBilledToCard: trip.fareBilledToCard,
-		client: userToJSON(trip.client)
-	};	
-}
-
 MessageFactory.createDriverPickup = function(driver, trip, client) {
 	return {
 		messageType: 'Pickup',
@@ -208,7 +203,7 @@ MessageFactory.createDriverPickup = function(driver, trip, client) {
 			id: trip.id,
 			pickupLocation: trip.pickupLocation,
 			eta: trip.eta,
-			client: clientPropertiesForDriver(client)
+			client: userToJSON(client)
 		}
 	}
 }
