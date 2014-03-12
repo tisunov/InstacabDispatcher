@@ -140,9 +140,9 @@ Trip.prototype._clearPickupTimeout = function() {
 
 Trip.prototype._dispatchDriver = function() {
 	// Estimate time to client
-	this.driver.queryETAToLocation(this.pickupLocation, function(err, eta) {
+	// this.driver.queryETAToLocation(this.pickupLocation, function(err, eta) {
 		// Keep ETA for client and driver apps
-		this.eta = eta;
+		// this.eta = eta;
 		// Give driver 15 seconds to confirm
 		this._pickupTimer = setTimeout(this._dispatchToNextAvailableDriver.bind(this), PICKUP_TIMEOUT);
 		this._save();
@@ -151,7 +151,7 @@ Trip.prototype._dispatchDriver = function() {
 		this.driver.dispatch(this.client, this);
 
 		this.publish();
-	}.bind(this));
+	// }.bind(this));
 }
 
 Trip.prototype.getSchema = function() {
