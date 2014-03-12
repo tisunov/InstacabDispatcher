@@ -80,7 +80,7 @@ Client.prototype.pickup = function(context, callback) {
 
 			// No drivers
 			if (!driverFound)
-				callback(null, MessageFactory.createError('Нет свободных водителей', ErrorCodes.NO_DRIVERS_AVAILABLE));
+				callback(null, MessageFactory.createError('К сожалению все водители уже заняты', ErrorCodes.NO_DRIVERS_AVAILABLE));
 
 		}.bind(this));
 	}.bind(this));

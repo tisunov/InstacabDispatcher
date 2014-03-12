@@ -319,7 +319,7 @@ Dispatcher.prototype._tokenValid = function(message, connection) {
 	}
 
 	if (user && !user.isTokenValid(message)) {
-		responseWithError.call(connection, "Ошибка доступа", ErrorCodes.INVALID_TOKEN);
+		responseWithError.call(connection, "Доступ запрещен", ErrorCodes.INVALID_TOKEN);
 		return false;
 	}
 	
