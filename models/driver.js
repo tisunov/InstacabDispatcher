@@ -229,13 +229,17 @@ Driver.prototype.isDrivingClient = function() {
   return this.state === Driver.DRIVINGCLIENT;
 }
 
-function isAvailable(driver, callback) {
-  console.log('+ isAvailable: Driver ' + driver.id + ' => ' + driver.connected + ', ' + driver.state);
-  callback(driver.connected && driver.state === Driver.AVAILABLE);
+Driver.prototype.isAvailable = function() {
+  console.log('Driver ' + this.id + ' connected: ' + this.connected + ' state: ' + this.state);
+  return this.connected && this.state === Driver.AVAILABLE;
 }
 
 function locationToString(location) {
   return location.latitude + ',' + location.longitude
+}
+
+function isAvailable(driver, callback) {
+  callback(driver.isAvailable());
 }
 
 function findAvailableDrivers(callback) {

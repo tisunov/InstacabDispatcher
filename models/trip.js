@@ -8,15 +8,13 @@ var MessageFactory = require("../messageFactory"),
 	ReverseGeocoder = require('../lib/reverse_geocoder'),
 	Repository = require('../lib/repository');
 
-function Trip(id, client, driver) {
+function Trip(id) {
 	this.rejectedDriverIds = [];
 	this.route = [];
 	this.boundOnDriverDisconnect = this._onDriverDisconnect.bind(this);
 
 	if (id) {
 		this.id = id;
-		this._setClient(client);
-		this._setDriver(driver);
 		this.createdAt = timestamp();
 	}
 }
@@ -171,15 +169,15 @@ Trip.prototype._setDriver = function(driver) {
 }
 
 // Клиент запросил машину
-Trip.prototype.pickup = function(location) {
-	if (this.state !== Trip.DISPATCHING) {
-		this.pickupLocation = location;
-		this._changeState(Trip.DISPATCHING);
-		this._save();
+Trip.prototype.pickup = function(client, location, driver) {
+	this._setClient(client);
+	this._setDriver(driver);	
+	this.pickupLocation = location;
+	this._changeState(Trip.DISPATCHING);
+	this._save();
 
-		// dispatch to nearest available driver
-		this._dispatchDriver();		
-	}
+	// dispatch to nearest available driver
+	this._dispatchDriver();		
 }
 
 // Водитель подтвердил заказ. Известить клиента что водитель в пути
@@ -403,9 +401,9 @@ Trip.prototype.toJSON = function() {
   };
 }
 
-Trip.create = function(client, driver, callback) {
+Trip.create = function(callback) {
 	repository.generateNextId(function(err, id){
-		callback(err, new Trip(id, client, driver));
+		callback(err, new Trip(id));
 	});
 }
 

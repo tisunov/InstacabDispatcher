@@ -4,6 +4,7 @@ var util = require("util"),
 	Cache = require('../lib/cache'),
 	Repository = require('../lib/repository'),
 	MessageFactory = require("../messageFactory"),
+	ErrorCodes = require("../error_codes"),
 	geofence = require("../lib/geofence");
 
 function Client() {
@@ -27,7 +28,7 @@ var repository = new Repository(Client);
 // Requests
 
 Client.prototype.login = function(context, callback) {
-	console.log('Client ' + this.id + ' login');
+	console.log('Client ' + this.id + ' login, ' + this.state);
 	this.updateLocation(context);
 	this.save();
 
@@ -52,28 +53,34 @@ Client.prototype.ping = function(context, callback) {
 
 Client.prototype.pickup = function(context, callback) {
 	this.updateLocation(context);
-	if (this.state !== Client.LOOKING) return callback(null, this._createOK(false));
+	if (this.state !== Client.LOOKING) return callback(null, this._createOK());
 
 	if (!Client.canRequestToLocation(context.message.pickupLocation))
 		return callback(null, MessageFactory.createError("К сожалению мы еще не работаем в вашем регионе. Но мы постоянно расширяем наш сервис, следите за обновлениями вступив в группу http://vk.com/instacab"));
 
-	// Нужно найти ближайшего свободного водителя
-	// - водителя нет: вернуть ошибку и сказать человеку что водитель уже занят
-	// - водитель есть: пометить его как занятого (но не DISPATCHING, хотя подумать), чтобы другой клиент
-	// не смог его занять, пока мы вычисляем ETA для отправки запроса водителю.
 	Driver.availableSortedByDistanceFrom(context.message.pickupLocation, function(err, items){
 		if (err) return callback(err);
-		if (items.length === 0) return callback(null, MessageFactory.createError('Нет свободных водителей'));
+		if (items.length === 0) return callback(null, MessageFactory.createError('Нет свободных водителей', ErrorCodes.NO_DRIVERS_AVAILABLE));
 
-		var driver = items[0].driver;
-		require("./trip").Trip.create(this, driver, function(err, trip) {
-			trip.pickup(context.message.pickupLocation);
+		require("./trip").Trip.create(function(err, trip) {
+			// Check again for driver availability, when two pickup requests come at the same time, some client
+			// can already claim first driver
+			var driverFound = items.some(function(item) {
+				if (!item.driver.isAvailable()) return false;
 
-			this.setTrip(trip);
-			this.changeState(Client.DISPATCHING);
-			this.save();
+				trip.pickup(this, context.message.pickupLocation, item.driver);
 
-			callback(null, this._createOK(false));
+				this.setTrip(trip);
+				this.changeState(Client.DISPATCHING);
+				this.save();
+
+				callback(null, this._createOK());
+				return true;
+			}, this);
+
+			// No drivers
+			if (!driverFound)
+				callback(null, MessageFactory.createError('Нет свободных водителей', ErrorCodes.NO_DRIVERS_AVAILABLE));
 
 		}.bind(this));
 	}.bind(this));
@@ -192,7 +199,7 @@ Client.prototype.notifyPickupCanceled = function(reason) {
 }
 
 Client.prototype.notifyTripBilled = function() {
-	this.send(this._createOK(false));
+	this.send(this._createOK());
 }
 
 //////////////////////////////////////////
@@ -200,7 +207,7 @@ Client.prototype.notifyTripBilled = function() {
 
 Client.prototype._createOK = function(includeToken) {
 	var options = {
-		includeToken: includeToken,
+		includeToken: includeToken || false,
 		trip: this.trip,
 		tripPendingRating: this.state === Client.PENDINGRATING
 	}
@@ -209,10 +216,9 @@ Client.prototype._createOK = function(includeToken) {
 }
 
 Client.prototype._generateOKResponse = function(includeToken, callback) {
-	if (this.trip) {
-		callback(null, this._createOK(includeToken));
-	}
-	else if (this.state === Client.LOOKING) {
+	if (this.trip) return callback(null, this._createOK(includeToken));
+		
+	if (this.state === Client.LOOKING) {
 		this._updateNearbyDrivers({includeToken: includeToken}, callback);
 	}
 }
@@ -239,7 +245,7 @@ Client.prototype.changeState = function(state) {
 // всех остальных
 //  Notify client about changes in nearby vehicles
 Client.prototype.updateNearbyDrivers = function(callback) {
-	if (!this.connected || this.state !== Client.LOOKING) return;
+	if (!this.connected || this.state !== Client.LOOKING) return callback(new Error('Can not update nearby drivers: Invalid state'));
 	
 	console.log('Update nearby drivers for client ' + this.id + ', connected: ' + this.connected + ', state: ' + this.state);
 	this._updateNearbyDrivers({}, function(err, response) {
