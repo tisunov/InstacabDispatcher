@@ -60,7 +60,7 @@ Client.prototype.pickup = function(context, callback) {
 
 	Driver.availableSortedByDistanceFrom(context.message.pickupLocation, function(err, items){
 		if (err) return callback(err);
-		if (items.length === 0) return callback(null, MessageFactory.createError('Нет свободных водителей', ErrorCodes.NO_DRIVERS_AVAILABLE));
+		if (items.length === 0) return callback(null, MessageFactory.createError('Нет свободных водителей. Попробуйте зайти позже.', ErrorCodes.NO_DRIVERS_AVAILABLE));
 
 		require("./trip").Trip.create(function(err, trip) {
 			// Check again for driver availability, when two pickup requests come at the same time, some client
@@ -80,7 +80,7 @@ Client.prototype.pickup = function(context, callback) {
 
 			// No drivers
 			if (!driverFound)
-				callback(null, MessageFactory.createError('К сожалению все водители уже заняты', ErrorCodes.NO_DRIVERS_AVAILABLE));
+				callback(null, MessageFactory.createError('К сожалению все водители уже заняты. Попробуйте зайти позже.', ErrorCodes.NO_DRIVERS_AVAILABLE));
 
 		}.bind(this));
 	}.bind(this));

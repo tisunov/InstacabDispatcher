@@ -136,7 +136,10 @@ Trip.prototype._clearPickupTimeout = function() {
 	}
 }
 
+// Two-stage dispatch to prevent driver stealing when multiple clients request pickup
 Trip.prototype._dispatchDriver = function() {
+	this.driver.reserveForDispatch();
+
 	// Estimate time to client
 	this.driver.queryETAToLocation(this.pickupLocation, function(err, eta) {
 		// Keep ETA for client and driver apps

@@ -21,7 +21,7 @@ var DEFAULT_PICKUP_TIME_SECONDS = 20 * 60;
  * Driver States
  */
 
-['OffDuty', 'Available', 'Dispatching', 'Accepted', 'Arrived', 'DrivingClient', 'PendingRating'].forEach(function (readableState, index) {
+['OffDuty', 'Available', 'Reserved', 'Dispatching', 'Accepted', 'Arrived', 'DrivingClient', 'PendingRating'].forEach(function (readableState, index) {
   var state = readableState.toUpperCase();
     Driver.prototype[state] = Driver[state] = readableState;
 });
@@ -180,10 +180,17 @@ Driver.prototype.selectVehicle = function(context, callback) {
   }.bind(this));
 }
 
+Driver.prototype.reserveForDispatch = function() {
+  if (this.state !== Driver.AVAILABLE) return;
+
+  this.changeState(Driver.RESERVED);
+  this.save();
+}
+
 // TODO: Если произошла ошибка посылки Заказа водителю, то перевести водителя в AVAILABLE
 // и об этом должен узнать объект Trip
 Driver.prototype.dispatch = function(client, trip) {
-  if (this.state != Driver.AVAILABLE) return;
+  if (this.state !== Driver.RESERVED) return;
 
   this.changeState(Driver.DISPATCHING, client);
   this.setTrip(trip);
