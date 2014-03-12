@@ -8,7 +8,7 @@ if (process.env.NODE_ENV === "production") {
 }
 
 var Dispatcher = require('./dispatch'),
-    agent = require('webkit-devtools-agent'),
+    // agent = require('webkit-devtools-agent'),
     WebSocketServer = require('ws').Server,
     express = require('express'),
     inspect = require('util').inspect;
