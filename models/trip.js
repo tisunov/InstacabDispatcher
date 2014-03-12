@@ -296,8 +296,6 @@ Trip.prototype.driverBegin = function(driverContext, callback) {
 
 // Водитель завершил поездку. Известить клиента что поездка была завершена
 Trip.prototype.driverEnd = function(context, callback) {
-	var response = this.driver.finishTrip(context);
-
 	if (this.state === Trip.STARTED) {
 		this.dropoffAt = timestamp();
 		this.fareBilledToCard = kFareBillingInProgress;
@@ -324,7 +322,7 @@ Trip.prototype.driverEnd = function(context, callback) {
 		this.client.notifyTripFinished();
 	}
 	
-	callback(null, response);
+	callback(null, this.driver.finishTrip(context));
 }
 
 Trip.prototype._bill = function() {
