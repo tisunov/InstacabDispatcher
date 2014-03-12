@@ -38,7 +38,7 @@ Driver.prototype.login = function(context, callback) {
   console.log('Driver ' + this.id + ' logged in: ' + this.state + ' connected: ' + this.connected);
   
   this.updateLocation(context);
-  if (!this.state) {
+  if (!this.state || this.state === Driver.OFFDUTY) {
     this.changeState(Driver.OFFDUTY);
     this.save();
   }
@@ -181,13 +181,15 @@ Driver.prototype.selectVehicle = function(context, callback) {
 }
 
 // TODO: Если произошла ошибка посылки Заказа водителю, то перевести водителя в AVAILABLE
+// и об этом должен узнать объект Trip
 Driver.prototype.dispatch = function(client, trip) {
+  if (this.state != Driver.AVAILABLE) return;
+
   this.changeState(Driver.DISPATCHING, client);
   this.setTrip(trip);
+  this.save();
 
   this.send(MessageFactory.createDriverPickup(this, trip, client));
-
-  this.save();
 }
 
 // Notify driver that Client canceled pickup or pickup timed out
@@ -300,21 +302,18 @@ function vehicleLocationsWithTimeToLocation(location, drivers, callback) {
   }, callback);
 }
 
-Driver.findAllAvailableNearLocation = function(location, callback) {
+Driver.allAvailableNear = function(location, callback) {
   async.waterfall([
     findAvailableDrivers,
     vehicleLocationsWithTimeToLocation.bind(null, location)
   ], callback);
 }
 
-Driver.findAllAvailableOrderByDistance = function(pickupLocation, callback) {
+Driver.availableSortedByDistanceFrom = function(pickupLocation, callback) {
   async.waterfall([
     findAvailableDrivers,
     // find distance to each driver
     function(availableDrivers, nextFn) {
-      console.log('Available drivers:');
-      console.log(util.inspect(availableDrivers, { colors:true }));
-
       async.map(
         availableDrivers,
         function(driver, cb) {
@@ -334,19 +333,6 @@ Driver.findAllAvailableOrderByDistance = function(pickupLocation, callback) {
       );
     }
   ], callback);
-}
-
-Driver.findOneAvailableNearPickupLocation = function(pickupLocation, callback) {
-  Driver.findAllAvailableOrderByDistance(pickupLocation, function(err, driversWithDistance){
-    if (err) return callback(err);
-
-    console.log('Drivers in ascending order by distance from client pickup location:');
-    console.log(util.inspect(driversWithDistance,{colors:true}));
-
-    if (driversWithDistance.length === 0) return callback(new Error('No available drivers'));
-
-    callback(null, driversWithDistance[0].driver);
-  });
 }
 
 Driver.publishAll = function() {

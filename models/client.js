@@ -50,17 +50,34 @@ Client.prototype.ping = function(context, callback) {
 	this._generateOKResponse(false, callback);
 }
 
-Client.prototype.pickup = function(context, trip) {
+Client.prototype.pickup = function(context, callback) {
 	this.updateLocation(context);
+	if (this.state !== Client.LOOKING) return callback(null, this._createOK(false));
 
-	if (this.state === Client.LOOKING) {
-		this.setTrip(trip);
-		// Change state causes event to be published which reads this.trip, so it has to be set prior to that
-		this.changeState(Client.DISPATCHING);
-		this.save();
-	}	
+	if (!Client.canRequestToLocation(context.message.pickupLocation))
+		return callback(null, MessageFactory.createError("К сожалению мы еще не работаем в вашем регионе. Но мы постоянно расширяем наш сервис, следите за обновлениями вступив в группу http://vk.com/instacab"));
 
-	return this._createOK(false);
+	// Нужно найти ближайшего свободного водителя
+	// - водителя нет: вернуть ошибку и сказать человеку что водитель уже занят
+	// - водитель есть: пометить его как занятого (но не DISPATCHING, хотя подумать), чтобы другой клиент
+	// не смог его занять, пока мы вычисляем ETA для отправки запроса водителю.
+	Driver.availableSortedByDistanceFrom(context.message.pickupLocation, function(err, items){
+		if (err) return callback(err);
+		if (items.length === 0) return callback(null, MessageFactory.createError('Нет свободных водителей'));
+
+		var driver = items[0].driver;
+		require("./trip").Trip.create(this, driver, function(err, trip) {
+			trip.pickup(context.message.pickupLocation);
+
+			this.setTrip(trip);
+			this.changeState(Client.DISPATCHING);
+			this.save();
+
+			callback(null, this._createOK(false));
+
+		}.bind(this));
+	}.bind(this));
+
 }
 
 // Client explicitly canceled pickup
@@ -236,7 +253,7 @@ Client.prototype._updateNearbyDrivers = function(options, callback) {
 		return callback(null, MessageFactory.createClientOK(this, options));
 	}
 
-	Driver.findAllAvailableNearLocation(this.location, function(err, vehicles) {
+	Driver.allAvailableNear(this.location, function(err, vehicles) {
 		options.vehicles = vehicles;
 		callback(err, MessageFactory.createClientOK(this, options));
 	}.bind(this));

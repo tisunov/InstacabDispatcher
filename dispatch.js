@@ -10,7 +10,7 @@ var async = require('async'),
 	Driver = require("./models/driver").Driver,
 	Client = require("./models/client").Client,
 	subscriber = require("redis").createClient(),
-	ErrorCodes = require("error_codes"),
+	ErrorCodes = require("./error_codes"),
 	MessageFactory = require("./messageFactory");
 
 function Dispatcher() {
@@ -79,27 +79,11 @@ Dispatcher.prototype = {
 	},
 
 	Pickup: function(context, callback) {
-		if (!Client.canRequestToLocation(context.message.pickupLocation))
-			return callback(null, MessageFactory.createError("К сожалению мы еще не работаем в вашем регионе. Но мы постоянно расширяем наш сервис, следите за обновлениями вступив в группу http://vk.com/instacab"));
+		clientRepository.get(context.message.id, function(err, client) {
+			if (err) return callback(err);
 
-		async.waterfall([
-			// Find client
-			clientRepository.get.bind(clientRepository, context.message.id),
-			// Find available driver
-			function(client, next) {
-				Driver.findOneAvailableNearPickupLocation(context.message.pickupLocation, function(err, driver){
-					next(err, client, driver);
-				});
-			},
-			// Create trip
-			function(client, driver, next) {
-				Trip.create(client, driver, next);
-			},
-			// Dispatch
-			function(trip, next) {
-				trip.pickup(context, next);
-			}
-		], callback);
+			client.pickup(context, callback);
+		});
 	},
 	
 	// Client canceled pickup request while we were searching/waiting for drivers

@@ -18,10 +18,11 @@ function Trip(id, client, driver) {
 		this._setClient(client);
 		this._setDriver(driver);
 		this.createdAt = timestamp();
-	}	
+	}
 }
 
 var PICKUP_TIMEOUT = 15000; // 15 secs
+var kFareBillingInProgress = -1;
 var repository = new Repository(Trip);
 
 ['dispatcher_canceled', 'client_canceled', 'driver_confirmed', 'driver_canceled', 'driver_rejected', 'driver_arriving', 'started', 'finished', 'dispatching'].forEach(function (readableState, index) {
@@ -32,13 +33,13 @@ var repository = new Repository(Trip);
 Trip.prototype.load = function(callback) {
 	var self = this;
 	async.parallel([
-		function(next) {
+		function(next){
 			require("./client").repository.get(self.clientId, function(err, client) {
 				self.client = client;
 				next(err);
 			})
 		},
-		function(next) {
+		function(next){
 			require("./driver").repository.get(self.driverId, function(err, driver) {
 				self.driver = driver;
 				next(err);
@@ -47,7 +48,7 @@ Trip.prototype.load = function(callback) {
 	], callback);
 }
 
-Trip.prototype._passPickupToNextAvailableDriver = function() {
+Trip.prototype._dispatchToNextAvailableDriver = function() {
 	console.log('Driver ' + this.driver.id + ' unable or unwilling to pickup. Finding next one...');
 	this._cancelDriverPickup(false);
 
@@ -57,7 +58,7 @@ Trip.prototype._passPickupToNextAvailableDriver = function() {
 
 	var self = this;
 	async.waterfall([
-		Driver.findAllAvailableOrderByDistance.bind(null, this.pickupLocation),
+		Driver.availableSortedByDistanceFrom.bind(null, this.pickupLocation),
 
 		function(driversWithDistance, next) {
 			// find first driver that hasn't rejected Pickup before
@@ -99,10 +100,12 @@ Trip.prototype._save = function(callback) {
 	repository.save(this, callback);
 }
 
+// IDEA: Возможно соединение потерялось по ошибке, 
+// и водитель еще успеет восстановить его и отправить подтверждение
 Trip.prototype._onDriverDisconnect = function() {
 	if (this.driver.state === Driver.DISPATCHING) {
 		this._clearPickupTimeout();
-		this._passPickupToNextAvailableDriver();
+		this._dispatchToNextAvailableDriver();
 	}
 }
 
@@ -141,7 +144,7 @@ Trip.prototype._dispatchDriver = function() {
 		// Keep ETA for client and driver apps
 		this.eta = eta;
 		// Give driver 15 seconds to confirm
-		this._pickupTimer = setTimeout(this._passPickupToNextAvailableDriver.bind(this), PICKUP_TIMEOUT);
+		this._pickupTimer = setTimeout(this._dispatchToNextAvailableDriver.bind(this), PICKUP_TIMEOUT);
 		this._save();
 
 		// Send dispatch request
@@ -168,17 +171,15 @@ Trip.prototype._setDriver = function(driver) {
 }
 
 // Клиент запросил машину
-Trip.prototype.pickup = function(clientContext, callback) {
+Trip.prototype.pickup = function(location) {
 	if (this.state !== Trip.DISPATCHING) {
-		this.pickupLocation = clientContext.message.pickupLocation;
+		this.pickupLocation = location;
 		this._changeState(Trip.DISPATCHING);
 		this._save();
 
 		// dispatch to nearest available driver
 		this._dispatchDriver();		
 	}
-
-	callback(null, this.client.pickup(clientContext, this));
 }
 
 // Водитель подтвердил заказ. Известить клиента что водитель в пути
@@ -299,6 +300,7 @@ Trip.prototype.driverEnd = function(context, callback) {
 
 	if (this.state === Trip.STARTED) {
 		this.dropoffAt = timestamp();
+		this.fareBilledToCard = kFareBillingInProgress;
 		this.dropoffLocation = {
 			latitude: context.message.latitude,
 			longitude: context.message.longitude
@@ -350,6 +352,9 @@ Trip.prototype.clientRateDriver = function(context, callback) {
 
 		// TODO: Push trip to Backend if driver rated
 		// Даже лучше пусть заведен таймер и раз в 15 минут все поездки с оценками перемещаются в архив
+		// Чтобы поездки не исчезали когда за ними наблюдает кто то. 
+		// Таким образом можно оставлять поездки которые были с ошибками, посылать email & sms Alert 
+		// чтобы человек пришел и нашел эти поездки в Диспетчере
 		this._save();
 	}
 
@@ -367,24 +372,6 @@ Trip.prototype.driverRateClient = function(context, callback) {
 	}
 
 	this.driver.rateClient(context, callback);
-}
-
-Trip.prototype._reverseGeocodeDropoffLocation = function(location) {
-
-	// TODO: А почему бы это не поручить Водитею, водитель привез и приложение выполняет 
-	// Google Reverse Geocode для координат высадки, и сервер получает готовый адрес
-
-	// GoogleMaps.reverseGeocode(location.latitude + ',' + location.longitude, function(err, response) {
-	// 	if (err) return console.log(err);
-	// 	if (response.status !== "OK") return console.log(response);
-	// 	if (response.results[0].types[0] !== "street_address") return console.log(response);
-
-	// 	this.dropoffLocation.streetAddress = "";
-	// 	this.dropoffLocation.city = "";
-	// 	this.dropoffLocation.region = "";
-
-	// 	this.save();
-	// }.bind(this), true, 'ru');
 }
 
 Trip.prototype._changeState = function(state) {
