@@ -1,14 +1,17 @@
+if (process.env.NODE_ENV === "production") {
+  require('nodetime').profile({
+    accountKey: 'a0df5534478dd2873fcc0789e958749f2a356908', 
+    appName: 'InstaCab Dispatcher'
+  });
+
+  require("bugsnag").register("889ee967ff69e8a6def329190b410677");
+}
+
 var Dispatcher = require('./dispatch'),
-    // agent = require('webkit-devtools-agent'),
+    agent = require('webkit-devtools-agent'),
     WebSocketServer = require('ws').Server,
     express = require('express'),
-    inspect = require('util').inspect,
-    bugsnag = require("bugsnag");
-
-// Register the bugsnag notifier
-if (process.env.NODE_ENV === "production") {
-  bugsnag.register("889ee967ff69e8a6def329190b410677");
-};
+    inspect = require('util').inspect;
 
 var dispatcher = new Dispatcher();
 

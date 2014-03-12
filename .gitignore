@@ -2,6 +2,6 @@
 .DS_STORE
 android/*
 TODO
-uber_*.txt
-*.chls
+uber_logs/*
 *.sublime-workspace
+v8.log
