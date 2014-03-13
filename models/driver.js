@@ -10,6 +10,7 @@ function Driver() {
   User.call(this, Driver.OFFDUTY);
   this.tripsRejected = this.tripsRejected || 0; 
   this.tripsAccepted = this.tripsRejected || 0;
+  this.photoUrl = 'http://instacab-assets.s3.amazonaws.com/drivers/mike@2x.png';
 }
 
 util.inherits(Driver, User);
@@ -29,6 +30,7 @@ var DEFAULT_PICKUP_TIME_SECONDS = 20 * 60;
 Driver.prototype.getSchema = function() {
   var props = User.prototype.getSchema.call(this);
   props.push('vehicle');
+  props.push('photo');
   props.push('tripsAccepted');
   props.push('tripsRejected');
   return props;
