@@ -244,12 +244,12 @@ Client.prototype.changeState = function(state) {
 // TODO: Обновилась позиция всего одного водителя и не нужно пересчитывать расстояние и время прибытия
 // всех остальных
 //  Notify client about changes in nearby vehicles
-Client.prototype.updateNearbyDrivers = function(callback) {
-	if (!this.connected || this.state !== Client.LOOKING) return callback(new Error('Can not update nearby drivers: Invalid state'));
+Client.prototype.updateNearbyDrivers = function() {
+	if (!this.connected || this.state !== Client.LOOKING) return;
 	
 	console.log('Update nearby drivers for client ' + this.id + ', connected: ' + this.connected + ', state: ' + this.state);
 	this._updateNearbyDrivers({}, function(err, response) {
-		this.send(response, callback);
+		this.send(response);
 	}.bind(this));
 }
 

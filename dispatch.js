@@ -291,9 +291,7 @@ Dispatcher.prototype._clientsUpdateNearbyDrivers = function(driver, clientReques
 	clientRepository.each(function(client) {
 		if (client.id === skipClientId) return;
 
-		client.updateNearbyDrivers(function(err){
-			if (err) console.log(err);
-		});
+		client.updateNearbyDrivers();
 	});
 }
 
