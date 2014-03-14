@@ -11,11 +11,11 @@ var MessageFactory = require("../messageFactory"),
 function Trip(id) {
 	this.rejectedDriverIds = [];
 	this.route = [];
-	this.boundOnDriverDisconnect = this._onDriverDisconnect.bind(this);
 
 	if (id) {
 		this.id = id;
 		this.createdAt = timestamp();
+		this.boundOnDriverDisconnect = this._onDriverDisconnect.bind(this);
 	}
 }
 
@@ -184,8 +184,12 @@ Trip.prototype.pickup = function(client, location, driver) {
 }
 
 // Водитель подтвердил заказ. Известить клиента что водитель в пути
-Trip.prototype.confirm = function(driverContext, callback) {
+Trip.prototype.confirm = function(driverContext, callback) {	
 	var response = this.driver.confirm(driverContext);
+
+	// cleanup
+	this.driver.removeListener('disconnect', this.boundOnDriverDisconnect);
+	this.boundOnDriverDisconnect = null;
 
 	if (this.state !== Trip.DRIVER_CONFIRMED) {
 		this.confirmedAt = timestamp();

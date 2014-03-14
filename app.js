@@ -36,10 +36,12 @@ dispatcher.load(function(err) {
 
     connection.on('close', function() {
       console.log('socket client disconnected');
+      connection.removeAllListeners();
     });
 
     connection.on('error', function(reason, code){
       console.log('socket error: reason ' + reason + ', code ' + code);
+      connection.removeAllListeners();
     })
   });
 

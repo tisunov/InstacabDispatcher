@@ -62,29 +62,36 @@ Client.prototype.pickup = function(context, callback) {
 		if (err) return callback(err);
 		if (items.length === 0) return callback(null, MessageFactory.createError('Нет свободных водителей. Попробуйте зайти позже.', ErrorCodes.NO_DRIVERS_AVAILABLE));
 
-		require("./trip").Trip.create(function(err, trip) {
-			// Check again for driver availability, when two pickup requests come at the same time, some client
-			// can already claim first driver
-			var driverFound = items.some(function(item) {
-				if (!item.driver.isAvailable()) return false;
-
-				trip.pickup(this, context.message.pickupLocation, item.driver);
-
-				this.setTrip(trip);
-				this.changeState(Client.DISPATCHING);
-				this.save();
-
-				callback(null, this._createOK());
-				return true;
-			}, this);
-
-			// No drivers
-			if (!driverFound)
-				callback(null, MessageFactory.createError('К сожалению все водители уже заняты. Попробуйте зайти позже.', ErrorCodes.NO_DRIVERS_AVAILABLE));
-
-		}.bind(this));
+		this._driversAvailableForDispatch(context.message.pickupLocation, items, callback);
 	}.bind(this));
+}
 
+Client.prototype._driversAvailableForDispatch = function(pickupLocation, items, callback) {
+	require("./trip").Trip.create(function(err, trip) {
+		// Check again for driver availability, when two pickup requests come at the same time, some client
+		// can already claim first driver
+		var driverFound = items.some(this._dispatchFirstAvailableDriver.bind(this, trip, pickupLocation));
+
+		// No drivers
+		if (driverFound) {
+			callback(null, this._createOK());
+		}
+		else 
+			callback(null, MessageFactory.createError('К сожалению все водители уже заняты. Попробуйте зайти позже.', ErrorCodes.NO_DRIVERS_AVAILABLE));
+
+	}.bind(this));
+}
+
+Client.prototype._dispatchFirstAvailableDriver = function(trip, pickupLocation, item) {
+	if (!item.driver.isAvailable()) return false;
+
+	trip.pickup(this, pickupLocation, item.driver);
+
+	this.setTrip(trip);
+	this.changeState(Client.DISPATCHING);
+	this.save();
+	
+	return true;
 }
 
 // Client explicitly canceled pickup

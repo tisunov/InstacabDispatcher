@@ -280,6 +280,8 @@ Dispatcher.prototype._findMessageHandler = function(message, connection) {
 Dispatcher.prototype._clientsUpdateNearbyDrivers = function(driver, clientRequestedPickup) {
 	var skipClientId = clientRequestedPickup ? clientRequestedPickup.id : null;
 
+	if (!driver.connected) driver.removeAllListeners();
+
 	clientRepository.each(function(client) {
 		if (client.id === skipClientId) return;
 
@@ -289,8 +291,9 @@ Dispatcher.prototype._clientsUpdateNearbyDrivers = function(driver, clientReques
 
 // Subscribe to driver events (1 time)
 Dispatcher.prototype._subscribeToDriverEvents = function(driver) {
+	driver.removeAllListeners();
+
 	_.each(['connect', 'disconnect', 'available', 'unavailable'], function(eventName){
-		driver.removeListener(eventName, this.driverEventCallback);
 		driver.on(eventName, this.driverEventCallback);
 	}.bind(this));
 }

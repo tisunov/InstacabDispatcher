@@ -62,14 +62,13 @@ User.prototype.send = function(message) {
 	console.log('Sending ' + message.messageType + ' to ' + this.constructor.name + ' ' + this.id);
 	console.log(util.inspect(message, {depth: 3, colors: true}));
 
-	this.connection.send(JSON.stringify(message), function(err) {
-		if (err) console.log(err);
-	});
+	this.connection.send(JSON.stringify(message));
 }
 
 User.prototype.disconnect = function() {
 	if (this.connection && this.connection.readyState === WebSocket.OPEN) {
 		this.connection.close();
+		this.connection = null;
 	}
 }
 
@@ -77,6 +76,7 @@ User.prototype._connectionClosed = function() {
 	console.log(this.constructor.name + ' ' + this.id + ' disconnected');
 	
 	this.connected = false;
+	this.connection = null;
 	this.emit('disconnect', this);
 	this.publish();
 }
