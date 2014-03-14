@@ -35,14 +35,14 @@ Client.prototype.login = function(context, callback) {
 	this._generateOKResponse(true, callback);
 }
 
-Client.prototype.logout = function(context) {
-	console.log('Client ' + this.id + ' logout');
-	this.updateLocation(context);
-	this.token = null;
-	this.save();
+// Client.prototype.logout = function(context) {
+// 	console.log('Client ' + this.id + ' logout');
+// 	this.updateLocation(context);
+// 	this.token = null;
+// 	this.save();
 
-	return MessageFactory.createClientOK(this);
-}
+// 	return MessageFactory.createClientOK(this);
+// }
 
 // Return client state and trip if any or available vehicles nearby
 Client.prototype.ping = function(context, callback) {
@@ -108,6 +108,8 @@ Client.prototype.cancelTrip = function(context) {
 		this.save();
 	}
 	
+	// TODO: Вызвать this._generateOKResponse(false, callback);
+	// Чтобы после отмены клиент получил обновленные позиции машин
 	return MessageFactory.createClientOK(this);
 }
 
@@ -119,11 +121,11 @@ Client.prototype.rateDriver = function(context, callback) {
 			this.changeState(Client.LOOKING);
 			this.save();
 
-			callback(null, MessageFactory.createClientOK(this));
+			this._generateOKResponse(false, callback);
 		}.bind(this));
 	}
 	else 
-		callback(null, MessageFactory.createClientOK(this));
+		this._generateOKResponse(false, callback);
 }
 
 /////////////////////////////////////////////////////

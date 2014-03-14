@@ -262,7 +262,7 @@ Trip.prototype.driverCancel = function(driverContext, callback) {
 		this._changeState(Trip.DRIVER_CANCELED);
 		this._archive();
 
-		this.client.notifyTripCanceled();		
+		this.client.notifyTripCanceled();
 	}
 
 	callback(null, response);

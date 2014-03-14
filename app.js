@@ -11,7 +11,9 @@ var Dispatcher = require('./dispatch'),
     // agent = require('webkit-devtools-agent'),
     WebSocketServer = require('ws').Server,
     express = require('express'),
-    inspect = require('util').inspect;
+    inspect = require('util').inspect,
+    mongo = require('mongoskin'),
+    db = mongo.db("mongodb://localhost:27017/instacab", {native_parser:true});
 
 var dispatcher = new Dispatcher();
 
@@ -23,8 +25,8 @@ dispatcher.load(function(err) {
   var server = app.listen(port);
   console.log('Dispatcher started on port %d', port);
 
+  // Websockets
   var wss = new WebSocketServer({ server: server });
-
   wss.on('connection', function(connection) {
     console.log('socket client connected');
 
@@ -41,45 +43,29 @@ dispatcher.load(function(err) {
     })
   });
 
-})
 
-// Middleware
-// app.use(express.bodyParser())
-// app.use(app.router)
-// app.use((err, req, res, next) ->
-//   console.error(err.stack)
+  // Middleware
+  app.use(express.bodyParser())
+  app.use(app.router)
+  app.use(function(err, req, res, next) {
+    console.error(err.stack);
 
-//   // res.status(err.status || 500)
-//   res.send('500', { messageType: 'Error', text: err.message })
-// )
+    res.send('500', { messageType: 'Error', text: err.message });
+  });
 
-// Routes
-// app.post('/', (req, resp) ->
-//   // set default content type
-//   resp.contentType('application/json; charset=utf-8')
 
-//   console.log("Process message")
-//   console.log(req.body)
+  // create index: 
+  // key, unique, callback
+  db.collection('mobile_events').ensureIndex({ "location": "2d" }, false, function(err, replies){});
 
-//   requestContext = new RequestContext(
-//     request: req
-//     requestBody: req.body
-//     response: resp
-//   )
+  // Events
+  app.post('/mobile/event', function(req, resp) {
+    db.collection('mobile_events').insert( req.body, function(err, replies){
+      if (err) console.log(err);
+    });
+    
+    resp.writeHead(200, { 'Content-Type': 'text/plain' });
+    resp.end();
+  });
 
-//   dispatch.processMessage(requestContext)
-// )
-
-// Events happening on clients
-// app.post('/mobile/event', (req, resp) ->
-//   console.log(req.body)
-
-//   // TODO: Писать в MongoDB или в PostgreSQL с полем json
-
-//   // db.collection('events').insert( req.body, (err, result) ->
-//   //   console.log(result)
-//   // )
-  
-//   resp.writeHead(200, 'Content-Type': 'text/plain');
-//   resp.end()
-// )
+});

@@ -62,14 +62,6 @@ Dispatcher.prototype = {
 		], callback);
 	},
 	
-	LogoutClient: function(context, callback) {
-		clientRepository.get(context.message.id, function(err, client) {
-			if (err) return callback(err);
-
-			callback(null, client.logout(context));
-		});
-	},
-
 	PingClient: function(context, callback) {
 		clientRepository.get(context.message.id, function(err, client) {
 			if (err) return callback(err);
