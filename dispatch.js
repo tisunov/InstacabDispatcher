@@ -27,10 +27,9 @@ function Dispatcher() {
 		if (!this.channelClients[channel]) return;
 
 		this.channelClients[channel].forEach(function(connection){
-			data = JSON.stringify({channel: channel, data: JSON.parse(message)});
+			var data = JSON.stringify({channel: channel, data: JSON.parse(message)});
 			
 			try {
-				// console.log('Broadcast: ' + data);
 				connection.send(data);				
 			}
 			catch(e) {};
