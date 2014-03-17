@@ -63,6 +63,22 @@ function tripForDriverToJSON(trip) {
 	};	
 }
 
+function GetNoun(number, one, two, five) {
+    number = Math.abs(number);
+    number %= 100;
+    if (number >= 5 && number <= 20) {
+        return five;
+    }
+    number %= 10;
+    if (number == 1) {
+        return one;
+    }
+    if (number >= 2 && number <= 4) {
+        return two;
+    }
+    return five;
+} 
+
 function MessageFactory() {
 	
 }
@@ -99,7 +115,8 @@ MessageFactory.createClientOK = function(client, options) {
 		}
 		else {
 			var minEta = _.min(options.vehicles, function(vehicle){ return vehicle.eta; }).eta;
-			msg.nearbyVehicles = { minEta: minEta, vehiclePoints: options.vehicles };
+			var minEtaString = minEta + " " + GetNoun(minEta, 'минута', 'минуты', 'минут');
+			msg.nearbyVehicles = { minEta: minEta, minEtaString: minEtaString, vehiclePoints: options.vehicles };
 		}		
 	}
 
