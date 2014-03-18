@@ -19,7 +19,7 @@ function initProperties(sourceProps) {
 	}.bind(this));
 };
 
-function login(url, email, password, constructor, repository, callback) {
+function login(url, email, password, deviceId, constructor, repository, callback) {
 	request.post(url, { form: {email: email, password: password} }, function (error, response, body) {
 		// network error
 		if (error) return callback(error);
@@ -41,7 +41,7 @@ function login(url, email, password, constructor, repository, callback) {
 				user = new constructor();
 			}
 			// case of a 2nd login with same credentials
-			else if (user.connected) {
+			else if (user.connected && user.deviceId !== deviceId) {
 				return callback(new Error("Повторный вход с указанными параметрами запрещен"));
 			}
 
@@ -52,12 +52,12 @@ function login(url, email, password, constructor, repository, callback) {
 	});
 }
 
-Backend.prototype.loginDriver = function(email, password, callback) {
-	login(backendUrl + '/api/v1/drivers/sign_in', email, password, Driver, driverRepository, callback);
+Backend.prototype.loginDriver = function(email, password, deviceId, callback) {
+	login(backendUrl + '/api/v1/drivers/sign_in', email, password, deviceId, Driver, driverRepository, callback);
 }
 
-Backend.prototype.loginClient = function(email, password, callback) {
-	login(backendUrl + '/api/v1/sign_in', email, password, Client, clientRepository, callback);
+Backend.prototype.loginClient = function(email, password, deviceId, callback) {
+	login(backendUrl + '/api/v1/sign_in', email, password, deviceId, Client, clientRepository, callback);
 }
 
 // TODO: Сделать через AMQP

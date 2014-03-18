@@ -42,7 +42,7 @@ Dispatcher.prototype = {
 	Login: function(context, callback) {
 		async.waterfall([
 			function(nextFn) {
-				apiBackend.loginClient(context.message.email, context.message.password, nextFn);
+				apiBackend.loginClient(context.message.email, context.message.password, context.message.deviceId, nextFn);
 			},
 			function(client, nextFn) {
 				client.login(context, nextFn);
@@ -104,7 +104,7 @@ Dispatcher.prototype = {
 	},
 
 	LoginDriver: function(context, callback) {
-		apiBackend.loginDriver(context.message.email, context.message.password, function(err, driver){
+		apiBackend.loginDriver(context.message.email, context.message.password, context.message.deviceId, function(err, driver){
 			if (err) return callback(err);
 
 			this._subscribeToDriverEvents(driver);

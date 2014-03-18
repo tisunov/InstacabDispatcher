@@ -29,7 +29,7 @@ function User(defaultState) {
 util.inherits(User, EventEmitter);
 
 User.prototype.getSchema = function() {
-	return ['id', 'firstName', 'email', 'token', 'mobile', 'rating', 'state', 'location', 'tripId'];
+	return ['id', 'firstName', 'email', 'token', 'deviceId', 'mobile', 'rating', 'state', 'location', 'tripId'];
 }
 
 User.prototype.load = function(callback) {
@@ -94,19 +94,21 @@ function isEqualLocations(oldLocation, newLocation) {
 				 oldLocation.longitude === newLocation.longitude;
 }
 
-User.prototype._setConnection = function(connection) {
+User.prototype._setConnection = function(connection, deviceId) {
 	var isNewConnection = this.connection !== connection;
-	if (isNewConnection) {
-		console.log(this.constructor.name + ' ' + this.id + ' connected');
+	if (!isNewConnection) return;
 
-		this.connected = connection.readyState === WebSocket.OPEN;
-		this.connection = connection;
-		this.connection.once('close', this._connectionClosed.bind(this));
-		this.connection.once('error', this._connectionError.bind(this));
+	console.log(this.constructor.name + ' ' + this.id + ' connected');
 
-		this.emit('connect', this);
-		this.publish();
-	}	
+	this.deviceId = deviceId;
+
+	this.connected = connection.readyState === WebSocket.OPEN;
+	this.connection = connection;
+	this.connection.once('close', this._connectionClosed.bind(this));
+	this.connection.once('error', this._connectionError.bind(this));
+
+	this.emit('connect', this);
+	this.publish();
 }
 
 User.prototype.isTokenValid = function(message) {
@@ -125,7 +127,7 @@ User.prototype.updateLocation = function(context) {
 		this.publish();
 	}
 	
-	this._setConnection(context.connection);
+	this._setConnection(context.connection, context.message.deviceId);
 }
 
 User.prototype.changeState = function(state) {

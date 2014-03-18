@@ -40,7 +40,7 @@ Driver.prototype.login = function(context, callback) {
   console.log('Driver ' + this.id + ' logged in: ' + this.state + ' connected: ' + this.connected);
   
   this.updateLocation(context);
-  if (!this.state || this.state === Driver.OFFDUTY) {
+  if (!this.state) {
     this.changeState(Driver.OFFDUTY);
     this.save();
   }
