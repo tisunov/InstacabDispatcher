@@ -194,7 +194,7 @@ Trip.prototype.confirm = function(driverContext, callback) {
 	if (this.state !== Trip.DRIVER_CONFIRMED) {
 		this.confirmedAt = timestamp();
 		this._changeState(Trip.DRIVER_CONFIRMED);
-		this._clearPickupTimeout();
+		this._clearPickupTimeout();		
 		this._save();
 
 		this.client.notifyDriverConfirmed();
@@ -290,6 +290,7 @@ Trip.prototype.driverBegin = function(driverContext, callback) {
 
 	if (this.state === Trip.DRIVER_ARRIVING) {
 		this.pickupAt = timestamp();
+		this._addRouteWayPoint(driverContext);
 		this._changeState(Trip.STARTED);
 		this._save();
 
