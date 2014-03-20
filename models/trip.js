@@ -290,6 +290,8 @@ Trip.prototype.driverBegin = function(driverContext, callback) {
 
 	if (this.state === Trip.DRIVER_ARRIVING) {
 		this.pickupAt = timestamp();
+		// Use as a starting point for the trip, because actual begin trip position could be different
+		// from stated pickup position: traffic jams, one way street
 		this._addRouteWayPoint(driverContext);
 		this._changeState(Trip.STARTED);
 		this._save();

@@ -42,8 +42,9 @@ Driver.prototype.login = function(context, callback) {
   this.updateLocation(context);
   if (!this.state) {
     this.changeState(Driver.OFFDUTY);
-    this.save();
   }
+
+  this.save();
 
   return MessageFactory.createDriverOK(this, true, this.trip, false);
 }
