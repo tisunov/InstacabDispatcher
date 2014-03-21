@@ -156,7 +156,7 @@ Trip.prototype._dispatchDriver = function() {
 }
 
 Trip.prototype.getSchema = function() {
-	return ['id', 'clientId', 'driverId', 'state', 'cancelReason', 'pickupLocation', 'dropoffLocation', 'pickupAt', 'dropoffAt', 'createdAt', 'fareBilledToCard', 'rejectedDriverIds', 'route', 'eta', 'secondsToArrival', 'confirmedAt', 'arrivedAt', 'driverRating', 'feedback'];
+	return ['id', 'clientId', 'driverId', 'state', 'cancelReason', 'pickupLocation', 'dropoffLocation', 'confirmLocation', 'pickupAt', 'dropoffAt', 'createdAt', 'fareBilledToCard', 'rejectedDriverIds', 'route', 'eta', 'secondsToArrival', 'confirmedAt', 'arrivedAt', 'driverRating', 'feedback'];
 }
 
 Trip.prototype._setClient = function(value) {
@@ -193,6 +193,8 @@ Trip.prototype.confirm = function(driverContext, callback) {
 
 	if (this.state !== Trip.DRIVER_CONFIRMED) {
 		this.confirmedAt = timestamp();
+		// Keep track for our own ETA engine in the future
+		this.confirmLocation = this.driver.location;
 		this._changeState(Trip.DRIVER_CONFIRMED);
 		this._clearPickupTimeout();		
 		this._save();
