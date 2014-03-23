@@ -76,7 +76,7 @@ Trip.prototype._dispatchToNextAvailableDriver = function() {
 		}
 		else {
 			console.log('No more available drivers to pass Pickup request to');
-			this._cancelClientPickup('Отсутствуют свободные водители');
+			this._cancelClientPickup('Отсутствуют свободные водители. Пожалуйста попробуйте позднее.');
 		}
 
 	}.bind(this));
@@ -140,6 +140,21 @@ Trip.prototype._clearPickupTimeout = function() {
 Trip.prototype._dispatchDriver = function() {
 	this.driver.reserveForDispatch();
 
+	// In case client app didn't provide us with reverse geocoded address
+	if (!this.pickupLocation.streetAddress && !this.pickupLocation.city) {
+		ReverseGeocoder.reverseGeocodeLocation(this.pickupLocation, function(err, streetName, streetNumber, city) {
+			this.pickupLocation.streetAddress = streetName + ", " + streetNumber;
+			this.pickupLocation.city = city;
+			this._save();
+
+			this._estimateTimeToClientThenDispatch();
+		}.bind(this));
+	}
+	else
+		this._estimateTimeToClientThenDispatch();
+}
+
+Trip.prototype._estimateTimeToClientThenDispatch = function() {
 	// Estimate time to client
 	this.driver.queryETAToLocation(this.pickupLocation, function(err, eta) {
 		// Keep ETA for client and driver apps
@@ -236,6 +251,8 @@ Trip.prototype.driverArriving = function(driverContext, callback) {
 
 	if (this.state === Trip.DRIVER_CONFIRMED) {
 		this.arrivedAt = timestamp();
+		// TODO: Add to schema and to API DB
+		this.arrivingLocation = this.driver.location;
 		this.secondsToArrival = this.arrivedAt - this.confirmedAt;
 		this._changeState(Trip.DRIVER_ARRIVING);
 		this._save();
@@ -403,6 +420,7 @@ Trip.prototype.toJSON = function() {
     client: this.client,
     driver: this.driver,
     state: this.state,
+    route: this.route,
     pickupLocation: this.pickupLocation,
     dropoffLocation: this.dropoffLocation,
     fareBilledToCard: this.fareBilledToCard,

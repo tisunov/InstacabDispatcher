@@ -274,7 +274,8 @@ Driver.prototype.toJSON = function() {
   if (this.trip) {
     obj.trip = {
       id: this.trip.id,
-      pickupLocation: this.trip.pickupLocation
+      pickupLocation: this.trip.pickupLocation,
+      route: this.trip.route
     }
   }
   return obj;

@@ -60,7 +60,7 @@ Client.prototype.pickup = function(context, callback) {
 
 	Driver.availableSortedByDistanceFrom(context.message.pickupLocation, function(err, items){
 		if (err) return callback(err);
-		if (items.length === 0) return callback(null, MessageFactory.createError('Нет свободных водителей. Попробуйте зайти позже.', ErrorCodes.NO_DRIVERS_AVAILABLE));
+		if (items.length === 0) return callback(null, MessageFactory.createError('Извините, все водители заняты. Попробуйте снова попозже!', ErrorCodes.NO_DRIVERS_AVAILABLE));
 
 		this._driversAvailableForDispatch(context.message.pickupLocation, items, callback);
 	}.bind(this));
@@ -77,7 +77,7 @@ Client.prototype._driversAvailableForDispatch = function(pickupLocation, items, 
 			callback(null, this._createOK());
 		}
 		else 
-			callback(null, MessageFactory.createError('К сожалению все водители уже заняты. Попробуйте зайти позже.', ErrorCodes.NO_DRIVERS_AVAILABLE));
+			callback(null, MessageFactory.createError('К сожалению все водители уже заняты. Попробуйте снова попозже!', ErrorCodes.NO_DRIVERS_AVAILABLE));
 
 	}.bind(this));
 }
