@@ -171,7 +171,7 @@ Trip.prototype._estimateTimeToClientThenDispatch = function() {
 }
 
 Trip.prototype.getSchema = function() {
-	return ['id', 'clientId', 'driverId', 'state', 'cancelReason', 'pickupLocation', 'dropoffLocation', 'confirmLocation', 'pickupAt', 'dropoffAt', 'createdAt', 'fareBilledToCard', 'rejectedDriverIds', 'route', 'eta', 'secondsToArrival', 'confirmedAt', 'arrivedAt', 'driverRating', 'feedback'];
+	return ['id', 'clientId', 'driverId', 'state', 'cancelReason', 'pickupLocation', 'dropoffLocation', 'confirmLocation', 'pickupAt', 'dropoffAt', 'createdAt', 'fareBilledToCard', 'fare', 'rejectedDriverIds', 'route', 'eta', 'secondsToArrival', 'confirmedAt', 'arrivedAt', 'driverRating', 'feedback'];
 }
 
 Trip.prototype._setClient = function(value) {
@@ -326,6 +326,7 @@ Trip.prototype.driverEnd = function(context, callback) {
 	if (this.state === Trip.STARTED) {
 		this.dropoffAt = timestamp();
 		this.fareBilledToCard = kFareBillingInProgress;
+		this.fare = kFareBillingInProgress;
 		this.dropoffLocation = {
 			latitude: context.message.latitude,
 			longitude: context.message.longitude
@@ -353,17 +354,20 @@ Trip.prototype.driverEnd = function(context, callback) {
 }
 
 Trip.prototype._bill = function() {
-	apiBackend.billTrip(this, function(err, fare) {
+	apiBackend.billTrip(this, function(err, fare_billed_to_card, fare) {
 		if (err) console.log(err);
 
-		console.log('Trip ' + this.id + ' fare is ' + fare + ' руб.');
-		this.fareBilledToCard = fare;
+		console.log('Trip ' + this.id + ' billed fare is ' + fare_billed_to_card + ' руб.');
+		console.log('Trip ' + this.id + ' total fare is ' + fare + ' руб.');
+		this.fareBilledToCard = fare_billed_to_card;
+		this.fare = fare;
 		this.publish();
 		this._save();
 
 		// TODO: Что делать когда платеж по какой то причине не прошел? 
 		// Нужно послать и водителю и клиенту уведомление чтобы они показали сообщение
 		// вместо цены и уведомить службу поддержки о критической ошибке платежа по поездке
+
 		this.client.notifyTripBilled();
 		this.driver.notifyTripBilled();		
 

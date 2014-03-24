@@ -118,7 +118,7 @@ Backend.prototype.billTrip = function(trip, callback) {
 		console.log('+ Backend.billTrip:');
 		console.log(util.inspect(body, {colors:true}));
 		
-		callback(null, body['fare']);
+		callback(null, body['fare_billed_to_card'], body['fare']);
 	});
 }
 

@@ -58,7 +58,7 @@ function tripForDriverToJSON(trip) {
 		pickupLocation: trip.pickupLocation,
 		dropoffLocation: trip.dropoffLocation,
 		dropoffTimestamp: trip.dropoffAt,
-		fareBilledToCard: trip.fareBilledToCard,
+		fare: trip.fare,
 		client: userToJSON(trip.client)
 	};	
 }
