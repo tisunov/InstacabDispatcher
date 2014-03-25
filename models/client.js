@@ -35,15 +35,6 @@ Client.prototype.login = function(context, callback) {
 	this._generateOKResponse(true, callback);
 }
 
-// Client.prototype.logout = function(context) {
-// 	console.log('Client ' + this.id + ' logout');
-// 	this.updateLocation(context);
-// 	this.token = null;
-// 	this.save();
-
-// 	return MessageFactory.createClientOK(this);
-// }
-
 // Return client state and trip if any or available vehicles nearby
 Client.prototype.ping = function(context, callback) {
 	this.updateLocation(context);
@@ -291,8 +282,7 @@ Client.publishAll = function() {
 }
 
 Client.canRequestToLocation = function(location) {
-	return true;
-	//return geofence.isLocationAllowed(location);
+	return geofence.isLocationAllowed(location);
 }
 
 // export Client constructor

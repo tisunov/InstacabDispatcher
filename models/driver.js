@@ -265,6 +265,8 @@ Driver.prototype.queryETAToLocation = function(location, callback) {
     }
 
     var eta = Math.ceil(data.durationSeconds / 60);
+    if (eta === 0) eta = 2;
+
     callback(null, eta);
   });
 }
