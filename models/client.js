@@ -47,7 +47,7 @@ Client.prototype.pickup = function(context, callback) {
 	if (this.state !== Client.LOOKING) return callback(null, this._createOK());
 
 	if (!Client.canRequestToLocation(context.message.pickupLocation))
-		return callback(null, MessageFactory.createError("К сожалению мы еще не работаем в вашем регионе. Но мы постоянно расширяем наш сервис, следите за обновлениями вступив в группу http://vk.com/instacab"));
+		return callback(null, MessageFactory.createError("К сожалению мы еще не работаем в вашем районе. Но мы постоянно расширяем наш сервис, следите за обновлениями вступив в группу http://vk.com/instacab"));
 
 	Driver.availableSortedByDistanceFrom(context.message.pickupLocation, function(err, items){
 		if (err) return callback(err);
