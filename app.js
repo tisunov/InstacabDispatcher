@@ -12,8 +12,7 @@ var Dispatcher = require('./dispatch'),
     WebSocketServer = require('ws').Server,
     express = require('express'),
     inspect = require('util').inspect,
-    mongo = require('mongoskin'),
-    db = mongo.db("mongodb://localhost:27017/instacab", {native_parser:true});
+    db = require('./mongo_client');
 
 var dispatcher = new Dispatcher();
 
@@ -62,6 +61,8 @@ dispatcher.load(function(err) {
 
   // Events
   app.post('/mobile/event', function(req, resp) {
+    // console.log(req.body);
+
     db.collection('mobile_events').insert( req.body, function(err, replies){
       if (err) console.log(err);
     });

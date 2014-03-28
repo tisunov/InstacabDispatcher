@@ -12,7 +12,7 @@ function tripForClientToJSON(trip) {
 			rating: trip.driver.rating,
 			state: trip.driver.state,
 			location: trip.driver.location,
-			photoUrl: trip.driver.photoUrl
+			photoUrl: trip.driver.picture
 		},
 		vehicle: trip.driver.vehicle,
 		eta: trip.eta

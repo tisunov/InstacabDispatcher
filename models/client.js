@@ -5,6 +5,7 @@ var util = require("util"),
 	Repository = require('../lib/repository'),
 	MessageFactory = require("../messageFactory"),
 	ErrorCodes = require("../error_codes"),
+	mongoClient = require("../mongo_client"),
 	geofence = require("../lib/geofence");
 
 function Client() {
