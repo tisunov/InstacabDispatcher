@@ -61,34 +61,34 @@ Backend.prototype.loginClient = function(email, password, deviceId, callback) {
 }
 
 // TODO: Сделать через AMQP
-Backend.prototype.signupClient = function(signupInfo, callback) {
-	request.post(backendUrl + '/api/v1/sign_up', { form: signupInfo }, function (error, response, body) {
-		// network error
-		if (error) return callback(error);
+// Backend.prototype.signupClient = function(signupInfo, callback) {
+// 	request.post(backendUrl + '/api/v1/sign_up', { form: signupInfo }, function (error, response, body) {
+// 		// network error
+// 		if (error) return callback(error);
 
-		console.log(body);
-		try {
-			var properties = JSON.parse(body);
-			util.inspect(properties, {colors: true});
-		} catch (e) {
-			console.log(e.message);
-			return callback(new Error("Техническая ошибка входа. Уже работаем над ней."));
-		}
+// 		console.log(body);
+// 		try {
+// 			var properties = JSON.parse(body);
+// 			util.inspect(properties, {colors: true});
+// 		} catch (e) {
+// 			console.log(e.message);
+// 			return callback(new Error("Техническая ошибка входа. Уже работаем над ней."));
+// 		}
 
-		console.log('Response statusCode = ' + response.statusCode);
+// 		console.log('Response statusCode = ' + response.statusCode);
 
-		// if response not HTTP 201 Created
-		if (response.statusCode !== 201) {
-			return callback(new Error(properties['errors'] || body));
-		}
+// 		// if response not HTTP 201 Created
+// 		if (response.statusCode !== 201) {
+// 			return callback(new Error(properties['errors'] || body));
+// 		}
 
-		// set user properties
-		var user = new Client();
-		initProperties.call(user, properties)
+// 		// set user properties
+// 		var user = new Client();
+// 		initProperties.call(user, properties)
 
-		callback(null, user);
-	});
-}
+// 		callback(null, user);
+// 	});
+// }
 
 function tripToJson(trip) {
 	var tripData = {};
@@ -163,10 +163,10 @@ Backend.prototype.apiCommand = function(message, callback) {
 			if (error) {
 				apiResponse['error'] = { message: error.message };
 			}
-			else if (response.statusCode !== 200) {
+			else if (response.statusCode >= 400) {
 				apiResponse['error'] = { statusCode: response.statusCode };
 			}
-			else {
+			else if (body) {
 	    	apiResponse['data'] = JSON.parse(body);
 			}
 

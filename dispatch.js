@@ -50,16 +50,16 @@ Dispatcher.prototype = {
 		], callback);
 	},
 
-	SignUpClient: function(context, callback) {
-		async.waterfall([
-			function(nextFn) {
-				apiBackend.signupClient(context.message, nextFn);
-			},
-			function(client, nextFn) {
-				client.login(context, nextFn);
-			}
-		], callback);
-	},
+	// SignUpClient: function(context, callback) {
+	// 	async.waterfall([
+	// 		function(nextFn) {
+	// 			apiBackend.signupClient(context.message, nextFn);
+	// 		},
+	// 		function(client, nextFn) {
+	// 			client.login(context, nextFn);
+	// 		}
+	// 	], callback);
+	// },
 	
 	PingClient: function(context, callback) {
 		clientRepository.get(context.message.id, function(err, client) {

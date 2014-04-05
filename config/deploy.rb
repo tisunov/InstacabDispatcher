@@ -44,7 +44,14 @@ set :default_env, {
 
 namespace :deploy do
 
-  desc 'Restart application'
+  desc 'Stop dispatcher'
+  task :stop do
+    on roles(:app), in: :sequence do
+      execute '/etc/init.d/forever', "stop"
+    end
+  end
+
+  desc 'Restart dispatcher'
   task :restart do
     on roles(:app), in: :sequence do
       execute '/etc/init.d/forever', "restart"
