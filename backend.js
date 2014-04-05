@@ -77,7 +77,7 @@ Backend.prototype.signupClient = function(signupInfo, callback) {
 
 		console.log('Response statusCode = ' + response.statusCode);
 
-		// signup error
+		// if response not HTTP 201 Created
 		if (response.statusCode !== 201) {
 			return callback(new Error(properties['errors'] || body));
 		}

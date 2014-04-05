@@ -58,7 +58,7 @@ Driver.prototype.logout = function(context) {
 Driver.prototype.onDuty = function(context) {
   this.updateLocation(context);
 
-  if (this.state !== Driver.AVAILABLE) {
+  if (this.state === Driver.OFFDUTY) {
     console.log('Driver ' + this.id + ' on duty');
     this.changeState(Driver.AVAILABLE);
     this.save();
