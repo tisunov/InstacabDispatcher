@@ -167,7 +167,7 @@ Backend.prototype.apiCommand = function(message, callback) {
 				apiResponse['error'] = { statusCode: response.statusCode };
 			}
 			else if (body) {
-	    	apiResponse['data'] = JSON.parse(body);
+	    	apiResponse = JSON.parse(body);
 			}
 
 			callback(null, { messageType: 'ApiResponse', apiResponse: apiResponse });
