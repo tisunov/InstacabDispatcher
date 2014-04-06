@@ -158,15 +158,12 @@ Backend.prototype.apiCommand = function(message, callback) {
 			form: message.apiParameters
 		},
 		function(error, response, body) {
-			var apiResponse = {};
+			var apiResponse = { statusCode: response.statusCode };
 
 			if (error) {
-				apiResponse['error'] = { message: error.message };
+				apiResponse['error'] = error.message;
 			}
-			else if (response.statusCode >= 400) {
-				apiResponse['error'] = { statusCode: response.statusCode };
-			}
-			else if (body) {
+			else if (response.statusCode < 400 && body) {
 	    	apiResponse = JSON.parse(body);
 			}
 
