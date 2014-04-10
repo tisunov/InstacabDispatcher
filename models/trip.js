@@ -76,7 +76,7 @@ Trip.prototype._dispatchToNextAvailableDriver = function() {
 		}
 		else {
 			console.log('No more available drivers to pass Pickup request to');
-			this._cancelClientPickup('Отсутствуют свободные водители. Пожалуйста попробуйте позднее.');
+			this._cancelClientPickupRequest('Отсутствуют свободные водители. Пожалуйста попробуйте позднее.');
 		}
 
 	}.bind(this));
@@ -107,7 +107,7 @@ Trip.prototype._onDriverDisconnect = function() {
 	}
 }
 
-Trip.prototype._cancelClientPickup = function(reasonString) {
+Trip.prototype._cancelClientPickupRequest = function(reasonString) {
 	this._changeState(Trip.DISPATCHER_CANCELED);
 	this._archive();
 	this.client.notifyPickupCanceled(reasonString);

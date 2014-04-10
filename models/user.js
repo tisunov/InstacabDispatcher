@@ -24,6 +24,9 @@ function User(defaultState) {
 	this.connected = false;
 	this.state = defaultState;
 	this.channelName = 'channel:' + this.constructor.name.toLowerCase() + 's';
+
+	this._onConnectionClosed = this._connectionClosed.bind(this);
+	this._onConnectionError = this._connectionError.bind(this);
 }
 
 util.inherits(User, EventEmitter);
@@ -60,7 +63,7 @@ User.prototype.send = function(message) {
 	}
 
 	console.log('Sending ' + message.messageType + ' to ' + this.constructor.name + ' ' + this.id);
-	console.log(util.inspect(message, {depth: 3, colors: true}));
+	console.log(util.inspect(message, {depth: 3}));
 
 	this.connection.send(JSON.stringify(message));
 }
@@ -68,15 +71,19 @@ User.prototype.send = function(message) {
 User.prototype.disconnect = function() {
 	if (this.connection && this.connection.readyState === WebSocket.OPEN) {
 		this.connection.close();
-		this.connection = null;
 	}
+	this.connection = null;
 }
 
 User.prototype._connectionClosed = function() {
 	console.log(this.constructor.name + ' ' + this.id + ' disconnected');
 	
 	this.connected = false;
+	// cleanup
+	this.connection.removeListener('error', this._onConnectionError);
+	this.connection.removeListener('close', this._onConnectionClosed);
 	this.connection = null;
+
 	this.emit('disconnect', this);
 	this.publish();
 }
@@ -100,12 +107,16 @@ User.prototype._setConnection = function(connection, deviceId) {
 
 	console.log(this.constructor.name + ' ' + this.id + ' connected');
 
+	// use device id to prevent double login
 	this.deviceId = deviceId;
-
 	this.connected = connection.readyState === WebSocket.OPEN;
+
+	// subscribe to connection events
+	connection.once('close', this._onConnectionClosed);
+	connection.once('error', this._onConnectionError);
+
+	// keep connection to send messages later
 	this.connection = connection;
-	this.connection.once('close', this._connectionClosed.bind(this));
-	this.connection.once('error', this._connectionError.bind(this));
 
 	this.emit('connect', this);
 	this.publish();

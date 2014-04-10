@@ -32,7 +32,9 @@ function Dispatcher() {
 			try {
 				connection.send(data);				
 			}
-			catch(e) {};
+			catch(e) {
+				connection.close();
+			};
 		}, this);
 
 	}.bind(this));	
@@ -375,7 +377,7 @@ Dispatcher.prototype.processMessage = function(data, connection) {
 		}
 
 		console.log('Sending response');
-		console.log(util.inspect(result, {depth: 3, colors: true}));
+		console.log(util.inspect(result, {depth: 3}));
 
 		// Send response
 		connection.send(JSON.stringify(result), function(err) {
