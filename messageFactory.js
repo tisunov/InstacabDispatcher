@@ -94,13 +94,8 @@ MessageFactory.createClientOK = function(client, options) {
 		client: userToJSON(client, options.includeToken)
 	}
 
-	// Для географической области вызовы в которую не обслуживаем
-	if (options.restrictedArea) {
-		msg.nearbyVehicles = { sorryMsg: "К сожалению мы еще не работаем в вашем регионе" };
-		return msg;
-	}
-
-	if (options.trip) {
+	if (options.trip) 
+	{
 		var jsonTrip = tripForClientToJSON(options.trip);
 		if (options.tripPendingRating) {
 			msg.client.tripPendingRating = jsonTrip;	
@@ -108,10 +103,16 @@ MessageFactory.createClientOK = function(client, options) {
 		else
 			msg.trip = jsonTrip;
 	}
-	else {
+	else
+	{
+		msg.nearbyVehicles = {};
+
+		if (options.sorryMsg) {
+			msg.nearbyVehicles.sorryMsg = options.sorryMsg;
+		}
+
 		if (!options.vehicles || options.vehicles.length === 0) {
-			// Когда нет свободных автомобилей для заказа в городе который подключен
-			msg.nearbyVehicles = { noneAvailableString: "Извините, но свободных автомобилей нет" };
+			msg.nearbyVehicles.noneAvailableString = "Извините, но свободных автомобилей нет";
 		}
 		else {
 			var minEta = _.min(options.vehicles, function(vehicle){ return vehicle.eta; }).eta;

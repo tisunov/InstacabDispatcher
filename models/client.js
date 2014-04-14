@@ -43,16 +43,19 @@ Client.prototype.ping = function(context, callback) {
 	this._generateOKResponse(false, callback);
 }
 
+// TODO: Записывать событие в mongo.collection("dispatcher_events")
 Client.prototype.pickup = function(context, callback) {
 	this.updateLocation(context);
 	if (this.state !== Client.LOOKING) return callback(null, this._createOK());
 
 	if (!Client.canRequestToLocation(context.message.pickupLocation))
-		return callback(null, MessageFactory.createError("К сожалению мы еще не работаем в вашем районе. Но мы постоянно расширяем наш сервис, следите за обновлениями вступив в группу http://vk.com/instacab"));
+		return callback(null, MessageFactory.createClientOK(this, { sorryMsg: "К сожалению мы еще не работаем в вашей области. Мы постоянно расширяем наш сервис, следите за обновлениями вступив в группу vk.com/instacab" }));
 
 	Driver.availableSortedByDistanceFrom(context.message.pickupLocation, function(err, items){
 		if (err) return callback(err);
-		if (items.length === 0) return callback(null, MessageFactory.createError('Извините, все водители заняты. Попробуйте снова попозже!', ErrorCodes.NO_DRIVERS_AVAILABLE));
+
+		if (items.length === 0)
+			return callback(null, MessageFactory.createClientOK(this, { sorryMsg: 'Спасибо БОЛЬШОЕ за интерес к Instacab. Все автомобили в настоящее время заполнены, пожалуйста проверьте снова в ближайшее время!' }));
 
 		this._driversAvailableForDispatch(context.message.pickupLocation, items, callback);
 	}.bind(this));
@@ -68,8 +71,8 @@ Client.prototype._driversAvailableForDispatch = function(pickupLocation, items, 
 		if (driverFound) {
 			callback(null, this._createOK());
 		}
-		else 
-			callback(null, MessageFactory.createError('К сожалению все водители уже заняты. Попробуйте снова попозже!', ErrorCodes.NO_DRIVERS_AVAILABLE));
+		else
+			return callback(null, MessageFactory.createClientOK(this, { sorryMsg: 'Спасибо БОЛЬШОЕ за интерес к Instacab. Все автомобили в настоящее время заполнены, пожалуйста проверьте снова в ближайшее время!' }));
 
 	}.bind(this));
 }
@@ -255,11 +258,6 @@ Client.prototype.updateNearbyDrivers = function() {
 }
 
 Client.prototype._updateNearbyDrivers = function(options, callback) {
-	if (!Client.canRequestToLocation(this.location)) {
-		options.restrictedArea = true;
-		return callback(null, MessageFactory.createClientOK(this, options));
-	}
-
 	Driver.allAvailableNear(this.location, function(err, vehicles) {
 		options.vehicles = vehicles;
 		callback(err, MessageFactory.createClientOK(this, options));
