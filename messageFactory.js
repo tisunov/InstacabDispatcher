@@ -39,9 +39,17 @@ function userToJSON(user, includeToken) {
 		json.token = user.token;
 	}
 
+	return json;
+}
+
+function clientToJSON(user, includeToken) {
+	var json = userToJSON(user, includeToken);
+
 	if (user.paymentProfile) {
 		json.paymentProfile = user.paymentProfile;
 	}
+
+	json.hasConfirmedMobile = user.hasConfirmedMobile;
 
 	return json;
 }
@@ -91,7 +99,7 @@ MessageFactory.createClientOK = function(client, options) {
 
 	var msg = {
 		messageType: "OK",
-		client: userToJSON(client, options.includeToken)
+		client: clientToJSON(client, options.includeToken)
 	}
 
 	if (options.trip) 
@@ -127,7 +135,7 @@ MessageFactory.createClientOK = function(client, options) {
 MessageFactory.createClientEndTrip = function(client, trip) {
 	var msg = {
 		messageType: "EndTrip",
-		client: userToJSON(client),
+		client: clientToJSON(client),
 	}
 
 	msg.client.tripPendingRating = tripForClientToJSON(trip);
@@ -138,7 +146,7 @@ MessageFactory.createClientPickupCanceled = function(client, reason) {
 	return {
 		messageType: 'PickupCanceled',
 		reason: reason,
-		client: userToJSON(client)
+		client: clientToJSON(client)
 	}
 }
 
@@ -146,7 +154,7 @@ MessageFactory.createDriverPickupCanceled = function(driver, reason) {
 	return {
 		messageType: 'PickupCanceled',
 		reason: reason,
-		driver: userToJSON(driver)
+		driver: clientToJSON(driver)
 	}
 }
 
@@ -154,7 +162,7 @@ MessageFactory.createClientTripCanceled = function(client, reason) {
 	return {
 		messageType: 'TripCanceled',
 		reason: reason,
-		client: userToJSON(client)
+		client: clientToJSON(client)
 	}
 }
 
@@ -184,7 +192,7 @@ MessageFactory.createArrivingNow = function(trip) {
 
 MessageFactory.createTripStarted = function(client, trip) {
 	var msg = tripToClientMessage(trip, 'BeginTrip');
-	msg.client = userToJSON(client);
+	msg.client = clientToJSON(client);
 	return msg;
 }
 

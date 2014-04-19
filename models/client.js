@@ -230,6 +230,7 @@ Client.prototype._generateOKResponse = function(includeToken, callback) {
 Client.prototype.getSchema = function() {
   var props = User.prototype.getSchema.call(this);
   props.push('paymentProfile');
+  props.push('hasConfirmedMobile');
   return props;
 }
 
