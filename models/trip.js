@@ -58,46 +58,80 @@ Trip.prototype._dispatchToNextAvailableDriver = function() {
 	};
 
 	var self = this;
-	async.waterfall([
-		// BUG: Возвращает пустой массив
-		Driver.availableSortedByDistanceFrom.bind(null, this.pickupLocation),
-
-		function(driversWithDistance, next) {
-			console.log("Drivers with distance:");
-			console.log(util.inspect(this.driversWithDistance, {depth: 3}));
-
-
-			// Find first driver that hasn't rejected Pickup before
-			async.detectSeries(
-				driversWithDistance,
-				function(item, callback) {
-					callback(hasDriverRejectedPickupBefore.call(self, item.driver));
-				},
-				next.bind(null)
-			);
-		}
-	],
-	function(err, result) {
+	Driver.availableSortedByDistanceFrom(this.pickupLocation, function(err, driversWithDistance) {
 		if (err) {
-			console.log("Dispatch error:");
-			console.log(util.inspect(err, {depth: 3}));
+			console.log("Can't find available drivers:");
+			console.log(util.inspect(err));
+
+			return this._cancelClientPickupRequest();
 		}
 
-		if (result) {
-			console.log("Dispatch result:");
-			console.log(util.inspect(result, {depth: 3}));
-		}
+		console.log("Drivers with distance:");
+		console.log(util.inspect(this.driversWithDistance, {depth: 2}));
 
-		if (result) {
-			this._setDriver(result.driver);
-			this._dispatchDriver();
-		}
-		else {
-			console.log('No more available drivers to pass Pickup request to');
-			this._cancelClientPickupRequest('Отсутствуют свободные водители. Пожалуйста попробуйте позднее еще раз!');
-		}
+		// Find first driver that hasn't rejected Pickup before
+		async.detectSeries(
+			driversWithDistance,
+			function(item, callback) {
+				callback(hasDriverRejectedPickupBefore.call(self, item.driver));
+			},
+			function(nextAvailable) {
 
-	}.bind(this));
+				if (nextAvailable) {
+					console.log("Next avaiable driver:");
+					console.log(util.inspect(nextAvailable, {depth: 2}));
+
+					this._setDriver(nextAvailable.driver);
+					this._dispatchDriver();
+				}
+				else {
+					this._cancelClientPickupRequest();
+				}
+
+			}
+		);
+
+	});
+
+	// async.waterfall([
+	// 	// BUG: Возвращает пустой массив
+	// 	Driver.availableSortedByDistanceFrom.bind(null, this.pickupLocation),
+
+	// 	function(driversWithDistance, next) {
+	// 		console.log("Drivers with distance:");
+	// 		console.log(util.inspect(this.driversWithDistance, {depth: 2}));
+
+
+	// 		// Find first driver that hasn't rejected Pickup before
+	// 		async.detectSeries(
+	// 			driversWithDistance,
+	// 			function(item, callback) {
+	// 				callback(hasDriverRejectedPickupBefore.call(self, item.driver));
+	// 			},
+	// 			next.bind(null)
+	// 		);
+	// 	}
+	// ],
+	// function(err, result) {
+	// 	if (err) {
+	// 		console.log("Dispatch error:");
+	// 		console.log(util.inspect(err, {depth: 3}));
+	// 	}
+
+	// 	if (result) {
+	// 		console.log("Dispatch result:");
+	// 		console.log(util.inspect(result, {depth: 3}));
+	// 	}
+
+	// 	if (result) {
+	// 		this._setDriver(result.driver);
+	// 		this._dispatchDriver();
+	// 	}
+	// 	else {
+	// 		this._cancelClientPickupRequest();
+	// 	}
+
+	// }.bind(this));
 }
 
 // TODO: Remove from cache once driver and client rated it
@@ -125,10 +159,12 @@ Trip.prototype._onDriverDisconnect = function() {
 	}
 }
 
-Trip.prototype._cancelClientPickupRequest = function(reasonString) {
+Trip.prototype._cancelClientPickupRequest = function() {
+	console.log('No more available drivers to pass Pickup request to');
+
 	this._changeState(Trip.DISPATCHER_CANCELED);
 	this._archive();
-	this.client.notifyPickupCanceled(reasonString);
+	this.client.notifyPickupCanceled('Отсутствуют свободные водители. Пожалуйста попробуйте позднее еще раз!');
 }
 
 Trip.prototype._cancelDriverPickup = function(clientCanceled) {
