@@ -59,13 +59,13 @@ Trip.prototype._dispatchToNextAvailableDriver = function() {
 		Driver.availableSortedByDistanceFrom.bind(null, this.pickupLocation),
 
 		function(driversWithDistance, next) {
-			// find first driver that hasn't rejected Pickup before
-			async.detect(
+			// Find first driver that hasn't rejected Pickup before
+			async.detectSeries(
 				driversWithDistance,
 				function(item, callback) {
 					callback(hasDriverRejectedPickupBefore.call(self, item.driver));
 				},
-				next
+				next.bind(null)
 			);
 		}
 	],
@@ -76,7 +76,7 @@ Trip.prototype._dispatchToNextAvailableDriver = function() {
 		}
 		else {
 			console.log('No more available drivers to pass Pickup request to');
-			this._cancelClientPickupRequest('Отсутствуют свободные водители. Пожалуйста попробуйте позднее.');
+			this._cancelClientPickupRequest('Отсутствуют свободные водители. Пожалуйста попробуйте позднее еще раз!');
 		}
 
 	}.bind(this));
