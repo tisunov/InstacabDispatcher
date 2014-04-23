@@ -59,6 +59,7 @@ Trip.prototype._dispatchToNextAvailableDriver = function() {
 
 	var self = this;
 	async.waterfall([
+		// BUG: Возвращает пустой массив
 		Driver.availableSortedByDistanceFrom.bind(null, this.pickupLocation),
 
 		function(driversWithDistance, next) {

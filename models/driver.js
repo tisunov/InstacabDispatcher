@@ -325,6 +325,9 @@ Driver.availableSortedByDistanceFrom = function(pickupLocation, callback) {
     findAvailableDrivers,
     // find distance to each driver
     function(availableDrivers, nextFn) {
+      console.log("Available drivers:");
+      console.log(util.inspect(availableDrivers));
+
       async.map(
         availableDrivers,
         function(driver, cb) {
@@ -337,6 +340,9 @@ Driver.availableSortedByDistanceFrom = function(pickupLocation, callback) {
     },
     // order drivers by distance
     function(driversAndDistances, nextFn) { 
+      console.log("Available drivers with distance to pickup location:");
+      console.log(util.inspect(driversAndDistances));
+
       async.sortBy(
         driversAndDistances, 
         function(item, cb) { cb(null, item.distanceToClient) },
