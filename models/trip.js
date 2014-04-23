@@ -50,6 +50,9 @@ Trip.prototype._dispatchToNextAvailableDriver = function() {
 	console.log('Driver ' + this.driver.id + ' unable or unwilling to pickup. Finding next one...');
 	this._cancelDriverPickup(false);
 
+	console.log("Rejected driver ids:");
+	console.log(util.inspect(this.rejectedDriverIds));
+
 	function hasDriverRejectedPickupBefore(driver) {
 		return this.rejectedDriverIds.indexOf(driver.id) !== -1;
 	};
@@ -59,6 +62,10 @@ Trip.prototype._dispatchToNextAvailableDriver = function() {
 		Driver.availableSortedByDistanceFrom.bind(null, this.pickupLocation),
 
 		function(driversWithDistance, next) {
+			console.log("Drivers with distance:");
+			console.log(util.inspect(this.driversWithDistance, {depth: 3}));
+
+
 			// Find first driver that hasn't rejected Pickup before
 			async.detectSeries(
 				driversWithDistance,
@@ -70,6 +77,16 @@ Trip.prototype._dispatchToNextAvailableDriver = function() {
 		}
 	],
 	function(err, result) {
+		if (err) {
+			console.log("Dispatch error:");
+			console.log(util.inspect(err, {depth: 3}));
+		}
+
+		if (result) {
+			console.log("Dispatch result:");
+			console.log(util.inspect(result, {depth: 3}));
+		}
+
 		if (result) {
 			this._setDriver(result.driver);
 			this._dispatchDriver();
