@@ -53,10 +53,6 @@ Trip.prototype._dispatchToNextAvailableDriver = function() {
 	console.log("Rejected driver ids:");
 	console.log(util.inspect(this.rejectedDriverIds));
 
-	function hasDriverRejectedPickupBefore(driver) {
-		return this.rejectedDriverIds.indexOf(driver.id) !== -1;
-	};
-
 	var self = this;
 	Driver.availableSortedByDistanceFrom(this.pickupLocation, function(err, driversWithDistance) {
 		if (err) {
@@ -67,19 +63,25 @@ Trip.prototype._dispatchToNextAvailableDriver = function() {
 		}
 
 		console.log("Drivers with distance:");
-		console.log(util.inspect(driversWithDistance, {depth: 2}));
+		console.log(util.inspect(driversWithDistance));
 
 		// Find first driver that hasn't rejected Pickup before
 		async.detectSeries(
 			driversWithDistance,
 			function(item, callback) {
-				callback(hasDriverRejectedPickupBefore.call(self, item.driver));
+				console.log("Check if driver " + item.driver.id + " rejected this pickup request...");
+				var rejectedBefore = self.rejectedDriverIds.indexOf(item.driver.id) !== -1;
+
+				console.log("... result " + rejectedBefore);
+				callback(rejectedBefore);
 			},
 			function(nextAvailable) {
+				console.log("async.detectSeries arguments:");
+				console.log(arguments);
 
 				if (nextAvailable) {
 					console.log("Next avaiable driver:");
-					console.log(util.inspect(nextAvailable, {depth: 2}));
+					console.log(util.inspect(nextAvailable));
 
 					self._setDriver(nextAvailable.driver);
 					self._dispatchDriver();
@@ -90,47 +92,8 @@ Trip.prototype._dispatchToNextAvailableDriver = function() {
 
 			}
 		);
+
 	});
-
-	// async.waterfall([
-	// 	// BUG: Возвращает пустой массив
-	// 	Driver.availableSortedByDistanceFrom.bind(null, this.pickupLocation),
-
-	// 	function(driversWithDistance, next) {
-	// 		console.log("Drivers with distance:");
-	// 		console.log(util.inspect(this.driversWithDistance, {depth: 2}));
-
-
-	// 		// Find first driver that hasn't rejected Pickup before
-	// 		async.detectSeries(
-	// 			driversWithDistance,
-	// 			function(item, callback) {
-	// 				callback(hasDriverRejectedPickupBefore.call(self, item.driver));
-	// 			},
-	// 			next.bind(null)
-	// 		);
-	// 	}
-	// ],
-	// function(err, result) {
-	// 	if (err) {
-	// 		console.log("Dispatch error:");
-	// 		console.log(util.inspect(err, {depth: 3}));
-	// 	}
-
-	// 	if (result) {
-	// 		console.log("Dispatch result:");
-	// 		console.log(util.inspect(result, {depth: 3}));
-	// 	}
-
-	// 	if (result) {
-	// 		this._setDriver(result.driver);
-	// 		this._dispatchDriver();
-	// 	}
-	// 	else {
-	// 		this._cancelClientPickupRequest();
-	// 	}
-
-	// }.bind(this));
 }
 
 // TODO: Remove from cache once driver and client rated it
