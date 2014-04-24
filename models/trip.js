@@ -47,7 +47,7 @@ Trip.prototype.load = function(callback) {
 }
 
 Trip.prototype._dispatchToNextAvailableDriver = function() {
-	console.log('Driver ' + this.driver.id + ' unable or unwilling to pickup. Finding next one...');
+	console.log('Driver ' + this.driver.id + ' canceled pickup. Finding next one...');
 	this._cancelDriverPickup(false);
 
 	console.log("Rejected driver ids:");
@@ -63,25 +63,22 @@ Trip.prototype._dispatchToNextAvailableDriver = function() {
 		}
 
 		console.log("Drivers with distance:");
-		console.log(util.inspect(driversWithDistance));
+		console.log(util.inspect(driversWithDistance, {depth:1}));
 
 		// Find first driver that hasn't rejected Pickup before
 		async.detectSeries(
 			driversWithDistance,
 			function(item, callback) {
-				console.log("Check if driver " + item.driver.id + " rejected this pickup request...");
-				var rejectedBefore = self.rejectedDriverIds.indexOf(item.driver.id) !== -1;
+				console.log("Check if driver " + item.driver.id + " has not rejected this pickup request...");
+				var didNotReject = self.rejectedDriverIds.indexOf(item.driver.id) === -1;
 
-				console.log("... result " + rejectedBefore);
-				callback(rejectedBefore);
+				console.log("... result " + didNotReject);
+				callback(didNotReject);
 			},
 			function(nextAvailable) {
-				console.log("async.detectSeries arguments:");
-				console.log(arguments);
-
 				if (nextAvailable) {
 					console.log("Next avaiable driver:");
-					console.log(util.inspect(nextAvailable));
+					console.log(util.inspect(nextAvailable, {depth:1}));
 
 					self._setDriver(nextAvailable.driver);
 					self._dispatchDriver();
