@@ -63,11 +63,11 @@ Trip.prototype._dispatchToNextAvailableDriver = function() {
 			console.log("Can't find available drivers:");
 			console.log(util.inspect(err));
 
-			return this._cancelClientPickupRequest();
+			return self._cancelClientPickupRequest();
 		}
 
 		console.log("Drivers with distance:");
-		console.log(util.inspect(this.driversWithDistance, {depth: 2}));
+		console.log(util.inspect(driversWithDistance, {depth: 2}));
 
 		// Find first driver that hasn't rejected Pickup before
 		async.detectSeries(
@@ -81,16 +81,15 @@ Trip.prototype._dispatchToNextAvailableDriver = function() {
 					console.log("Next avaiable driver:");
 					console.log(util.inspect(nextAvailable, {depth: 2}));
 
-					this._setDriver(nextAvailable.driver);
-					this._dispatchDriver();
+					self._setDriver(nextAvailable.driver);
+					self._dispatchDriver();
 				}
 				else {
-					this._cancelClientPickupRequest();
+					self._cancelClientPickupRequest();
 				}
 
 			}
 		);
-
 	});
 
 	// async.waterfall([
