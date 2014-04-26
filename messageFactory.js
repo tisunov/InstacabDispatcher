@@ -5,6 +5,8 @@ function tripForClientToJSON(trip) {
 		id: trip.id,
 		pickupLocation: trip.pickupLocation,
 		fareBilledToCard: trip.fareBilledToCard,
+		fare: trip.fare,
+		paidByCard: trip.paidByCard,
 		dropoffAt: trip.dropoffAt,
 		driver: {
 			firstName: trip.driver.firstName,
@@ -66,7 +68,9 @@ function tripForDriverToJSON(trip) {
 		pickupLocation: trip.pickupLocation,
 		dropoffLocation: trip.dropoffLocation,
 		dropoffTimestamp: trip.dropoffAt,
+		fareBilledToCard: trip.fareBilledToCard,
 		fare: trip.fare,
+		paidByCard: trip.paidByCard,
 		client: userToJSON(trip.client)
 	};	
 }

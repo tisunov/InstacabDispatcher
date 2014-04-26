@@ -153,6 +153,14 @@ User.prototype.changeState = function(state) {
 	}
 };
 
+User.prototype.update = function(userInfo) {
+	Object.keys(userInfo).forEach(function(propName) {
+	    this[propName] = userInfo[propName];
+	}.bind(this));
+
+	this.save();
+}
+
 User.prototype.toJSON = function() {
   return {
     id: this.id,

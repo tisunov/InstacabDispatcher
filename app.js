@@ -12,6 +12,7 @@ var Dispatcher = require('./dispatch'),
     WebSocketServer = require('ws').Server,
     express = require('express'),
     inspect = require('util').inspect,
+    util = require('util'),
     db = require('./mongo_client');
 
 var dispatcher = new Dispatcher();
@@ -68,6 +69,21 @@ dispatcher.load(function(err) {
     });
     
     resp.writeHead(200, { 'Content-Type': 'text/plain' });
+    resp.end();
+  });
+
+  var clientRepository = require('./models/client').repository;
+
+  // State management
+  app.put('/clients/:id', function(req, resp) {
+    console.log(req.body);
+
+    clientRepository.get(req.body.id, function(err, client) {
+      if (err) return console.log(err);
+
+      client.update(req.body);
+    });
+
     resp.end();
   });
 

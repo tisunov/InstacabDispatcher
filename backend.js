@@ -118,7 +118,7 @@ Backend.prototype.billTrip = function(trip, callback) {
 		console.log('+ Backend.billTrip:');
 		console.log(util.inspect(body, {colors:true}));
 		
-		callback(null, body['fare_billed_to_card'], body['fare']);
+		callback(null, body['fare_billed_to_card'], body['fare'], body['paid_by_card']);
 	});
 }
 
@@ -158,14 +158,19 @@ Backend.prototype.apiCommand = function(message, callback) {
 			form: message.apiParameters
 		},
 		function(error, response, body) {
-			var apiResponse = { statusCode: response.statusCode };
+			var apiResponse = { };
 
 			if (error) {
 				apiResponse['error'] = error.message;
 			}
-			else if (response.statusCode < 400 && body) {
-	    	apiResponse = JSON.parse(body);
+			else if (body) {
+				try {
+					apiResponse = JSON.parse(body);
+				}
+	    	catch(e) { /* ignore */ }
 			}
+
+			apiResponse.statusCode = response.statusCode;
 
 			callback(null, { messageType: 'ApiResponse', apiResponse: apiResponse });
 		}

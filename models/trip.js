@@ -184,7 +184,7 @@ Trip.prototype._estimateTimeToClientThenDispatch = function() {
 }
 
 Trip.prototype.getSchema = function() {
-	return ['id', 'clientId', 'driverId', 'state', 'cancelReason', 'pickupLocation', 'dropoffLocation', 'confirmLocation', 'pickupAt', 'dropoffAt', 'createdAt', 'fareBilledToCard', 'fare', 'rejectedDriverIds', 'route', 'eta', 'secondsToArrival', 'confirmedAt', 'arrivedAt', 'driverRating', 'feedback'];
+	return ['id', 'clientId', 'driverId', 'state', 'cancelReason', 'pickupLocation', 'dropoffLocation', 'confirmLocation', 'pickupAt', 'dropoffAt', 'createdAt', 'fareBilledToCard', 'fare', 'paidByCard', 'rejectedDriverIds', 'route', 'eta', 'secondsToArrival', 'confirmedAt', 'arrivedAt', 'driverRating', 'feedback'];
 }
 
 Trip.prototype._setClient = function(value) {
@@ -367,13 +367,14 @@ Trip.prototype.driverEnd = function(context, callback) {
 }
 
 Trip.prototype._bill = function() {
-	apiBackend.billTrip(this, function(err, fare_billed_to_card, fare) {
+	apiBackend.billTrip(this, function(err, fareBilledToCard, fare, paidByCard) {
 		if (err) console.log(err);
 
-		console.log('Trip ' + this.id + ' billed fare is ' + fare_billed_to_card + ' руб.');
+		console.log('Trip ' + this.id + ' billed fare is ' + fareBilledToCard + ' руб.');
 		console.log('Trip ' + this.id + ' total fare is ' + fare + ' руб.');
-		this.fareBilledToCard = fare_billed_to_card;
+		this.fareBilledToCard = fareBilledToCard;
 		this.fare = fare;
+		this.paidByCard = paidByCard;
 		this.publish();
 		this._save();
 
