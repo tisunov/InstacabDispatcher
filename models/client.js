@@ -55,7 +55,7 @@ Client.prototype.pickup = function(context, callback) {
 		if (err) return callback(err);
 
 		if (items.length === 0)
-			return callback(null, MessageFactory.createClientOK(this, { sorryMsg: 'Спасибо БОЛЬШОЕ за интерес к Instacab. Все автомобили в настоящее время заполнены, пожалуйста проверьте снова в ближайшее время!' }));
+			return callback(null, MessageFactory.createClientOK(this, { sorryMsg: 'ОГРОМНОЕ спасибо за интерес к Instacab! Все автомобили в настоящее время заполнены, пожалуйста проверьте снова в ближайшее время!' }));
 
 		this._driversAvailableForDispatch(context.message.pickupLocation, items, callback);
 	}.bind(this));

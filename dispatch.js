@@ -11,6 +11,7 @@ var async = require('async'),
 	Client = require("./models/client").Client,
 	subscriber = require("redis").createClient(),
 	ErrorCodes = require("./error_codes"),
+	DistanceMatrix = require('./lib/google-distance'),
 	MessageFactory = require("./messageFactory");
 
 function Dispatcher() {
@@ -76,6 +77,52 @@ Dispatcher.prototype = {
 			if (err) return callback(err);
 
 			client.pickup(context, callback);
+		});
+	},
+
+	// TODO: Записать в Client lastEstimatedTrip расчет поездки
+	// И сохранять для каждого клиента это в базе
+	SetDestination: function(context, callback) {
+		var m = context.message;
+
+		clientRepository.get(m.id, function(err, client) {
+			if (err) return callback(err);
+
+			// TODO: Учти DistanceMatrix выдает несколько вариантов маршрута
+			// https://developers.google.com/maps/documentation/javascript/distancematrix
+			// Нужно выбрать самый короткий по расстоянию или самый быстрый по времени
+			DistanceMatrix.get(m.pickupLocation, m.destination, function(err, data) {
+			  if (err) {
+			  	// default to 20 minute and 9 km per trip
+			    data = { durationSeconds: 20 * 60, distanceKms: 9 };
+			    console.log(err);
+			  }
+
+			  var distanceKm = data.distanceKms / 1000;
+
+			  // Time per trip with speed less than 21 km/h = 1.5 min per 5 km
+			  var billedTimeLow = (distanceKm / 5) * 1.5;
+			  // Use 5 minutes per 5 km during traffic
+			  var billedTimeHigh = (distanceKm / 5) * 5;
+			  // 500 meters for each 5 km below < 21 km/h
+			  var billedDistance = distanceKm - distanceKm * 0.1;
+
+			  // TODO: Нужно спросить Fare у Backend, или вообще перенести весь расчет в API Backend
+			  var fare = { base: 50.00, per_minute: 5.0, per_km: 14.0, minimum: 139 }
+
+			  var estimateLow = Math.round((fare.base + billedTimeLow * fare.per_minute + billedDistance * fare.per_km) / 10) * 10;
+			  var estimateHigh = Math.round((fare.base + billedTimeHigh * fare.per_minute + billedDistance * fare.per_km) / 10) * 10;
+
+			  var estimateString;
+
+			  if (estimateHigh > (fare.minimum + 1)) // 139 + 1 = 140
+			  	estimateString = estimateLow.toString() + '-' + estimateHigh.toString() + ' руб.';
+			  else
+			  	estimateString = fare.minimum.toString() + ' руб.';
+			  
+			  callback(null, MessageFactory.clientFareEstimate(client, estimateString));
+			});
+
 		});
 	},
 	

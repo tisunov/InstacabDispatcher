@@ -238,10 +238,6 @@ Driver.prototype.isAvailable = function() {
   return this.connected && this.state === Driver.AVAILABLE;
 }
 
-function locationToString(location) {
-  return location.latitude + ',' + location.longitude
-}
-
 function isAvailable(driver, callback) {
   callback(driver.isAvailable());
 }
@@ -253,11 +249,8 @@ function findAvailableDrivers(callback) {
 
 // TODO: Нужно кэшировать полученные расстояния когда координаты origin и destination входят в небольшой bounding box или geofence с радиусом
 // Иначе очень быстро исчерпаются временной и дневной лимиты на запросы к Google Maps Distance Matrix API
-Driver.prototype.queryETAToLocation = function(location, callback) {
-  DistanceMatrix.get({
-    origin: locationToString(this.location),
-    destination: locationToString(location)
-  }, function(err, data) {
+Driver.prototype.queryETAToLocation = function(pickupLocation, callback) {
+  DistanceMatrix.get(this.location, pickupLocation, function(err, data) {
     if (err) {
       data = { durationSeconds: DEFAULT_PICKUP_TIME_SECONDS };
       console.log(err);

@@ -146,6 +146,16 @@ MessageFactory.createClientEndTrip = function(client, trip) {
 	return msg;
 }
 
+MessageFactory.clientFareEstimate = function(client, estimate) {
+	var msg = {
+		messageType: "OK",
+		client: clientToJSON(client),
+	};
+
+	msg.client.lastFareEstimate = estimate;
+	return msg;
+}
+
 MessageFactory.createClientPickupCanceled = function(client, reason) {
 	return {
 		messageType: 'PickupCanceled',
