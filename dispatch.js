@@ -9,7 +9,7 @@ var async = require('async'),
 	clientRepository = require('./models/client').repository,
 	Driver = require("./models/driver").Driver,
 	Client = require("./models/client").Client,
-	subscriber = require("redis").createClient(),
+	redis = require("redis").createClient(),
 	ErrorCodes = require("./error_codes"),
 	DistanceMatrix = require('./lib/google-distance'),
 	MessageFactory = require("./messageFactory");
@@ -18,12 +18,12 @@ function Dispatcher() {
 	this.driverEventCallback = this._clientsUpdateNearbyDrivers.bind(this);
 	this.channelClients = {};
 	
-	subscriber.subscribe('channel:drivers');
-	subscriber.subscribe('channel:clients');
-	subscriber.subscribe('channel:trips');
+	redis.subscribe('channel:drivers');
+	redis.subscribe('channel:clients');
+	redis.subscribe('channel:trips');
 
 	// Broadcast message to clients
-	subscriber.on('message', function(channel, message) {
+	redis.on('message', function(channel, message) {
 		channel = channel.split(':')[1];
 		if (!this.channelClients[channel]) return;
 
@@ -271,13 +271,13 @@ Dispatcher.prototype = {
 		clients.push(context.connection);
 
 		console.log("Subscribe to " + context.message.channel);
-		console.log("Channel " + context.message.channel + " has " + clients.length + " subscribers");
+		console.log("Channel " + context.message.channel + " has " + clients.length + " rediss");
 		
 		// Remove disconnected clients
 		context.connection.once('close', function() {
 			index = clients.indexOf(context.connection);
 			if (index > -1) {
-				console.log('Remove subscriber from ' + context.message.channel);
+				console.log('Remove redis from ' + context.message.channel);
 				clients.splice(index, 1);
 			}
 		});

@@ -13,6 +13,7 @@ var Dispatcher = require('./dispatch'),
     express = require('express'),
     inspect = require('util').inspect,
     util = require('util'),
+    cors = require('cors'),
     db = require('./mongo_client');
 
 var dispatcher = new Dispatcher();
@@ -48,6 +49,7 @@ dispatcher.load(function(err) {
 
   // Middleware
   app.use(express.json());
+  app.use(cors());
   app.use(app.router);
   app.use(function(err, req, res, next) {
     console.error(err.stack);
@@ -55,14 +57,13 @@ dispatcher.load(function(err) {
     res.send('500', { messageType: 'Error', text: err.message });
   });
 
-
   // create index: 
   // key, unique, callback
   db.collection('mobile_events').ensureIndex({ "location": "2d" }, false, function(err, replies){});
 
   // Events
   app.post('/mobile/event', function(req, resp) {
-    // console.log(req.body);
+    console.log(req.body);
 
     db.collection('mobile_events').insert( req.body, function(err, replies){
       if (err) console.log(err);

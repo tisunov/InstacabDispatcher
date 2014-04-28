@@ -217,4 +217,19 @@ Backend.prototype.selectVehicle = function(driver, vehicleId, callback) {
 	});
 }
 
+Backend.prototype.getActiveFare = function(callback) {
+	request.get(backendUrl + '/api/v1/fares', function (error, response, body) {
+		if (error) console.log(error);
+
+		try {
+			var response = JSON.parse(body);
+		} catch (e) {
+			console.log(e.message);
+			return callback(new Error("Техническая ошибка."));
+		}
+
+		callback(null, response.fare);
+	});
+}
+
 module.exports = new Backend();
