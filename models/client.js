@@ -169,7 +169,7 @@ Client.prototype.notifyTripCanceled = function() {
 	// nulls out this.trip
 	this.changeState(Client.LOOKING);	
 
-	this.send(MessageFactory.createClientTripCanceled(this, "Водитель вынужден был отменить ваш заказ."));
+	this.send(MessageFactory.createClientTripCanceled(this, "Водитель был вынужден отменить твой заказ, но возможно у нас есть еще один свободный Instacab! Пожалуйста попробуй снова заказать машину."));
 
 	this.save();
 }
