@@ -63,7 +63,7 @@ dispatcher.load(function(err) {
 
   // Events
   app.post('/mobile/event', function(req, resp) {
-    console.log(req.body);
+    // console.log(req.body);
 
     db.collection('mobile_events').insert( req.body, function(err, replies){
       if (err) console.log(err);
@@ -77,7 +77,7 @@ dispatcher.load(function(err) {
 
   // State management
   app.put('/clients/:id', function(req, resp) {
-    console.log(req.body);
+    // console.log(req.body);
 
     clientRepository.get(req.body.id, function(err, client) {
       if (err) return console.log(err);
