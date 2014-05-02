@@ -277,7 +277,7 @@ Dispatcher.prototype = {
 		context.connection.once('close', function() {
 			index = clients.indexOf(context.connection);
 			if (index > -1) {
-				console.log('Remove redis from ' + context.message.channel);
+				console.log('Remove subscriber from ' + context.message.channel);
 				clients.splice(index, 1);
 			}
 		});
