@@ -72,7 +72,6 @@ User.prototype.disconnect = function() {
 	if (this.connection && this.connection.readyState === WebSocket.OPEN) {
 		this.connection.close();
 	}
-	this.connection = null;
 }
 
 User.prototype._connectionClosed = function() {
@@ -80,9 +79,11 @@ User.prototype._connectionClosed = function() {
 	
 	this.connected = false;
 	// cleanup
-	this.connection.removeListener('error', this._onConnectionError);
-	this.connection.removeListener('close', this._onConnectionClosed);
-	this.connection = null;
+	if (connection) {
+		this.connection.removeListener('error', this._onConnectionError);
+		this.connection.removeListener('close', this._onConnectionClosed);
+		this.connection = null;
+	}
 
 	this.emit('disconnect', this);
 	this.publish();
