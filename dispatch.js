@@ -404,7 +404,8 @@ Dispatcher.prototype.load = function(callback) {
 }
 
 Dispatcher.prototype.processMessage = function(data, connection) {
-	console.log("Process message");
+	console.log("Process message:");
+	// console.log(data);
 
 	var message;
 	if (!(message = this._parseJSONData(data, connection))) return;

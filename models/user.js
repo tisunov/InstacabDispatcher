@@ -79,11 +79,9 @@ User.prototype._connectionClosed = function() {
 	
 	this.connected = false;
 	// cleanup
-	if (connection) {
-		this.connection.removeListener('error', this._onConnectionError);
-		this.connection.removeListener('close', this._onConnectionClosed);
-		this.connection = null;
-	}
+	this.connection.removeListener('error', this._onConnectionError);
+	this.connection.removeListener('close', this._onConnectionClosed);
+	this.connection = null;
 
 	this.emit('disconnect', this);
 	this.publish();
