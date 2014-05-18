@@ -4,7 +4,8 @@ var login1 = {
   email: 'mike@mail.ru',
   password: 'securepassword',
   latitude: 51.674789,
-  longitude: 39.211527
+  longitude: 39.211527,
+  epoch: Math.round(new Date().getTime() / 1000.0)
   // latitude: 51.66351,
   // longitude: 39.185234
 };
@@ -13,16 +14,8 @@ var onduty = {
   messageType: "OnDutyDriver",
   app: "driver",  
   latitude: 51.674789,
-  longitude: 39.211527  
-}
-
-var login2 = {
-  messageType: "LoginDriver",
-  app: "driver",
-  email: 'katrin@gmail.com',
-  password: 'securepassword',
-  latitude: 51.66251,
-  longitude: 39.185234  
+  longitude: 39.211527,
+  epoch: Math.round(new Date().getTime() / 1000.0)
 }
 
 var signOut = {
@@ -36,7 +29,9 @@ var pingDriver = {
   messageType: "PingDriver",
   app: 'driver',
   latitude: 51.674789,
-  longitude: 39.211527    
+  longitude: 39.211527,
+  epoch: Math.round(new Date().getTime() / 1000.0),
+  course: 0
 };
 
 var confirmPickup = {
@@ -44,6 +39,7 @@ var confirmPickup = {
   altitude: 0,
   latitude: 51.68274,
   longitude: 39.12119,
+  epoch: Math.round(new Date().getTime() / 1000.0),
   app: 'driver',
 };
 
@@ -52,6 +48,7 @@ var arrivingNow = {
   altitude: 0,
   latitude: 51.68274,
   longitude: 39.12119,
+  epoch: Math.round(new Date().getTime() / 1000.0),
   app: 'driver',
 };
 
@@ -59,7 +56,8 @@ var beginTrip = {
   messageType: "BeginTripDriver",
   app: 'driver',
   latitude: 51.68274,
-  longitude: 39.12119  
+  longitude: 39.12119,
+  epoch: Math.round(new Date().getTime() / 1000.0) 
 };
 
 var endTrip = {
@@ -67,7 +65,8 @@ var endTrip = {
   app: 'driver',
   token: 'db1eba81d9d8',
   latitude: 51.68274,
-  longitude: 39.12119
+  longitude: 39.12119,
+  epoch: Math.round(new Date().getTime() / 1000.0)
 };
 
 var tripCoordinates = [
@@ -80,7 +79,6 @@ var tripCoordinates = [
   [51.680296, 39.129653],
   [51.683448, 39.122151],
 ];
-
 
 var WebSocket = require('faye-websocket'),
     client    = new WebSocket.Client('ws://localhost:9000/');
@@ -112,7 +110,7 @@ function driveToClient(driverId, tripId, pickupLocation) {
     pingDriver.id = driverId;
     pingDriver.latitude = tripCoordinates[i][0];
     pingDriver.longitude = tripCoordinates[i][1];
-    pingDriver.timestamp = Date.now();
+    pingDriver.epoch = Math.round(new Date().getTime() / 1000.0);
     pingDriver.token = token;
     client.sendWithLog(pingDriver);
 
@@ -125,6 +123,7 @@ function driveToClient(driverId, tripId, pickupLocation) {
       arrivingNow.tripId = tripId;
       arrivingNow.latitude = pickupLocation.latitude;
       arrivingNow.longitude = pickupLocation.longitude;      
+      arrivingNow.epoch = Math.round(new Date().getTime() / 1000.0);
       client.sendWithLog(arrivingNow);
     }
 
@@ -141,7 +140,7 @@ function driveClient(driverId, callback) {
     pingDriver.id = driverId;
     pingDriver.latitude = tripCoordinates[i][0];
     pingDriver.longitude = tripCoordinates[i][1];
-    pingDriver.timestamp = Math.round(Date.now() / 1000); // in seconds
+    pingDriver.epoch = Math.round(new Date().getTime()/1000.0); // in seconds
     pingDriver.token = token;
     client.sendWithLog(pingDriver);
 
@@ -150,11 +149,11 @@ function driveClient(driverId, callback) {
       clearInterval(timerId);
       callback();
     }
-  }, 200);
+  }, 1000);
 
 }
 
-var timer, token;
+var timer, token, justStarted = true;
 
 client.on('message', function(event) {
   console.log("Received: " + event.data);
@@ -181,15 +180,24 @@ client.on('message', function(event) {
           app: 'driver',
           token: token,
           latitude: 51.66351,
-          longitude: 39.185234          
+          longitude: 39.185234,
+          epoch: Math.round(new Date().getTime() / 1000.0)
         });
       }
-
-      if (response.driver.state === 'OffDuty') {
+      else if (response.driver.state === 'DrivingClient' && justStarted) {
+        endTrip.tripId = response.trip.id;
+        endTrip.token = token;
+        endTrip.epoch = Math.round(new Date().getTime() / 1000.0);
+        client.sendWithLog(endTrip);
+      }
+      else if (response.driver.state === 'OffDuty') {
         onduty.id = response.driver.id;
         onduty.token = token;
+        onduty.epoch = Math.round(new Date().getTime() / 1000.0);
         client.sendWithLog(onduty);
       }
+
+      justStarted = false;
       break;
 
     case 'PickupCanceled':
@@ -202,6 +210,7 @@ client.on('message', function(event) {
         confirmPickup.latitude = 51.681520;
         confirmPickup.longitude = 39.183383;
         confirmPickup.token = token;
+        confirmPickup.epoch = Math.round(new Date().getTime() / 1000.0);
         client.sendWithLog(confirmPickup);
         
         driveToClient(response.driver.id, response.trip.id, response.trip.pickupLocation);
@@ -211,6 +220,7 @@ client.on('message', function(event) {
           // let the Trip begin
           beginTrip.tripId = response.trip.id;
           beginTrip.token = token;
+          beginTrip.epoch = Math.round(new Date().getTime() / 1000.0);
           client.sendWithLog(beginTrip);
 
           // send couple of gps points to dispatcher
@@ -218,11 +228,12 @@ client.on('message', function(event) {
             // end trip
             endTrip.tripId = response.trip.id;
             endTrip.token = token;
+            endTrip.epoch = Math.round(new Date().getTime() / 1000.0);
             client.sendWithLog(endTrip);
           });
         }, 3000);
 
-      }, 1000);
+      }, 5000);
       break;
   }    
 });

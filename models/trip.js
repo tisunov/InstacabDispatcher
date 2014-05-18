@@ -316,6 +316,15 @@ Trip.prototype.clientCancel = function(clientContext, callback) {
 	callback(null, this.client.cancelTrip(clientContext));
 }
 
+Trip.prototype.pickupCanceledClient = function() {
+	if (this.state === Trip.CLIENT_CANCELED) return;
+
+	this._changeState(Trip.CLIENT_CANCELED);
+	this._archive();
+
+	this.driver.notifyTripCanceled();
+}
+
 // Водитель начал поездку. Известить клиента что поездка началась
 Trip.prototype.driverBegin = function(driverContext, callback) {
 	var response = this.driver.beginTrip(driverContext);

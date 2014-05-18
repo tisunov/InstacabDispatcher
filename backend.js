@@ -232,4 +232,14 @@ Backend.prototype.getActiveFare = function(callback) {
 	});
 }
 
+Backend.prototype.clientOpenApp = function(clientId) {
+	request.get(backendUrl + '/api/v1/clients/' + clientId + '/open_app', function(error, response, body) {
+	});
+}
+
+Backend.prototype.clientRequestPickup = function(clientId, params) {
+	request.put(backendUrl + '/api/v1/clients/' + clientId + '/request_pickup', { json: params }, function(error, response, body) {
+	});
+}
+
 module.exports = new Backend();

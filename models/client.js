@@ -48,14 +48,20 @@ Client.prototype.pickup = function(context, callback) {
 	this.updateLocation(context);
 	if (this.state !== Client.LOOKING) return callback(null, this._createOK());
 
-	if (!Client.canRequestToLocation(context.message.pickupLocation))
+	if (!Client.canRequestToLocation(context.message.pickupLocation)) {
+		require('../backend').clientRequestPickup(this.id, { restrictedLocation: context.message.pickupLocation });
+
 		return callback(null, MessageFactory.createClientOK(this, { sorryMsg: "К сожалению мы еще не работаем в вашей области. Мы постоянно расширяем наш сервис, следите за обновлениями вступив в группу vk.com/instacab" }));
+	}
 
 	Driver.availableSortedByDistanceFrom(context.message.pickupLocation, function(err, items){
 		if (err) return callback(err);
 
-		if (items.length === 0)
+		if (items.length === 0) {
+			require('../backend').clientRequestPickup(this.id, { noCarsAvailable: true });
+
 			return callback(null, MessageFactory.createClientOK(this, { sorryMsg: 'ОГРОМНОЕ спасибо за интерес к Instacab! Все автомобили в настоящее время заполнены, пожалуйста проверьте снова в ближайшее время!' }));
+		}
 
 		this._driversAvailableForDispatch(context.message.pickupLocation, items, callback);
 	}.bind(this));
@@ -67,12 +73,15 @@ Client.prototype._driversAvailableForDispatch = function(pickupLocation, items, 
 		// can already claim first driver
 		var driverFound = items.some(this._dispatchFirstAvailableDriver.bind(this, trip, pickupLocation));
 
-		// No drivers
 		if (driverFound) {
 			callback(null, this._createOK());
 		}
-		else
+		// No drivers
+		else {
+			require('../backend').clientRequestPickup(this.id, { noCarsAvailable: true, secondCheck: true });
+
 			return callback(null, MessageFactory.createClientOK(this, { sorryMsg: 'Спасибо БОЛЬШОЕ за интерес к Instacab. Все автомобили в настоящее время заполнены, пожалуйста проверьте снова в ближайшее время!' }));
+		}
 
 	}.bind(this));
 }
@@ -89,16 +98,17 @@ Client.prototype._dispatchFirstAvailableDriver = function(trip, pickupLocation, 
 	return true;
 }
 
-// Client explicitly canceled pickup
-Client.prototype.cancelPickup = function(context) {
+// Отменить заказ на поездку
+Client.prototype.cancelPickup = function(context, callback) {
 	this.updateLocation(context);
 	
-	if (this.state === Client.DISPATCHING) {
+	if (this.state === Client.DISPATCHING || this.state === Client.WAITINGFORPICKUP) {
+		this.trip.pickupCanceledClient();
 		this.changeState(Client.LOOKING);
 		this.save();
 	}
 
-	return MessageFactory.createClientOK(this);
+	this._generateOKResponse(false, callback);
 }
 
 // Client explicitly canceled trip
@@ -150,14 +160,27 @@ Client.prototype.notifyTripStarted = function() {
 	
 	this.changeState(Client.ONTRIP);
 
+	// TODO: Remove after updating iOS client app
 	this.send(MessageFactory.createTripStarted(this, this.trip));
+
+	// Web Mobile Client
+	this._generateOKResponse(false, function(err, response) {
+		this.send(response);
+	}.bind(this));
 
 	this.save();
 }
 
+// TODO: Просто возвращать одного водителя, назначенного в заказе в поле nearbyVehicles
 Client.prototype.notifyDriverEnroute = function() {
-	if (this.state === Client.WAITINGFORPICKUP || this.state === Client.ONTRIP)
+	if (this.state === Client.WAITINGFORPICKUP || this.state === Client.ONTRIP) {
+		this._generateOKResponse(false, function(err, response) {
+			this.send(response);
+		}.bind(this));
+
+		// TODO: Remove after updating iOS client app
 		this.send(MessageFactory.createClientDriverEnroute(this.trip));
+	}
 }
 
 // Notify client that driver canceled trip
@@ -177,7 +200,13 @@ Client.prototype.notifyTripCanceled = function() {
 Client.prototype.notifyDriverArriving = function() {
 	if (this.state !== Client.WAITINGFORPICKUP) return;
 	
+	// TODO: Remove after updating iOS client app
 	this.send(MessageFactory.createArrivingNow(this.trip));
+
+	// Web Mobile Client
+	this._generateOKResponse(false, function(err, response) {
+		this.send(response);
+	}.bind(this));
 
 	require('../backend').smsTripStatusToClient(this.trip, this);
 }
@@ -188,7 +217,13 @@ Client.prototype.notifyTripFinished = function() {
 	this.changeState(Client.PENDINGRATING);
 	this.save();
 
+	// TODO: Remove after updating iOS client app
 	this.send(MessageFactory.createClientEndTrip(this, this.trip))
+
+	// Web Mobile Client
+	this._generateOKResponse(false, function(err, response) {
+		this.send(response);
+	}.bind(this));	
 }
 
 // Notify client that pickup request was canceled
@@ -220,10 +255,27 @@ Client.prototype._createOK = function(includeToken) {
 }
 
 Client.prototype._generateOKResponse = function(includeToken, callback) {
-	if (this.trip) return callback(null, this._createOK(includeToken));
-		
-	if (this.state === Client.LOOKING) {
-		this._updateNearbyDrivers({includeToken: includeToken}, callback);
+	// Return only one vehicle when client waits for pickup or already on the trip
+	if (this.state === Client.WAITINGFORPICKUP || this.state === Client.ONTRIP) {
+		var vehicle = {
+		  id: this.trip.driver.vehicle.id,
+		  longitude: this.trip.driver.location.longitude, 
+		  latitude: this.trip.driver.location.latitude,
+		  epoch: this.trip.driver.location.epoch,
+		  course: this.trip.driver.location.course,
+		  eta: 0 // TODO: Позже можно динамически считать ETA водителя (скажем каждые 500 метров)
+		};
+
+		var message = MessageFactory.createClientOK(this, { includeToken: includeToken, trip: this.trip, vehicles: [vehicle] });
+		callback(null, message);
+	}
+	// Return all vehicles nearby client location
+	else if (this.state === Client.LOOKING) {
+		this._updateNearbyDrivers({ includeToken: includeToken }, callback);
+	}
+	// Return current client state
+	else {
+		callback(null, this._createOK(includeToken))
 	}
 }
 

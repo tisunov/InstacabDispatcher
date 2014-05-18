@@ -1,6 +1,51 @@
 var _ = require('underscore');
 
+var city = {
+  cityName: "Воронеж",
+  vehicleViews: {
+    "1": {
+      id: 1,
+      fareDetailsUrl: null,
+      allowFareEstimate: true,
+      mapImages: [
+        {
+          url: "http://d1a3f4spazzrp4.cloudfront.net/car-types/map70px/map-uberx.png",
+          width: 70,
+          height: 70
+        }
+      ],
+      monoImages: [
+        {
+          url: "http://d1a3f4spazzrp4.cloudfront.net/car-types/mono/mono-uberx.png",
+          width: 100,
+          height: 37
+        }
+      ],
+      description: "АВТОМОБИЛЬ",
+      pickupButtonString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",
+      confirmPickupButtonString: "Подтвердить заказ",
+      requestPickupButtonString: "ЗАКАЗАТЬ {string}",
+      setPickupLocationString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",
+      pickupEtaString: "Время прибытия машины примерно {string}",
+      noneAvailableString: "НЕТ СВОБОДНЫХ АВТОМОБИЛЕЙ",
+    },
+  },
+  vehicleViewsOrder: [ 1 ],
+  defaultVehicleViewId: 1
+};
+
 function tripForClientToJSON(trip) {
+	var vehicle = trip.driver.vehicle;
+
+	vehicle.vehicleViewId = city.defaultVehicleViewId;
+	vehicle.uuid = vehicle.id;
+
+	// Web Mobile Client
+	vehicle.vehicleType = {
+		make: vehicle.make,
+		model: vehicle.model
+	}
+	
 	return {
 		id: trip.id,
 		pickupLocation: trip.pickupLocation,
@@ -16,8 +61,10 @@ function tripForClientToJSON(trip) {
 			location: trip.driver.location,
 			photoUrl: trip.driver.picture
 		},
-		vehicle: trip.driver.vehicle,
-		eta: trip.eta
+		vehicle: vehicle,
+		eta: trip.eta,
+		// Web Mobile Client
+		vehicleViewId: city.defaultVehicleViewId,
 	}
 }
 
@@ -95,6 +142,25 @@ function MessageFactory() {
 	
 }
 
+function vehiclePointsToVehiclePaths(vehiclePoints) {
+	var vehiclePaths = {};
+	_.map(vehiclePoints, function(item) {
+		// TODO: Использовать вместо порядковых id => "cff13a78-dc45-495b-b28f-c27a802d9742". Зачем так делает Uber?
+	
+		// TODO: Записывать изменения позиции водителя в массив последовательных координат
+		// чтобы позже на клиенте их можно было бы плавно анимировать хоть и не в реальном времени (с небольшой задержкой),
+		// но за время задержки можно выполнить Map Fitting сгладив индивидуальные точки (устранив погрешности GPS)
+		vehiclePaths[item.id] = [{
+			epoch: item.epoch || 0, // TODO: Передавать Unix epoch реального получения координаты от водителя
+			latitude: item.latitude,
+			longitude: item.longitude,
+			course: item.course || 0
+		}];
+	});
+
+	return vehiclePaths;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 // Factory Methods
 // 
@@ -103,7 +169,9 @@ MessageFactory.createClientOK = function(client, options) {
 
 	var msg = {
 		messageType: "OK",
-		client: clientToJSON(client, options.includeToken)
+		city: city,
+		client: clientToJSON(client, options.includeToken),
+		nearbyVehicles: {}
 	}
 
 	if (options.trip) 
@@ -115,23 +183,32 @@ MessageFactory.createClientOK = function(client, options) {
 		else
 			msg.trip = jsonTrip;
 	}
-	else
-	{
-		msg.nearbyVehicles = {};
 
-		if (options.sorryMsg) {
-			msg.nearbyVehicles.sorryMsg = options.sorryMsg;
-		}
-
-		if (!options.vehicles || options.vehicles.length === 0) {
-			msg.nearbyVehicles.noneAvailableString = "Извините, но свободных автомобилей нет";
-		}
-		else {
-			var minEta = _.min(options.vehicles, function(vehicle){ return vehicle.eta; }).eta;
-			var minEtaString = minEta + " " + GetNoun(minEta, 'минута', 'минуты', 'минут');
-			msg.nearbyVehicles = { minEta: minEta, minEtaString: minEtaString, vehiclePoints: options.vehicles };
-		}		
+	if (options.sorryMsg) {
+		msg.nearbyVehicles.sorryMsg = options.sorryMsg;
 	}
+
+	if (!options.vehicles || options.vehicles.length === 0) {
+		msg.nearbyVehicles.noneAvailableString = "Извините, но свободных автомобилей нет";
+	}
+	else {
+		var minEta = options.vehicles.length == 1 ? options.vehicles[0].eta : _.min(options.vehicles, function(vehicle){ return vehicle.eta; }).eta;
+		var minEtaString = minEta + " " + GetNoun(minEta, 'минута', 'минуты', 'минут');
+
+		msg.nearbyVehicles = { 
+			minEta: minEta,
+			minEtaString: minEtaString, 
+			vehiclePoints: options.vehicles
+		};
+
+		// Web Mobile Client
+		msg.nearbyVehicles["1"] = {
+			etaString: minEtaString,
+			etaStringShort: minEtaString,
+			minEta: minEta,				
+			vehiclePaths: vehiclePointsToVehiclePaths(options.vehicles)
+		}
+	}		
 
 	return msg;
 }
@@ -149,6 +226,7 @@ MessageFactory.createClientEndTrip = function(client, trip) {
 MessageFactory.clientFareEstimate = function(client, estimate) {
 	var msg = {
 		messageType: "OK",
+		city: city,
 		client: clientToJSON(client),
 	};
 

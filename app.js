@@ -14,6 +14,7 @@ var Dispatcher = require('./dispatch'),
     inspect = require('util').inspect,
     util = require('util'),
     cors = require('cors'),
+    apiBackend = require('./backend'),
     db = require('./mongo_client');
 
 var dispatcher = new Dispatcher();
@@ -71,6 +72,10 @@ dispatcher.load(function(err) {
     
     resp.writeHead(200, { 'Content-Type': 'text/plain' });
     resp.end();
+
+    if (req.body.eventName === "NearestCabRequest" && req.body.parameters.reason === "openApp") {
+      apiBackend.clientOpenApp(req.body.parameters.clientId);
+    }
   });
 
   var clientRepository = require('./models/client').repository;

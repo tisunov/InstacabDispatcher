@@ -82,7 +82,7 @@ Driver.prototype.offDuty = function(context) {
 // Update driver's position
 Driver.prototype.ping = function(context) {
   this.updateLocation(context);
-  
+
   // Track trip route
   if (this.trip) {
     this.trip.driverPing(context);
@@ -298,6 +298,8 @@ function vehicleLocationsWithTimeToLocation(location, drivers, callback) {
         id: driver.vehicle.id,
         longitude: driver.location.longitude, 
         latitude: driver.location.latitude,
+        epoch: driver.location.epoch,
+        course: driver.location.course,
         eta: eta
       };
 

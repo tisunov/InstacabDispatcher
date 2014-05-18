@@ -79,9 +79,11 @@ User.prototype._connectionClosed = function() {
 	
 	this.connected = false;
 	// cleanup
-	this.connection.removeListener('error', this._onConnectionError);
-	this.connection.removeListener('close', this._onConnectionClosed);
-	this.connection = null;
+	if (this.connection) {
+		this.connection.removeListener('error', this._onConnectionError);
+		this.connection.removeListener('close', this._onConnectionClosed);
+		this.connection = null;
+	}
 
 	this.emit('disconnect', this);
 	this.publish();
@@ -97,7 +99,7 @@ User.prototype._connectionError = function() {
 
 function isEqualLocations(oldLocation, newLocation) {
 	return oldLocation.latitude === newLocation.latitude &&
-				 oldLocation.longitude === newLocation.longitude;
+		   oldLocation.longitude === newLocation.longitude;
 }
 
 User.prototype._setConnection = function(connection, deviceId) {
@@ -126,7 +128,12 @@ User.prototype.isTokenValid = function(message) {
 }
 
 User.prototype.updateLocation = function(context) {
-	var newLocation = { latitude: context.message.latitude, longitude: context.message.longitude };
+	var newLocation = {
+		epoch: context.message.epoch,
+		latitude: context.message.latitude, 
+		longitude: context.message.longitude,
+		course: context.message.course
+	};
 
 	var locationChanged = !this.location || !isEqualLocations(this.location, newLocation);
 	this.location = newLocation;

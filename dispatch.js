@@ -126,6 +126,17 @@ Dispatcher.prototype = {
 		});
 	},
 	
+	// TODO: В Uber PickupCanceledClient посылается в начиная после отправки заказа и до приезда водителя
+	// То есть используется одно сообщение PickupCanceledClient вместо моих CancelPickup, CancelTripClient
+	PickupCanceledClient: function(context, callback) {
+		clientRepository.get(context.message.id, function(err, client) {
+			if (err) return callback(err);
+
+			client.cancelPickup(context, callback);
+		});
+	},
+
+	// TODO: УБРАТЬ НИЖНИЕ ДВА СООБЩЕНИЯ И ИСПОЛЬЗОВАТЬ ОДНО PickupCanceledClient ВЫШЕ
 	// Client canceled pickup request while we were searching/waiting for drivers
 	CancelPickup: function(context, callback) {
 		tripRepository.get(context.message.tripId, function(err, trip){
