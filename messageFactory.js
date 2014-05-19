@@ -184,10 +184,6 @@ MessageFactory.createClientOK = function(client, options) {
 			msg.trip = jsonTrip;
 	}
 
-	if (options.sorryMsg) {
-		msg.nearbyVehicles.sorryMsg = options.sorryMsg;
-	}
-
 	if (!options.vehicles || options.vehicles.length === 0) {
 		msg.nearbyVehicles.noneAvailableString = "Извините, но свободных автомобилей нет";
 	}
@@ -208,7 +204,17 @@ MessageFactory.createClientOK = function(client, options) {
 			minEta: minEta,				
 			vehiclePaths: vehiclePointsToVehiclePaths(options.vehicles)
 		}
-	}		
+	}
+
+	if (options.sorryMsg) {
+		msg.nearbyVehicles = {
+			sorryMsg: options.sorryMsg,
+			// Web Mobile Client
+			"1": {
+				sorryMsg: options.sorryMsg,
+			}
+		}
+	}	
 
 	return msg;
 }

@@ -61,34 +61,40 @@ Backend.prototype.loginClient = function(email, password, deviceId, callback) {
 }
 
 // TODO: Сделать через AMQP
-// Backend.prototype.signupClient = function(signupInfo, callback) {
-// 	request.post(backendUrl + '/api/v1/sign_up', { form: signupInfo }, function (error, response, body) {
-// 		// network error
-// 		if (error) return callback(error);
+Backend.prototype.signupClient = function(signupInfo, callback) {
+	request.post(backendUrl + '/api/v1/sign_up', { form: signupInfo }, function (error, response, body) {
+		// network error
+		if (error) return callback(error);
 
-// 		console.log(body);
-// 		try {
-// 			var properties = JSON.parse(body);
-// 			util.inspect(properties, {colors: true});
-// 		} catch (e) {
-// 			console.log(e.message);
-// 			return callback(new Error("Техническая ошибка входа. Уже работаем над ней."));
-// 		}
+		console.log(body);
+		try {
+			var data = JSON.parse(body);
+		} catch (e) {
+			console.log(e.message);
+			return callback(new Error("Техническая ошибка входа. Уже работаем над ней."));
+		}
 
-// 		console.log('Response statusCode = ' + response.statusCode);
+		console.log('Response statusCode = ' + response.statusCode);
 
-// 		// if response not HTTP 201 Created
-// 		if (response.statusCode !== 201) {
-// 			return callback(new Error(properties['errors'] || body));
-// 		}
+		// if response not HTTP 201 Created
+		if (response.statusCode !== 201) {
+			
+			var apiResponse = {
+				error: { statusCode: response.statusCode },
+				data: data.errors
+			}
 
-// 		// set user properties
-// 		var user = new Client();
-// 		initProperties.call(user, properties)
+			// Generate API response as expected by client app
+			return callback(null, null, { messageType: 'Error', apiResponse: apiResponse  });
+		}
 
-// 		callback(null, user);
-// 	});
-// }
+		// set user properties
+		var client = new Client();
+		initProperties.call(client, data.client); // TODO: Передать данные в конструктор и там их присвоить
+
+		callback(null, client, null);
+	});
+}
 
 function tripToJson(trip) {
 	var tripData = {};
