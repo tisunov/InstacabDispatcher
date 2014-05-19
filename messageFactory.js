@@ -229,14 +229,20 @@ MessageFactory.createClientEndTrip = function(client, trip) {
 	return msg;
 }
 
-MessageFactory.clientFareEstimate = function(client, estimate) {
+MessageFactory.clientFareEstimate = function(client, fareEstimateString) {
 	var msg = {
 		messageType: "OK",
 		city: city,
 		client: clientToJSON(client),
 	};
 
-	msg.client.lastFareEstimate = estimate;
+	msg.client.lastFareEstimate = fareEstimateString;
+
+	// Web Mobile Client
+	msg.client.lastEstimatedTrip = {
+		fareEstimateString: fareEstimateString
+	};
+
 	return msg;
 }
 
