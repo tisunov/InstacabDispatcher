@@ -4,6 +4,11 @@ var MessageFactory = require("../messageFactory"),
   async = require("async"),
   Repository = require('../lib/repository'),
   DistanceMatrix = require('../lib/google-distance'),
+  RequestRedisCache = require('request-redis-cache'),
+  redisClient = require("redis").createClient()
+  cache = new RequestRedisCache({
+    redis: redisClient
+  }),
   User = require("./user");
 
 function Driver() {
@@ -247,10 +252,37 @@ function findAvailableDrivers(callback) {
   repository.filter(isAvailable, callback.bind(null, null));
 }
 
-// TODO: Нужно кэшировать полученные расстояния когда координаты origin и destination входят в небольшой bounding box или geofence с радиусом
-// Иначе очень быстро исчерпаются временной и дневной лимиты на запросы к Google Maps Distance Matrix API
+function round(arg) { 
+  return Math.round(arg * 10000) / 10000;
+}
+
+function cacheKeyFor(driverLocation, pickupLocation) {
+  return (round(driverLocation.latitude) + round(driverLocation.longitude) +
+          round(pickupLocation.latitude) + round(pickupLocation.longitude)).toString();
+}
+
 Driver.prototype.queryETAToLocation = function(pickupLocation, callback) {
-  DistanceMatrix.get(this.location, pickupLocation, function(err, data) {
+  var self = this;
+  
+  // Cache Google Distance Matrix query result, we have only 2500 queries per day
+  cache.get({
+    cacheKey: cacheKeyFor(this.location, pickupLocation),
+    cacheTtl: 5 * 60, // 5 minutes in seconds
+    // Dynamic `options` to pass to our `uncachedGet` call
+    requestOptions: {},
+    // Action to use when we cannot retrieve data from cache
+    uncachedGet: function (options, cb) {
+      DistanceMatrix.get(self.location, pickupLocation, function(err, data) {
+        // Store only approximate driving duration, instead of whole result to save memory
+        if (!err) {
+          data = { durationSeconds: data.durationSeconds }
+        }
+          
+        cb(err, data);
+      });
+    }
+  }, function handleData (err, data) {
+
     if (err) {
       data = { durationSeconds: DEFAULT_PICKUP_TIME_SECONDS };
       console.log(err);

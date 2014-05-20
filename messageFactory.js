@@ -9,14 +9,14 @@ var city = {
       allowFareEstimate: true,
       mapImages: [
         {
-          url: "http://d1a3f4spazzrp4.cloudfront.net/car-types/map70px/map-uberx.png",
+          url: "http://s3-eu-west-1.amazonaws.com/instacab-assets/car-types/map70px/map-uberx.png",
           width: 70,
           height: 70
         }
       ],
       monoImages: [
         {
-          url: "http://d1a3f4spazzrp4.cloudfront.net/car-types/mono/mono-uberx.png",
+          url: "http://s3-eu-west-1.amazonaws.com/instacab-assets/car-types/mono/mono-uberx.png",
           width: 100,
           height: 37
         }
@@ -25,6 +25,7 @@ var city = {
       pickupButtonString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",
       confirmPickupButtonString: "Подтвердить заказ",
       requestPickupButtonString: "ЗАКАЗАТЬ {string}",
+      
       setPickupLocationString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",
       pickupEtaString: "Время прибытия машины примерно {string}",
       noneAvailableString: "НЕТ СВОБОДНЫХ АВТОМОБИЛЕЙ",
@@ -170,10 +171,10 @@ MessageFactory.createClientOK = function(client, options) {
 	var msg = {
 		messageType: "OK",
 		city: city,
-		client: clientToJSON(client, options.includeToken),
-		nearbyVehicles: {}
+		client: clientToJSON(client, options.includeToken)
 	}
 
+	// Trip
 	if (options.trip) 
 	{
 		var jsonTrip = tripForClientToJSON(options.trip);
@@ -183,29 +184,24 @@ MessageFactory.createClientOK = function(client, options) {
 		else
 			msg.trip = jsonTrip;
 	}
-
-	if (!options.vehicles || options.vehicles.length === 0) {
-		msg.nearbyVehicles.noneAvailableString = "Извините, но свободных автомобилей нет";
-	}
-	else {
+	
+	// Nearby Vehicles
+	if (options.vehicles && options.vehicles.length > 0) {
 		var minEta = options.vehicles.length == 1 ? options.vehicles[0].eta : _.min(options.vehicles, function(vehicle){ return vehicle.eta; }).eta;
 		var minEtaString = minEta + " " + GetNoun(minEta, 'минута', 'минуты', 'минут');
 
-		msg.nearbyVehicles = { 
-			minEta: minEta,
-			minEtaString: minEtaString, 
-			vehiclePoints: options.vehicles
-		};
-
 		// Web Mobile Client
-		msg.nearbyVehicles["1"] = {
-			etaString: minEtaString,
-			etaStringShort: minEtaString,
-			minEta: minEta,				
-			vehiclePaths: vehiclePointsToVehiclePaths(options.vehicles)
+		msg.nearbyVehicles = {
+			"1": {
+				etaString: minEtaString,
+				etaStringShort: minEtaString,
+				minEta: minEta,
+				vehiclePaths: vehiclePointsToVehiclePaths(options.vehicles)
+			}
 		}
 	}
 
+	// Sorry that we don't have a car for you
 	if (options.sorryMsg) {
 		msg.nearbyVehicles = {
 			sorryMsg: options.sorryMsg,
@@ -282,10 +278,11 @@ MessageFactory.createDriverTripCanceled = function(driver, reason) {
 	}
 }
 
-MessageFactory.createError = function(errorText, errorCode) {
+MessageFactory.createError = function(description, errorCode) {
 	return {
 	  messageType: 'Error',
-	  errorText: errorText,
+	  description: description,
+	  errorText: description, // TODO: Удали когда проверишь Instacab Driver
 	  errorCode: errorCode
 	}
 }

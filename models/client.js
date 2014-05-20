@@ -48,6 +48,11 @@ Client.prototype.pickup = function(context, callback) {
 	this.updateLocation(context);
 	if (this.state !== Client.LOOKING) return callback(null, this._createOK());
 
+	if (!this.hasConfirmedMobile) {
+		require('../backend').requestMobileConfirmation();
+		return callback(null, this._createOK());
+	}
+
 	if (!Client.canRequestToLocation(context.message.pickupLocation)) {
 		require('../backend').clientRequestPickup(this.id, { restrictedLocation: context.message.pickupLocation });
 

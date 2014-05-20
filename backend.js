@@ -159,26 +159,27 @@ Backend.prototype.rateClient = function(tripId, rating, callback) {
 // apiMethod: 'POST'
 Backend.prototype.apiCommand = function(message, callback) {
 	request(
-		{ method: message.apiMethod, 
-			uri: backendApiUrl + message.apiUrl,
+		{ method: message.apiMethod,
+			 uri: backendApiUrl + message.apiUrl,
 			form: message.apiParameters
 		},
 		function(error, response, body) {
-			var apiResponse = { };
+			var apiResponse = {};
 
 			if (error) {
-				apiResponse['error'] = error.message;
+				apiResponse.error = {
+					message: error.message,
+					statusCode: response.statusCode
+				};
 			}
 			else if (body) {
 				try {
-					apiResponse = JSON.parse(body);
+					apiResponse.data = JSON.parse(body);
 				}
-	    	catch(e) { /* ignore */ }
+	    		catch(e) { /* ignore */ }
 			}
 
-			apiResponse.statusCode = response.statusCode;
-
-			callback(null, { messageType: 'ApiResponse', apiResponse: apiResponse });
+			callback(null, { messageType: 'OK', apiResponse: apiResponse });
 		}
 	);
 }
@@ -204,7 +205,6 @@ Backend.prototype.listVehicles = function(driver, callback) {
 
 		try {
 			var response = JSON.parse(body);
-			util.inspect(response, {colors: true});
 		} catch (e) {
 			console.log(e.message);
 			return callback(new Error("Техническая ошибка. Уже работаем над ней."));
@@ -236,6 +236,11 @@ Backend.prototype.getActiveFare = function(callback) {
 
 		callback(null, response.fare);
 	});
+}
+
+Backend.prototype.requestMobileConfirmation = function(client) {
+	request.put(backendUrl + '/api/v1/clients/' + clientId + '/request_mobile_confirmation', function(error, response, body) {
+	});	
 }
 
 Backend.prototype.clientOpenApp = function(clientId) {
