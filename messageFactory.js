@@ -25,7 +25,7 @@ var city = {
       pickupButtonString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",
       confirmPickupButtonString: "Подтвердить заказ",
       requestPickupButtonString: "ЗАКАЗАТЬ {string}",
-      
+
       setPickupLocationString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",
       pickupEtaString: "Время прибытия машины примерно {string}",
       noneAvailableString: "НЕТ СВОБОДНЫХ АВТОМОБИЛЕЙ",
@@ -150,7 +150,7 @@ function vehiclePointsToVehiclePaths(vehiclePoints) {
 	
 		// TODO: Записывать изменения позиции водителя в массив последовательных координат
 		// чтобы позже на клиенте их можно было бы плавно анимировать хоть и не в реальном времени (с небольшой задержкой),
-		// но за время задержки можно выполнить Map Fitting сгладив индивидуальные точки (устранив погрешности GPS)
+		// но за время задержки можно выполнить Map Fitting сгладив индивидуальные точки (устранив погрешности GPS), и потом сделать плавную анимацию между точками
 		vehiclePaths[item.id] = [{
 			epoch: item.epoch || 0, // TODO: Передавать Unix epoch реального получения координаты от водителя
 			latitude: item.latitude,
@@ -170,9 +170,11 @@ MessageFactory.createClientOK = function(client, options) {
 
 	var msg = {
 		messageType: "OK",
-		city: city,
-		client: clientToJSON(client, options.includeToken)
+		city: city
 	}
+
+	if (client) 
+		msg.client = clientToJSON(client, options.includeToken);
 
 	// Trip
 	if (options.trip) 
@@ -204,13 +206,15 @@ MessageFactory.createClientOK = function(client, options) {
 	// Sorry that we don't have a car for you
 	if (options.sorryMsg) {
 		msg.nearbyVehicles = {
-			sorryMsg: options.sorryMsg,
-			// Web Mobile Client
 			"1": {
 				sorryMsg: options.sorryMsg,
 			}
 		}
 	}	
+
+	if (options.apiResponse) {
+		msg.apiResponse = options.apiResponse;
+	}
 
 	return msg;
 }
@@ -232,8 +236,6 @@ MessageFactory.clientFareEstimate = function(client, fareEstimateString) {
 		client: clientToJSON(client),
 	};
 
-	msg.client.lastFareEstimate = fareEstimateString;
-
 	// Web Mobile Client
 	msg.client.lastEstimatedTrip = {
 		fareEstimateString: fareEstimateString
@@ -250,14 +252,6 @@ MessageFactory.createClientPickupCanceled = function(client, reason) {
 	}
 }
 
-MessageFactory.createDriverPickupCanceled = function(driver, reason) {
-	return {
-		messageType: 'PickupCanceled',
-		reason: reason,
-		driver: clientToJSON(driver)
-	}
-}
-
 MessageFactory.createClientTripCanceled = function(client, reason) {
 	return {
 		messageType: 'TripCanceled',
@@ -266,8 +260,13 @@ MessageFactory.createClientTripCanceled = function(client, reason) {
 	}
 }
 
-MessageFactory.createClientDriverEnroute = function(trip) {
-	return tripToClientMessage(trip, 'Enroute');
+// TODO: Устрани путаницу с PickupCanceled/TripCanceled, оставить только PickupCanceled и в ответ посылать только OK/Error
+MessageFactory.createDriverPickupCanceled = function(driver, reason) {
+	return {
+		messageType: 'PickupCanceled',
+		reason: reason,
+		driver: clientToJSON(driver)
+	}
 }
 
 MessageFactory.createDriverTripCanceled = function(driver, reason) {
@@ -283,18 +282,8 @@ MessageFactory.createError = function(description, errorCode) {
 	  messageType: 'Error',
 	  description: description,
 	  errorText: description, // TODO: Удали когда проверишь Instacab Driver
-	  errorCode: errorCode
+	  errorCode: errorCode, // TODO: Удали когда проверишь Instacab Driver
 	}
-}
-
-MessageFactory.createArrivingNow = function(trip) {
-	return tripToClientMessage(trip, 'ArrivingNow');
-}
-
-MessageFactory.createTripStarted = function(client, trip) {
-	var msg = tripToClientMessage(trip, 'BeginTrip');
-	msg.client = clientToJSON(client);
-	return msg;
 }
 
 // Messages to the Driver

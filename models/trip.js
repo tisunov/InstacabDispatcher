@@ -313,7 +313,7 @@ Trip.prototype.clientCancel = function(clientContext, callback) {
 		this.driver.notifyTripCanceled();
 	}
 
-	callback(null, this.client.cancelTrip(clientContext));
+	this.client.cancelTrip(clientContext, callback);
 }
 
 Trip.prototype.pickupCanceledClient = function() {

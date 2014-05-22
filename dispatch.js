@@ -138,8 +138,7 @@ Dispatcher.prototype = {
         });
     },
     
-    // TODO: В Uber PickupCanceledClient посылается в начиная после отправки заказа и до приезда водителя
-    // То есть используется одно сообщение PickupCanceledClient вместо моих CancelPickup, CancelTripClient
+    // TODO: Сделать как в Uber. Используется одно сообщение PickupCanceledClient вместо моих CancelPickup, CancelTripClient
     PickupCanceledClient: function(context, callback) {
         clientRepository.get(context.message.id, function(err, client) {
             if (err) return callback(err);
@@ -282,7 +281,15 @@ Dispatcher.prototype = {
     },
 
     ApiCommand: function(context, callback) {
-        apiBackend.apiCommand(context.message, callback);
+        if (context.message.id) {
+            clientRepository.get(context.message.id, function(err, client) {
+                if (err) return callback(err);
+
+                apiBackend.apiCommand(client, context.message, callback);
+            });
+        }
+        else
+            apiBackend.apiCommand(null, context.message, callback);
     },
 
     Subscribe: function(context, callback) {

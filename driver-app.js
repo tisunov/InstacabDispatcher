@@ -128,7 +128,7 @@ function driveToClient(driverId, tripId, pickupLocation) {
     }
 
     i++;
-  }, 200);
+  }, 1000);
 }
 
 function driveClient(driverId, callback) {
@@ -154,6 +154,9 @@ function driveClient(driverId, callback) {
 }
 
 var timer, token, justStarted = true;
+
+// token = "qLfDVxnRdkVM6ywULEaR";
+// driveToClient(10, null, {latitude: 51.683448, longitude: 39.122151});
 
 client.on('message', function(event) {
   console.log("Received: " + event.data);
@@ -231,9 +234,9 @@ client.on('message', function(event) {
             endTrip.epoch = Math.round(new Date().getTime() / 1000.0);
             client.sendWithLog(endTrip);
           });
-        }, 3000);
+        }, 10000);
 
-      }, 5000);
+      }, 2000);
       break;
   }    
 });

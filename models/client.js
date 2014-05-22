@@ -48,8 +48,9 @@ Client.prototype.pickup = function(context, callback) {
 	this.updateLocation(context);
 	if (this.state !== Client.LOOKING) return callback(null, this._createOK());
 
+	// TODO: Записать событие вызова и уведомить по e-mail
 	if (!this.hasConfirmedMobile) {
-		require('../backend').requestMobileConfirmation();
+		require('../backend').requestMobileConfirmation(this.id);
 		return callback(null, this._createOK());
 	}
 
@@ -117,7 +118,7 @@ Client.prototype.cancelPickup = function(context, callback) {
 }
 
 // Client explicitly canceled trip
-Client.prototype.cancelTrip = function(context) {
+Client.prototype.cancelTrip = function(context, callback) {
 	this.updateLocation(context);	
 
 	if (this.state === Client.WAITINGFORPICKUP) {
@@ -125,9 +126,7 @@ Client.prototype.cancelTrip = function(context) {
 		this.save();
 	}
 	
-	// TODO: Вызвать this._generateOKResponse(false, callback);
-	// Чтобы после отмены клиент получил обновленные позиции машин
-	return MessageFactory.createClientOK(this);
+	this._generateOKResponse(false, callback);
 }
 
 Client.prototype.rateDriver = function(context, callback) {
@@ -155,8 +154,10 @@ Client.prototype.notifyDriverConfirmed = function() {
 	this.save();
 	
 	require('../backend').smsTripStatusToClient(this.trip, this);		
-	
-	this.send(MessageFactory.createClientOK(this, { trip: this.trip }));
+
+	this._generateOKResponse(false, function(err, response) {
+		this.send(response);
+	}.bind(this));
 }
 
 // Driver pressed 'Begin Trip' to start trip
@@ -165,10 +166,6 @@ Client.prototype.notifyTripStarted = function() {
 	
 	this.changeState(Client.ONTRIP);
 
-	// TODO: Remove after updating iOS client app
-	this.send(MessageFactory.createTripStarted(this, this.trip));
-
-	// Web Mobile Client
 	this._generateOKResponse(false, function(err, response) {
 		this.send(response);
 	}.bind(this));
@@ -176,15 +173,11 @@ Client.prototype.notifyTripStarted = function() {
 	this.save();
 }
 
-// TODO: Просто возвращать одного водителя, назначенного в заказе в поле nearbyVehicles
 Client.prototype.notifyDriverEnroute = function() {
 	if (this.state === Client.WAITINGFORPICKUP || this.state === Client.ONTRIP) {
 		this._generateOKResponse(false, function(err, response) {
 			this.send(response);
 		}.bind(this));
-
-		// TODO: Remove after updating iOS client app
-		this.send(MessageFactory.createClientDriverEnroute(this.trip));
 	}
 }
 
@@ -205,10 +198,6 @@ Client.prototype.notifyTripCanceled = function() {
 Client.prototype.notifyDriverArriving = function() {
 	if (this.state !== Client.WAITINGFORPICKUP) return;
 	
-	// TODO: Remove after updating iOS client app
-	this.send(MessageFactory.createArrivingNow(this.trip));
-
-	// Web Mobile Client
 	this._generateOKResponse(false, function(err, response) {
 		this.send(response);
 	}.bind(this));
@@ -222,10 +211,6 @@ Client.prototype.notifyTripFinished = function() {
 	this.changeState(Client.PENDINGRATING);
 	this.save();
 
-	// TODO: Remove after updating iOS client app
-	this.send(MessageFactory.createClientEndTrip(this, this.trip))
-
-	// Web Mobile Client
 	this._generateOKResponse(false, function(err, response) {
 		this.send(response);
 	}.bind(this));	

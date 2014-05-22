@@ -1,10 +1,11 @@
 var Driver = require("./models/driver").Driver,
-		Client = require("./models/client").Client,
-		driverRepository = require('./models/driver').repository,
-		clientRepository = require('./models/client').repository,		
-		request = require("request"),
-		util = require("util"),
-		config = require('konfig')();
+	Client = require("./models/client").Client,
+	driverRepository = require('./models/driver').repository,
+	clientRepository = require('./models/client').repository,		
+	request = require("request"),
+	util = require("util"),
+	MessageFactory = require("./messageFactory"),
+	config = require('konfig')();
 
 function Backend() { 
 	
@@ -85,7 +86,7 @@ Backend.prototype.signupClient = function(signupInfo, callback) {
 			}
 
 			// Generate API response as expected by client app
-			return callback(null, null, { messageType: 'Error', apiResponse: apiResponse  });
+			return callback(null, null, { messageType: 'Error', apiResponse: apiResponse });
 		}
 
 		// set user properties
@@ -157,20 +158,21 @@ Backend.prototype.rateClient = function(tripId, rating, callback) {
 //      email: 'email@domain.ru' },
 // apiUrl: '/clients/validate',
 // apiMethod: 'POST'
-Backend.prototype.apiCommand = function(message, callback) {
+Backend.prototype.apiCommand = function(client, message, callback) {
 	request(
 		{ method: message.apiMethod,
 			 uri: backendApiUrl + message.apiUrl,
 			form: message.apiParameters
 		},
 		function(error, response, body) {
-			var apiResponse = {};
+			var apiResponse = {
+				error: {
+					statusCode: response.statusCode
+				}
+			};
 
 			if (error) {
-				apiResponse.error = {
-					message: error.message,
-					statusCode: response.statusCode
-				};
+				apiResponse.error.message = error.message;
 			}
 			else if (body) {
 				try {
@@ -179,7 +181,7 @@ Backend.prototype.apiCommand = function(message, callback) {
 	    		catch(e) { /* ignore */ }
 			}
 
-			callback(null, { messageType: 'OK', apiResponse: apiResponse });
+			callback(null, MessageFactory.createClientOK(client, { apiResponse: apiResponse }));
 		}
 	);
 }
@@ -238,7 +240,7 @@ Backend.prototype.getActiveFare = function(callback) {
 	});
 }
 
-Backend.prototype.requestMobileConfirmation = function(client) {
+Backend.prototype.requestMobileConfirmation = function(clientId) {
 	request.put(backendUrl + '/api/v1/clients/' + clientId + '/request_mobile_confirmation', function(error, response, body) {
 	});	
 }
