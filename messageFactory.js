@@ -9,29 +9,55 @@ var city = {
       allowFareEstimate: true,
       mapImages: [
         {
-          url: "http://s3-eu-west-1.amazonaws.com/instacab-assets/car-types/map70px/map-uberx.png",
+          url: "https://s3-eu-west-1.amazonaws.com/instacab-assets/car-types/map70px/map-uberx.png",
           width: 70,
           height: 70
         }
       ],
       monoImages: [
         {
-          url: "http://s3-eu-west-1.amazonaws.com/instacab-assets/car-types/mono/mono-uberx.png",
+          url: "https://s3-eu-west-1.amazonaws.com/instacab-assets/car-types/mono/mono-uberx.png",
           width: 100,
           height: 37
         }
       ],
-      description: "АВТОМОБИЛЬ",
-      pickupButtonString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",
-      confirmPickupButtonString: "Подтвердить заказ",
+      description: "INSTACAB",
+      // pickupButtonString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",
+      // confirmPickupButtonString: "Подтвердить заказ",
       requestPickupButtonString: "ЗАКАЗАТЬ {string}",
-
       setPickupLocationString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",
       pickupEtaString: "Время прибытия машины примерно {string}",
       noneAvailableString: "НЕТ СВОБОДНЫХ АВТОМОБИЛЕЙ",
     },
+
+    "2": {
+    	id: 2,
+    	fareDetailsUrl: null,
+    	allowFareEstimate: true,
+    	mapImages: [
+    	  {
+    	    url: "https://s3-eu-west-1.amazonaws.com/instacab-assets/car-types/map70px/map-taxi.png",
+    	    width: 70,
+    	    height: 70
+    	  }
+    	],
+    	monoImages: [
+    	  {
+    	    url: "https://s3-eu-west-1.amazonaws.com/instacab-assets/car-types/mono/mono-taxi.png",
+    	    width: 100,
+    	    height: 37
+    	  }
+    	],
+    	description: "ТАКСИ",
+    	// pickupButtonString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",
+    	// confirmPickupButtonString: "Подтвердить заказ",
+    	requestPickupButtonString: "ЗАКАЗАТЬ {string}",
+    	setPickupLocationString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",
+    	pickupEtaString: "Время прибытия машины примерно {string}",
+    	noneAvailableString: "НЕТ СВОБОДНЫХ ТАКСИ",
+    }
   },
-  vehicleViewsOrder: [ 1 ],
+  vehicleViewsOrder: [ 2, 1 ],
   defaultVehicleViewId: 1
 };
 
