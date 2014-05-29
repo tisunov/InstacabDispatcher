@@ -120,7 +120,7 @@ Dispatcher.prototype = {
               var billedDistance = distanceKm - distanceKm * 0.1;
 
               // TODO: Нужно спросить Fare у Backend, или вообще перенести весь расчет в API Backend
-              var fare = { base: 50.00, per_minute: 5.0, per_km: 14.0, minimum: 140 }
+              var fare = { base: 130.00, per_minute: 5.0, per_km: 13.0, minimum: 130 }
 
               var estimateLow = Math.round((fare.base + billedTimeLow * fare.per_minute + billedDistance * fare.per_km) / 10) * 10;
               var estimateHigh = Math.round((fare.base + billedTimeHigh * fare.per_minute + billedDistance * fare.per_km) / 10) * 10;
