@@ -110,7 +110,7 @@ Dispatcher.prototype = {
                 console.log(err);
               }
 
-              var distanceKm = data.distanceKms / 1000;
+              var distanceKm = data.distanceKms / 1000.0;
 
               // Time per trip with speed less than 21 km/h = 1.5 min per 5 km
               var billedTimeLow = (distanceKm / 5) * 1.5;
@@ -118,6 +118,10 @@ Dispatcher.prototype = {
               var billedTimeHigh = (distanceKm / 5) * 5;
               // 500 meters for each 5 km below < 21 km/h
               var billedDistance = distanceKm - distanceKm * 0.1;
+
+              // Include 2 km in base fare
+              var base_km = 2;
+              billedDistance = billedDistance > 2 ? billedDistance - 2 : 0;
 
               // TODO: Нужно спросить Fare у Backend, или вообще перенести весь расчет в API Backend
               var fare = { base: 130.00, per_minute: 5.0, per_km: 13.0, minimum: 130 }
@@ -127,10 +131,10 @@ Dispatcher.prototype = {
 
               var estimateString;
 
-              if (estimateHigh > fare.minimum)
+              if (estimateLow !== estimateHigh)
                 estimateString = estimateLow.toString() + '-' + estimateHigh.toString() + ' руб.';
               else
-                estimateString = fare.minimum.toString() + ' руб.';
+                estimateString = estimateLow.toString() + ' руб.';
               
               callback(null, MessageFactory.clientFareEstimate(client, estimateString));
             });
