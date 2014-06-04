@@ -450,6 +450,7 @@ Trip.prototype.toJSON = function() {
     route: this.route,
     pickupLocation: this.pickupLocation,
     dropoffLocation: this.dropoffLocation,
+    fare: this.fare,
     fareBilledToCard: this.fareBilledToCard,
     eta: this.eta,
     createdAt: this.createdAt,
