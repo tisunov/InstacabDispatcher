@@ -1,16 +1,48 @@
 default:
   BackendApiHost: localhost
   BackendApiPort: 3000
-  Geofences: [
-    {
-      name: 'Воронеж',
-      # array of [latitude, longitude] coordinates
-      polygon: []
-    },
-    {
-      name: 'Град',
-      polygon: []
-    }]
+  Schedule: 
+    "0": 
+      name: 18:00 до 22:00
+      timeRanges: [ {start: 18, end: 22} ]
+    "1": 
+      name: 7:00 до 10:00 и с 18:00 до 22:00
+      timeRanges: [
+        {start: 7, end: 10},
+        {start: 18, end: 22}
+        ]
+    "2": 
+      name: 7:00 до 10:00 и с 18:00 до 22:00
+      timeRanges: [
+        {start: 7, end: 10},
+        {start: 18, end: 22}
+        ]
+    "3": 
+      name: 7:00 до 10:00 и с 18:00 до 22:00
+      timeRanges: [
+        {start: 7, end: 10},
+        {start: 18, end: 22}
+        ]
+    "4": 
+      name: 7:00 до 10:00 и с 18:00 до 22:00
+      timeRanges: [
+        {start: 7, end: 10},
+        {start: 18, end: 22}
+        ]
+    # Friday
+    "5": 
+      name: 7:00 до 10:00 и с 18:00 до 24:00
+      timeRanges: [
+        {start: 7, end: 10},
+        {start: 18, end: 24},
+        ]
+
+    # Saturday
+    "6": 
+      name: 18:00 до 24:00
+      timeRanges: [ {start: 18, end: 24} ]
+
+
 
 development:
 

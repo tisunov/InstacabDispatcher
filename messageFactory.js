@@ -1,4 +1,5 @@
-var _ = require('underscore');
+var _ = require('underscore'),
+	schedule = require("./lib/schedule");
 
 var city = {
   cityName: "Воронеж",
@@ -27,7 +28,7 @@ var city = {
       requestPickupButtonString: "ЗАКАЗАТЬ {string}",
       setPickupLocationString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",
       pickupEtaString: "Время прибытия машины примерно {string}",
-      noneAvailableString: "НЕТ СВОБОДНЫХ АВТОМОБИЛЕЙ",
+      noneAvailableString: schedule.getNoneAvailableString(),
     },
 
     "2": {

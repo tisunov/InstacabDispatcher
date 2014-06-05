@@ -6,7 +6,9 @@ var util = require("util"),
 	MessageFactory = require("../messageFactory"),
 	ErrorCodes = require("../error_codes"),
 	mongoClient = require("../mongo_client"),
-	geofence = require("../lib/geofence");
+	geofence = require("../lib/geofence"),
+	schedule = require("../lib/schedule"),
+	config = require('konfig')();
 
 function Client() {
 	User.call(this, Client.LOOKING);	
@@ -66,7 +68,7 @@ Client.prototype.pickup = function(context, callback) {
 		if (items.length === 0) {
 			require('../backend').clientRequestPickup(this.id, { noCarsAvailable: true });
 
-			return callback(null, MessageFactory.createClientOK(this, { sorryMsg: 'ОГРОМНОЕ спасибо за интерес к Instacab! Все автомобили в настоящее время заполнены, пожалуйста проверьте снова в ближайшее время!' }));
+			return callback(null, MessageFactory.createClientOK(this, { sorryMsg: schedule.getSorryMsg() }));
 		}
 
 		this._driversAvailableForDispatch(context.message.pickupLocation, items, callback);
@@ -86,7 +88,7 @@ Client.prototype._driversAvailableForDispatch = function(pickupLocation, items, 
 		else {
 			require('../backend').clientRequestPickup(this.id, { noCarsAvailable: true, secondCheck: true });
 
-			return callback(null, MessageFactory.createClientOK(this, { sorryMsg: 'Спасибо БОЛЬШОЕ за интерес к Instacab. Все автомобили в настоящее время заполнены, пожалуйста проверьте снова в ближайшее время!' }));
+			return callback(null, MessageFactory.createClientOK(this, { sorryMsg: schedule.getSorryMsg() }));
 		}
 
 	}.bind(this));
