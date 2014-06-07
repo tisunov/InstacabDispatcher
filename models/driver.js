@@ -275,7 +275,8 @@ Driver.prototype.queryETAToLocation = function(pickupLocation, callback) {
       DistanceMatrix.get(self.location, pickupLocation, function(err, data) {
         // Store only approximate driving duration, instead of whole result to save memory
         if (!err) {
-          data = { durationSeconds: data.durationSeconds }
+          // To get more accurate estimate multiply by 1.5
+          data = { durationSeconds: data.durationSeconds * 1.5 }
         }
           
         cb(err, data);
