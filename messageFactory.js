@@ -62,7 +62,7 @@ var city = {
   defaultVehicleViewId: 1
 };
 
-function getCity {
+function getCity() {
 	city.vehicleViews["1"].noneAvailableString = schedule.getNoneAvailableString();
 	return city;
 }
@@ -202,7 +202,7 @@ MessageFactory.createClientOK = function(client, options) {
 
 	var msg = {
 		messageType: "OK",
-		city: city
+		city: getCity()
 	}
 
 	if (client) 
@@ -264,7 +264,7 @@ MessageFactory.createClientEndTrip = function(client, trip) {
 MessageFactory.clientFareEstimate = function(client, fareEstimateString) {
 	var msg = {
 		messageType: "OK",
-		city: city,
+		city: getCity(),
 		client: clientToJSON(client),
 	};
 
