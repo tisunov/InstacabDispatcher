@@ -28,7 +28,7 @@ var city = {
       requestPickupButtonString: "ЗАКАЗАТЬ {string}",
       setPickupLocationString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",
       pickupEtaString: "Время прибытия машины примерно {string}",
-      noneAvailableString: schedule.getNoneAvailableString(),
+      noneAvailableString: "НЕТ СВОБОДНЫХ АВТОМОБИЛЕЙ",
     },
 
     "2": {
@@ -61,6 +61,11 @@ var city = {
   vehicleViewsOrder: [ 2, 1 ],
   defaultVehicleViewId: 1
 };
+
+function getCity {
+	city.vehicleViews["1"].noneAvailableString = schedule.getNoneAvailableString();
+	return city;
+}
 
 function tripForClientToJSON(trip) {
 	var vehicle = trip.driver.vehicle;
