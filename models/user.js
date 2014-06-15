@@ -85,9 +85,13 @@ User.prototype._connectionClosed = function() {
 		this.connection = null;
 	}
 
+	this.onDisconnect();
+
 	this.emit('disconnect', this);
 	this.publish();
 }
+
+User.prototype.onDisconnect = function () {}
 
 User.prototype.publish = function() {
 	publisher.publish(this.channelName, JSON.stringify(this));

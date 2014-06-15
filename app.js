@@ -103,20 +103,19 @@ dispatcher.load(function(err) {
     resp.end();
   });
 
-  var geoCondition = { 
-    $near: [39.192151, 51.672448], // Center of the Voronezh
-    $maxDistance: 20 * 1000 // 20 km
-  };
-
   // Query demand
   app.get('/query/pings', function(req, resp) {
-    // http://webapplog.com/querying-20m-record-mongodb-collection/
+    var filter = {
+      location: { 
+        $near: [39.192151, 51.672448], // Center of the Voronezh
+        $maxDistance: 20 * 1000 // 20 km
+      }, 
+      eventName: 'NearestCabRequest', 
+      'parameters.reason': 'openApp', 
+      'parameters.clientId': { $nin: [ 29, 35 ] } // filter out Pavel Tisunov and Mikhail Zhizhenko
+    };
 
-
-    // TODO: Filter out
-    // db.mobile_events.find({'parameters.clientId': 29}), db.mobile_events.find({'parameters.clientId': 35})
-
-    db.collection('mobile_events').find({location: geoCondition, eventName: 'NearestCabRequest', 'parameters.reason': 'openApp'}).toArray(function(err, items) {
+    db.collection('mobile_events').find(filter).toArray(function(err, items) {
       if (err) return resp.end(JSON.stringify({pings: ""}));
 
       var pings = async.map(items, function(item, callback) {

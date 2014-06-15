@@ -40,25 +40,24 @@ Driver.prototype.getSchema = function() {
 }
 
 Driver.prototype.login = function(context, callback) {
-  console.log('Driver ' + this.id + ' logged in: ' + this.state + ' connected: ' + this.connected);
+  // console.log('Driver ' + this.id + ' logged in: ' + this.state + ' connected: ' + this.connected);
   
-  logEvent('SignInRequest', context);
-
   this.updateLocation(context);
   if (!this.state) {
     this.changeState(Driver.OFFDUTY);
   }
 
+  this.buildAndLogEvent('SignInRequest', context);
   this.save();
 
   return MessageFactory.createDriverOK(this, true, this.trip, false);
 }
 
 Driver.prototype.logout = function(context) {
-  console.log('Driver ' + this.id + ' logged out');
+  // console.log('Driver ' + this.id + ' logged out');
   
-  logEvent('SignOutRequest', context);
   this.updateLocation(context);
+  this.buildAndLogEvent('SignOutRequest', context);
   
   return MessageFactory.createDriverOK(this);
 }
@@ -67,10 +66,10 @@ Driver.prototype.onDuty = function(context) {
   this.updateLocation(context);
 
   if (this.state === Driver.OFFDUTY) {
-    console.log('Driver ' + this.id + ' on duty');
-
-    logEvent('GoOnlineRequest', context);
+    // console.log('Driver ' + this.id + ' on duty');
     this.changeState(Driver.AVAILABLE);
+    this.buildAndLogEvent('GoOnlineRequest', context);
+
     this.save();
   }
 
@@ -81,10 +80,11 @@ Driver.prototype.offDuty = function(context) {
   this.updateLocation(context);
 
   if (this.state === Driver.AVAILABLE) {
-    console.log('Driver ' + this.id + ' off duty');
+    // console.log('Driver ' + this.id + ' off duty');
 
-    logEvent('GoOfflineRequest', context);
     this.changeState(Driver.OFFDUTY);
+    this.buildAndLogEvent('GoOfflineRequest', context);
+
     this.save();
   }
 
@@ -95,29 +95,14 @@ Driver.prototype.offDuty = function(context) {
 Driver.prototype.ping = function(context) {
   this.updateLocation(context);
 
-  logEvent('PositionUpdateRequest', context);
-
   // Track trip route
   if (this.trip) {
     this.trip.driverPing(context);
   }
 
+  this.logPingEvent(context);
+
   return MessageFactory.createDriverOK(this, false, this.trip, this.state === Driver.PENDINGRATING);
-}
-
-function logEvent(eventName, context) {
-  var payload = context.message;
-  var event = {
-    eventName: eventName,
-    location: [payload.longitude, payload.latitude],
-    epoch: payload.epoch,
-    deviceId: payload.deviceId,
-    appVersion: payload.appVersion
-  }
-
-  mongoClient.collection('driver_events').insert(event, function(err, replies){
-    if (err) console.log(err);
-  });
 }
 
 // Driver explicitly canceled trip
@@ -125,8 +110,9 @@ Driver.prototype.cancelTrip = function(context) {
   this.updateLocation(context);
 
   if (this.state === Driver.ACCEPTED || this.state === Driver.ARRIVED) {
-    logEvent('PickupCanceledRequest', context);
     this.changeState(Driver.AVAILABLE);
+    this.buildAndLogEvent('PickupCanceledRequest', context);
+
     this.save();
   }
 
@@ -137,9 +123,10 @@ Driver.prototype.confirm = function(context) {
   this.updateLocation(context);
 
   if (this.state === Driver.DISPATCHING) {
-    logEvent('PickupConfirmedRequest', context);
     this.tripsAccepted += 1;
     this.changeState(Driver.ACCEPTED);
+    this.buildAndLogEvent('PickupConfirmedRequest', context);
+
     this.save();
   }
 
@@ -150,8 +137,9 @@ Driver.prototype.arriving = function(context) {
   this.updateLocation(context);
 
   if (this.state === Driver.ACCEPTED) {
-    logEvent('ArrivingRequest', context);
     this.changeState(Driver.ARRIVED);
+    this.buildAndLogEvent('ArrivingRequest', context);
+
     this.save();    
   }
 
@@ -162,8 +150,9 @@ Driver.prototype.beginTrip = function(context) {
   this.updateLocation(context);
 
   if (this.state === Driver.ARRIVED) {
-    logEvent('TripStartedRequest', context);
     this.changeState(Driver.DRIVINGCLIENT);
+    this.buildAndLogEvent('TripStartedRequest', context);
+
     this.save();
   }
 
@@ -174,8 +163,9 @@ Driver.prototype.finishTrip = function(context) {
   this.updateLocation(context);
 
   if (this.state === Driver.DRIVINGCLIENT) {
-    logEvent('TripFinishedRequest', context);
     this.changeState(Driver.PENDINGRATING);
+    this.buildAndLogEvent('TripFinishedRequest', context);
+
     this.save();
   }
 
@@ -257,6 +247,19 @@ Driver.prototype.notifyTripBilled = function() {
   if (this.trip) {
     this.send(MessageFactory.createDriverOK(this, false, this.trip, true));
   }
+}
+
+Driver.prototype.onDisconnect = function () {
+  var payload = {
+    message: {
+      latitude: this.location.latitude,
+      longitude: this.location.longitude,
+      epoch: Math.round(Date.now() / 1000),
+      deviceId: this.deviceId
+    }
+  }
+
+  this.buildAndLogEvent('Disconnect', payload);
 }
 
 Driver.prototype._distanceTo = function(location) {
@@ -415,6 +418,42 @@ Driver.publishAll = function() {
     drivers.forEach(function(driver) {
       driver.publish();
     });
+  });
+}
+
+///////////////////////////////////////////////////////////////////////////////
+/// Log Events
+/// 
+Driver.prototype.logPingEvent = function(context) {
+  var event = buildEvent('PositionUpdateRequest', context);
+  event.horizontalAccuracy = context.message.horizontalAccuracy;
+  event.verticalAccuracy = context.message.verticalAccuracy;
+
+  logEvent(event);
+}
+
+Driver.prototype.buildEvent = function(eventName, context) {
+  var payload = context.message;
+  var event = {
+    driverId: this.id,
+    state: this.state,
+    eventName: eventName,
+    location: [payload.longitude, payload.latitude],
+    epoch: payload.epoch,
+    deviceId: payload.deviceId,
+    appVersion: payload.appVersion
+  }
+
+  return event;
+}
+
+Driver.prototype.buildAndLogEvent = function(eventName, context) {
+  logEvent(this.buildEvent(eventName, context));
+}
+
+function logEvent(event) {
+  mongoClient.collection('driver_events').insert(event, function(err, replies){
+    if (err) console.log(err);
   });
 }
 
