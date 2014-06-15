@@ -425,7 +425,7 @@ Driver.publishAll = function() {
 /// Log Events
 /// 
 Driver.prototype.logPingEvent = function(context) {
-  var event = buildEvent('PositionUpdateRequest', context);
+  var event = this.buildEvent('PositionUpdateRequest', context);
   event.horizontalAccuracy = context.message.horizontalAccuracy;
   event.verticalAccuracy = context.message.verticalAccuracy;
 
