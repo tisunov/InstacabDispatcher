@@ -112,7 +112,7 @@ dispatcher.load(function(err) {
       }, 
       eventName: 'NearestCabRequest', 
       'parameters.reason': 'openApp', 
-      'parameters.clientId': { $nin: [ 29, 35 ] } // filter out Pavel Tisunov and Mikhail Zhizhenko
+      'parameters.clientId': { $nin: [ 29, 31, 35, 63, 60, ] } // filter out Pavel Tisunov and Mikhail Zhizhenko
     };
 
     db.collection('mobile_events').find(filter).toArray(function(err, items) {
@@ -126,8 +126,8 @@ dispatcher.load(function(err) {
           longitude: item.location[0],
           latitude: item.location[1],
           epoch: item.epoch,
-          locationVerticalAccuracy: item.parameters.locationVerticalAccuracy,
-          locationHorizontalAccuracy: item.parameters.locationHorizontalAccuracy
+          verticalAccuracy: item.parameters.locationVerticalAccuracy,
+          horizontalAccuracy: item.parameters.locationHorizontalAccuracy
         });
 
       }, function(err, result) {
