@@ -6,9 +6,8 @@ var MessageFactory = require("../messageFactory"),
   DistanceMatrix = require('../lib/google-distance'),
   RequestRedisCache = require('request-redis-cache'),
   redisClient = require("redis").createClient()
-  cache = new RequestRedisCache({
-    redis: redisClient
-  }),
+  cache = new RequestRedisCache({ redis: redisClient }),
+  mongoClient = require('../mongo_client'),
   User = require("./user");
 
 function Driver() {
@@ -43,6 +42,8 @@ Driver.prototype.getSchema = function() {
 Driver.prototype.login = function(context, callback) {
   console.log('Driver ' + this.id + ' logged in: ' + this.state + ' connected: ' + this.connected);
   
+  logEvent('SignInRequest', context);
+
   this.updateLocation(context);
   if (!this.state) {
     this.changeState(Driver.OFFDUTY);
@@ -55,6 +56,8 @@ Driver.prototype.login = function(context, callback) {
 
 Driver.prototype.logout = function(context) {
   console.log('Driver ' + this.id + ' logged out');
+  
+  logEvent('SignOutRequest', context);
   this.updateLocation(context);
   
   return MessageFactory.createDriverOK(this);
@@ -65,6 +68,8 @@ Driver.prototype.onDuty = function(context) {
 
   if (this.state === Driver.OFFDUTY) {
     console.log('Driver ' + this.id + ' on duty');
+
+    logEvent('GoOnlineRequest', context);
     this.changeState(Driver.AVAILABLE);
     this.save();
   }
@@ -77,6 +82,8 @@ Driver.prototype.offDuty = function(context) {
 
   if (this.state === Driver.AVAILABLE) {
     console.log('Driver ' + this.id + ' off duty');
+
+    logEvent('GoOfflineRequest', context);
     this.changeState(Driver.OFFDUTY);
     this.save();
   }
@@ -88,6 +95,8 @@ Driver.prototype.offDuty = function(context) {
 Driver.prototype.ping = function(context) {
   this.updateLocation(context);
 
+  logEvent('PositionUpdateRequest', context);
+
   // Track trip route
   if (this.trip) {
     this.trip.driverPing(context);
@@ -96,11 +105,27 @@ Driver.prototype.ping = function(context) {
   return MessageFactory.createDriverOK(this, false, this.trip, this.state === Driver.PENDINGRATING);
 }
 
+function logEvent(eventName, context) {
+  var payload = context.message;
+  var event = {
+    eventName: eventName,
+    location: [payload.longitude, payload.latitude],
+    epoch: payload.epoch,
+    deviceId: payload.deviceId,
+    appVersion: payload.appVersion
+  }
+
+  mongoClient.collection('driver_events').insert(event, function(err, replies){
+    if (err) console.log(err);
+  });
+}
+
 // Driver explicitly canceled trip
 Driver.prototype.cancelTrip = function(context) {
   this.updateLocation(context);
 
   if (this.state === Driver.ACCEPTED || this.state === Driver.ARRIVED) {
+    logEvent('PickupCanceledRequest', context);
     this.changeState(Driver.AVAILABLE);
     this.save();
   }
@@ -112,6 +137,7 @@ Driver.prototype.confirm = function(context) {
   this.updateLocation(context);
 
   if (this.state === Driver.DISPATCHING) {
+    logEvent('PickupConfirmedRequest', context);
     this.tripsAccepted += 1;
     this.changeState(Driver.ACCEPTED);
     this.save();
@@ -124,6 +150,7 @@ Driver.prototype.arriving = function(context) {
   this.updateLocation(context);
 
   if (this.state === Driver.ACCEPTED) {
+    logEvent('ArrivingRequest', context);
     this.changeState(Driver.ARRIVED);
     this.save();    
   }
@@ -135,6 +162,7 @@ Driver.prototype.beginTrip = function(context) {
   this.updateLocation(context);
 
   if (this.state === Driver.ARRIVED) {
+    logEvent('TripStartedRequest', context);
     this.changeState(Driver.DRIVINGCLIENT);
     this.save();
   }
@@ -146,6 +174,7 @@ Driver.prototype.finishTrip = function(context) {
   this.updateLocation(context);
 
   if (this.state === Driver.DRIVINGCLIENT) {
+    logEvent('TripFinishedRequest', context);
     this.changeState(Driver.PENDINGRATING);
     this.save();
   }
@@ -224,9 +253,10 @@ Driver.prototype.notifyTripCanceled = function() {
 }
 
 Driver.prototype.notifyTripBilled = function() {
-  if (!this.trip) return; // fake driver sends rating without waiting for fare
-
-  this.send(MessageFactory.createDriverOK(this, false, this.trip, true));
+  // fake driver sends rating without waiting for the fare
+  if (this.trip) {
+    this.send(MessageFactory.createDriverOK(this, false, this.trip, true));
+  }
 }
 
 Driver.prototype._distanceTo = function(location) {
@@ -239,7 +269,7 @@ Driver.prototype.isDrivingClient = function() {
 }
 
 Driver.prototype.isAvailable = function() {
-  console.log('Driver ' + this.id + ' connected: ' + this.connected + ' state: ' + this.state);
+  // console.log('Driver ' + this.id + ' connected: ' + this.connected + ' state: ' + this.state);
   return this.connected && this.state === Driver.AVAILABLE;
 }
 

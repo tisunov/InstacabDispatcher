@@ -62,6 +62,7 @@ dispatcher.load(function(err) {
   // create index: 
   // key, unique, callback
   db.collection('mobile_events').ensureIndex({ "location": "2d" }, false, function(err, replies){});
+  db.collection('driver_events').ensureIndex({ "location": "2d" }, false, function(err, replies){});
 
   // Events
   app.post('/mobile/event', function(req, resp) {
@@ -110,6 +111,10 @@ dispatcher.load(function(err) {
   // Query demand
   app.get('/query/pings', function(req, resp) {
     // http://webapplog.com/querying-20m-record-mongodb-collection/
+
+
+    // TODO: Filter out
+    // db.mobile_events.find({'parameters.clientId': 29}), db.mobile_events.find({'parameters.clientId': 35})
 
     db.collection('mobile_events').find({location: geoCondition, eventName: 'NearestCabRequest', 'parameters.reason': 'openApp'}).toArray(function(err, items) {
       if (err) return resp.end(JSON.stringify({pings: ""}));
