@@ -32,7 +32,7 @@ function User(defaultState) {
 util.inherits(User, EventEmitter);
 
 User.prototype.getSchema = function() {
-	return ['id', 'firstName', 'email', 'token', 'deviceId', 'mobile', 'rating', 'state', 'location', 'tripId'];
+	return ['id', 'firstName', 'lastName', 'email', 'token', 'deviceId', 'mobile', 'rating', 'state', 'location', 'tripId'];
 }
 
 User.prototype.load = function(callback) {

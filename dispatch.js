@@ -305,7 +305,7 @@ Dispatcher.prototype = {
         clients.push(context.connection);
 
         console.log("Subscribe to " + context.message.channel);
-        console.log("Channel " + context.message.channel + " has " + clients.length + " rediss");
+        console.log("Channel " + context.message.channel + " has " + clients.length + " subscriber");
         
         // Remove disconnected clients
         context.connection.once('close', function() {

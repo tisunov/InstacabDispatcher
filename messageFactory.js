@@ -50,6 +50,9 @@ var city = {
     	  }
     	],
     	description: "ТАКСИ",
+    	allowCash: false,
+    	allowCashError: "Для доставки пончиков необходимо зарегистрировать банковскую карту. 240 руб автоматически снимется сразу после доставки пончиков.",
+    	addCreditCardButtonTitle: "Добавить Карту",
     	// pickupButtonString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",
     	// confirmPickupButtonString: "Подтвердить заказ",
     	requestPickupButtonString: "ЗАКАЗАТЬ {string}",
@@ -112,6 +115,7 @@ function userToJSON(user, includeToken) {
 	var json = {
 		id: user.id,
 		firstName: user.firstName,
+		lastName: user.lastName,
 		mobile: user.mobile,
 		rating: user.rating,
 		state: user.state
@@ -132,6 +136,7 @@ function clientToJSON(user, includeToken) {
 	}
 
 	json.hasConfirmedMobile = user.hasConfirmedMobile;
+	json.referralCode = user.referralCode;
 
 	return json;
 }

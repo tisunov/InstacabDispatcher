@@ -275,6 +275,7 @@ Client.prototype.getSchema = function() {
   var props = User.prototype.getSchema.call(this);
   props.push('paymentProfile');
   props.push('hasConfirmedMobile');
+  props.push('referralCode');
   return props;
 }
 

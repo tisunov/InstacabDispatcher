@@ -15,6 +15,7 @@ var Dispatcher = require('./dispatch'),
     util = require('util'),
     cors = require('cors'),
     apiBackend = require('./backend'),
+    async = require('async'),
     db = require('./mongo_client');
 
 var dispatcher = new Dispatcher();
@@ -80,6 +81,14 @@ dispatcher.load(function(err) {
 
   var clientRepository = require('./models/client').repository;
 
+  // TODO: Это должен быть отдельный от Диспетчера Node.js процесс
+  // 1) Нужен набор служб который запускается как один организм в котором службы сотрудничают друг с другом
+  // 2) Нужен процесс который будет перезапускать умершие службы, да Forever должен справиться 
+
+  // TODO: Это должно делаться через Redis, хранишь данные в Redis, 
+  // потом читаешь их и кэшируешь в памяти через request-redis-cache, затем с Web интерфейса можешь 
+  // обновить данные Клиента, Водителя в Redis и послать сигнал в Redis чтобы Диспетчер прочитал обновленные данные из Redis
+  // 
   // State management
   app.put('/clients/:id', function(req, resp) {
     // console.log(req.body);
@@ -91,6 +100,36 @@ dispatcher.load(function(err) {
     });
 
     resp.end();
+  });
+
+  var geoCondition = { 
+    $near: [39.192151, 51.672448], // Center of the Voronezh
+    $maxDistance: 20 * 1000 // 20 km
+  };
+
+  // Query demand
+  app.get('/query/pings', function(req, resp) {
+    // http://webapplog.com/querying-20m-record-mongodb-collection/
+
+    db.collection('mobile_events').find({location: geoCondition, eventName: 'NearestCabRequest', 'parameters.reason': 'openApp'}).toArray(function(err, items) {
+      if (err) return resp.end(JSON.stringify({pings: ""}));
+
+      var pings = async.map(items, function(item, callback) {
+
+        callback(null, {
+          id: item._id,
+          clientId: item.parameters.clientId,
+          longitude: item.location[0],
+          latitude: item.location[1],
+          epoch: item.epoch,
+          locationVerticalAccuracy: item.parameters.locationVerticalAccuracy,
+          locationHorizontalAccuracy: item.parameters.locationHorizontalAccuracy
+        });
+
+      }, function(err, result) {
+        resp.end(JSON.stringify({pings: result}));
+      });
+    });
   });
 
 });
