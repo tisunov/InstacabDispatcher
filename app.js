@@ -106,10 +106,10 @@ dispatcher.load(function(err) {
   // Query demand
   app.get('/query/pings', function(req, resp) {
     var filter = {
-      location: { 
-        $near: [39.192151, 51.672448], // Center of the Voronezh
-        $maxDistance: 80 * 1000 // 40 km
-      }, 
+      // location: { 
+      //   $near: [39.192151, 51.672448], // Center of the Voronezh
+      //   $maxDistance: 80 * 1000 // 40 km
+      // }, 
       eventName: 'NearestCabRequest', 
       'parameters.reason': 'openApp', 
       // 'parameters.clientId': { $nin: [ 29, 31, 35, 36, 49, 63, 60, 67 ] } // filter out Pavel Tisunov and Mikhail Zhizhenko
@@ -123,8 +123,8 @@ dispatcher.load(function(err) {
         callback(null, {
           id: item._id,
           clientId: item.parameters.clientId,
-          longitude: item.location[0],
-          latitude: item.location[1],
+          longitude: item.location[0] || 0,
+          latitude: item.location[1] || 0,
           epoch: item.epoch,
           verticalAccuracy: item.parameters.locationVerticalAccuracy,
           horizontalAccuracy: item.parameters.locationHorizontalAccuracy
