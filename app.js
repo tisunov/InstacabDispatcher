@@ -112,7 +112,7 @@ dispatcher.load(function(err) {
       }, 
       eventName: 'NearestCabRequest', 
       'parameters.reason': 'openApp', 
-      'parameters.clientId': { $nin: [ 29, 31, 35, 49, 63, 60, 67,  ] } // filter out Pavel Tisunov and Mikhail Zhizhenko
+      'parameters.clientId': { $nin: [ 29, 31, 35, 36, 49, 63, 60, 67 ] } // filter out Pavel Tisunov and Mikhail Zhizhenko
     };
 
     db.collection('mobile_events').find(filter).toArray(function(err, items) {
@@ -134,6 +134,35 @@ dispatcher.load(function(err) {
         resp.end(JSON.stringify({pings: result}));
       });
     });
+    
+  });
+
+  app.get('/query/pickup_requests', function(req, resp) {
+    var filter = {
+      eventName: 'PickupRequest', 
+      'parameters.clientId': { $nin: [ 29, 31, 35, 36, 49, 63, 60, 67 ] } // filter out Pavel Tisunov and Mikhail Zhizhenko
+    };
+
+    db.collection('mobile_events').find(filter).toArray(function(err, items) {
+      if (err) return resp.end(JSON.stringify({pickup_requests: ""}));
+
+      var pings = async.map(items, function(item, callback) {
+
+        callback(null, {
+          id: item._id,
+          clientId: item.parameters.clientId,
+          longitude: item.location[0],
+          latitude: item.location[1],
+          epoch: item.epoch,
+          verticalAccuracy: item.parameters.locationVerticalAccuracy,
+          horizontalAccuracy: item.parameters.locationHorizontalAccuracy
+        });
+
+      }, function(err, result) {
+        resp.end(JSON.stringify({pickup_requests: result}));
+      });
+    });
+
   });
 
 });
