@@ -103,6 +103,8 @@ dispatcher.load(function(err) {
     resp.end();
   });
 
+  var filterClientIds = [ 29, 31, 35, 36, 49, 63, 60, 67 ];
+
   // Query demand
   app.get('/query/pings', function(req, resp) {
     var filter = {
@@ -112,7 +114,7 @@ dispatcher.load(function(err) {
       // }, 
       eventName: 'NearestCabRequest', 
       'parameters.reason': 'openApp', 
-      // 'parameters.clientId': { $nin: [ 29, 31, 35, 36, 49, 63, 60, 67 ] } // filter out Pavel Tisunov and Mikhail Zhizhenko
+      'parameters.clientId': { $nin: filterClientIds } // filter out Pavel Tisunov and Mikhail Zhizhenko
     };
 
     db.collection('mobile_events').find(filter).toArray(function(err, items) {
@@ -140,7 +142,7 @@ dispatcher.load(function(err) {
   app.get('/query/pickup_requests', function(req, resp) {
     var filter = {
       eventName: 'PickupRequest', 
-      'parameters.clientId': { $nin: [ 29, 31, 35, 36, 49, 63, 60, 67 ] } // filter out Pavel Tisunov and Mikhail Zhizhenko
+      'parameters.clientId': { $nin: filterClientIds } // filter out Pavel Tisunov and Mikhail Zhizhenko
     };
 
     db.collection('mobile_events').find(filter).toArray(function(err, items) {
