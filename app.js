@@ -108,7 +108,7 @@ dispatcher.load(function(err) {
     var filter = {
       location: { 
         $near: [39.192151, 51.672448], // Center of the Voronezh
-        $maxDistance: 20 * 1000 // 20 km
+        $maxDistance: 40 * 1000 // 40 km
       }, 
       eventName: 'NearestCabRequest', 
       'parameters.reason': 'openApp', 
