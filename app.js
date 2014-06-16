@@ -108,11 +108,11 @@ dispatcher.load(function(err) {
     var filter = {
       location: { 
         $near: [39.192151, 51.672448], // Center of the Voronezh
-        $maxDistance: 40 * 1000 // 40 km
+        $maxDistance: 80 * 1000 // 40 km
       }, 
       eventName: 'NearestCabRequest', 
       'parameters.reason': 'openApp', 
-      'parameters.clientId': { $nin: [ 31, 35, 36, 49, 63, 60, 67 ] } // filter out Pavel Tisunov and Mikhail Zhizhenko
+      // 'parameters.clientId': { $nin: [ 29, 31, 35, 36, 49, 63, 60, 67 ] } // filter out Pavel Tisunov and Mikhail Zhizhenko
     };
 
     db.collection('mobile_events').find(filter).toArray(function(err, items) {
