@@ -3,11 +3,9 @@ var login1 = {
   app: "driver",
   email: 'mike@mail.ru',
   password: 'securepassword',
-  latitude: 51.674789,
-  longitude: 39.211527,
-  epoch: Math.round(new Date().getTime() / 1000.0)
-  // latitude: 51.66351,
-  // longitude: 39.185234
+  latitude: 51.724789,
+  longitude: 39.171527,
+  epoch: Math.round(new Date().getTime() / 1000.0),
 };
 
 var onduty = {

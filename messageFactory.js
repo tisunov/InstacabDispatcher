@@ -23,6 +23,7 @@ var city = {
         }
       ],
       description: "INSTACAB",
+      allowCash: true,
       // pickupButtonString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",
       // confirmPickupButtonString: "Подтвердить заказ",
       requestPickupButtonString: "ЗАКАЗАТЬ {string}",
