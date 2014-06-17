@@ -23,7 +23,8 @@ var city = {
         }
       ],
       description: "INSTACAB",
-      allowCash: true,
+      allowCashPayment: true,
+      requestAfterMobileConfirm: true,
       // pickupButtonString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",
       // confirmPickupButtonString: "Подтвердить заказ",
       requestPickupButtonString: "ЗАКАЗАТЬ {string}",
@@ -51,7 +52,8 @@ var city = {
     	  }
     	],
     	description: "ТАКСИ",
-    	allowCash: false,
+      requestAfterMobileConfirm: false,
+    	allowCashPayment: false,
     	allowCashError: "Для доставки пончиков необходимо зарегистрировать банковскую карту. 240 руб автоматически снимется сразу после доставки пончиков.",
     	addCreditCardButtonTitle: "Добавить Карту",
     	// pickupButtonString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",

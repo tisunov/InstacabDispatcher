@@ -424,12 +424,26 @@ Driver.publishAll = function() {
 ///////////////////////////////////////////////////////////////////////////////
 /// Log Events
 /// 
-Driver.prototype.logPingEvent = function(context) {
-  var event = this.buildEvent('PositionUpdateRequest', context);
-  event.horizontalAccuracy = context.message.horizontalAccuracy;
-  event.verticalAccuracy = context.message.verticalAccuracy;
+var EPSILON = 0.000002;
 
-  logEvent(event);
+function equalLocations(location1, location2) {
+  return (Math.abs(location1[0] - location2[0]) <= EPSILON) && (Math.abs(location1[1] - location2[1]) <= EPSILON);
+}
+
+Driver.prototype.logPingEvent = function(context) {
+  // find last ping location
+  mongoClient.collection('driver_events').findOne({$query: {eventName: 'PositionUpdateRequest'}, $orderby: { epoch : -1 }}, function(err, lastPing) {
+    if (err) return console.log(err);
+
+    // log only if location changed to save space
+    if (!equalLocations(lastPing.location, [context.message.longitude, context.message.latitude])) {
+      var event = this.buildEvent('PositionUpdateRequest', context);
+      event.horizontalAccuracy = context.message.horizontalAccuracy;
+      event.verticalAccuracy = context.message.verticalAccuracy;
+
+      logEvent(event);
+    }
+  }.bind(this));    
 }
 
 Driver.prototype.buildEvent = function(eventName, context) {
