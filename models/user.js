@@ -1,8 +1,8 @@
 var WebSocket = require('ws'),
-	util = require('util'),
-	EventEmitter = require('events').EventEmitter,
-	assert = require('assert'),
-	publisher = require('../publisher');
+		util = require('util'),
+		EventEmitter = require('events').EventEmitter,
+		assert = require('assert'),
+		publisher = require('../publisher');
 
 // Create a new object, that prototypally inherits from the Error constructor
 function NetworkError(message, socketError) {
@@ -32,7 +32,7 @@ function User(defaultState) {
 util.inherits(User, EventEmitter);
 
 User.prototype.getSchema = function() {
-	return ['id', 'firstName', 'lastName', 'email', 'token', 'deviceId', 'mobile', 'rating', 'state', 'location', 'tripId'];
+	return ['id', 'firstName', 'lastName', 'email', 'token', 'deviceId', 'mobile', 'rating', 'state', 'location', 'tripId', 'isAdmin'];
 }
 
 User.prototype.load = function(callback) {
@@ -72,6 +72,8 @@ User.prototype.disconnect = function() {
 	if (this.connection && this.connection.readyState === WebSocket.OPEN) {
 		this.connection.close();
 	}
+
+	this.connection = null;
 }
 
 User.prototype._connectionClosed = function() {
@@ -82,8 +84,8 @@ User.prototype._connectionClosed = function() {
 	if (this.connection) {
 		this.connection.removeListener('error', this._onConnectionError);
 		this.connection.removeListener('close', this._onConnectionClosed);
-		this.connection = null;
 	}
+	this.connection = null;
 
 	this.onDisconnect();
 
@@ -121,6 +123,7 @@ User.prototype._setConnection = function(connection, deviceId) {
 	connection.once('error', this._onConnectionError);
 
 	// keep connection to send messages later
+	if (this.connection) delete this.connection;
 	this.connection = connection;
 
 	this.emit('connect', this);

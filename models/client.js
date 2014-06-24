@@ -7,7 +7,7 @@ var util = require("util"),
 	ErrorCodes = require("../error_codes"),
 	mongoClient = require("../mongo_client"),
 	geofence = require("../lib/geofence"),
-	schedule = require("../lib/schedule"),
+	city = require('./city'),
 	config = require('konfig')();
 
 function Client() {
@@ -45,41 +45,40 @@ Client.prototype.ping = function(context, callback) {
 	this._generateOKResponse(false, callback);
 }
 
-// TODO: Записывать событие в mongo.collection("dispatcher_events")
 Client.prototype.pickup = function(context, callback) {
+	var m = context.message;
+
 	this.updateLocation(context);
 	if (this.state !== Client.LOOKING) return callback(null, this._createOK());
 
-	// TODO: Записать событие вызова и уведомить по e-mail
 	if (!this.hasConfirmedMobile) {
 		require('../backend').requestMobileConfirmation(this.id);
 		return callback(null, this._createOK());
 	}
 
-	if (!Client.canRequestToLocation(context.message.pickupLocation)) {
-		require('../backend').clientRequestPickup(this.id, { restrictedLocation: context.message.pickupLocation });
+	if (!Client.canRequestToLocation(m.pickupLocation)) {
+		require('../backend').clientRequestPickup(this.id, { restrictedLocation: m.pickupLocation });
 
-		return callback(null, MessageFactory.createClientOK(this, { sorryMsg: "К сожалению мы еще не работаем в вашей области. Мы постоянно расширяем наш сервис, следите за обновлениями вступив в группу vk.com/instacab" }));
+		return callback(null, MessageFactory.createClientOK(this, { sorryMsg: city.sorryMsgGeofence, vehicleViewId: m.vehicleViewId }));
 	}
 
-	Driver.availableSortedByDistanceFrom(context.message.pickupLocation, function(err, items){
+	Driver.availableSortedByDistanceFrom(m.pickupLocation, m.vehicleViewId, function(err, items){
 		if (err) return callback(err);
 
 		if (items.length === 0) {
 			require('../backend').clientRequestPickup(this.id, { noCarsAvailable: true });
-
-			return callback(null, MessageFactory.createClientOK(this, { sorryMsg: schedule.getSorryMsg() }));
+			return callback(null, MessageFactory.createClientOK(this, { sorryMsg: city.getSorryMsg(m.vehicleViewId), vehicleViewId: m.vehicleViewId }));
 		}
 
-		this._driversAvailableForDispatch(context.message.pickupLocation, items, callback);
+		this._dispatchStillAvailableDriver(context.message.pickupLocation, m.vehicleViewId, items, callback);
 	}.bind(this));
 }
 
-Client.prototype._driversAvailableForDispatch = function(pickupLocation, items, callback) {
+// Check again for driver availability, when two pickup requests come at the same time, some client
+// may already claimed first driver
+Client.prototype._dispatchStillAvailableDriver = function(pickupLocation, vehicleViewId, items, callback) {
 	require("./trip").Trip.create(function(err, trip) {
-		// Check again for driver availability, when two pickup requests come at the same time, some client
-		// can already claim first driver
-		var driverFound = items.some(this._dispatchFirstAvailableDriver.bind(this, trip, pickupLocation));
+		var driverFound = items.some(this._dispatchDriver.bind(this, trip, pickupLocation, vehicleViewId));
 
 		if (driverFound) {
 			callback(null, this._createOK());
@@ -88,16 +87,16 @@ Client.prototype._driversAvailableForDispatch = function(pickupLocation, items, 
 		else {
 			require('../backend').clientRequestPickup(this.id, { noCarsAvailable: true, secondCheck: true });
 
-			return callback(null, MessageFactory.createClientOK(this, { sorryMsg: schedule.getSorryMsg() }));
+			return callback(null, MessageFactory.createClientOK(this, { sorryMsg: city.getSorryMsg(vehicleViewId), vehicleViewId: m.vehicleViewId }));
 		}
 
 	}.bind(this));
 }
 
-Client.prototype._dispatchFirstAvailableDriver = function(trip, pickupLocation, item) {
+Client.prototype._dispatchDriver = function(trip, pickupLocation, vehicleViewId, item) {
 	if (!item.driver.isAvailable()) return false;
 
-	trip.pickup(this, pickupLocation, item.driver);
+	trip.pickup(this, pickupLocation, vehicleViewId, item.driver);
 
 	this.setTrip(trip);
 	this.changeState(Client.DISPATCHING);
@@ -247,23 +246,13 @@ Client.prototype._createOK = function(includeToken) {
 }
 
 Client.prototype._generateOKResponse = function(includeToken, callback) {
-	// Return only one vehicle when client waits for pickup or already on the trip
 	if (this.state === Client.WAITINGFORPICKUP || this.state === Client.ONTRIP) {
-		var vehicle = {
-		  id: this.trip.driver.vehicle.id,
-		  longitude: this.trip.driver.location.longitude, 
-		  latitude: this.trip.driver.location.latitude,
-		  epoch: this.trip.driver.location.epoch,
-		  course: this.trip.driver.location.course,
-		  eta: 0 // TODO: Позже можно динамически считать ETA водителя (скажем каждые 500 метров)
-		};
-
-		var message = MessageFactory.createClientOK(this, { includeToken: includeToken, trip: this.trip, vehicles: [vehicle] });
+		var message = MessageFactory.createClientOK(this, { includeToken: includeToken, trip: this.trip });
 		callback(null, message);
 	}
-	// Return all vehicles nearby client location
+	// Return all vehicles near client location
 	else if (this.state === Client.LOOKING) {
-		this._updateNearbyDrivers({ includeToken: includeToken }, callback);
+		this.findAndSendDriversNearby({ includeToken: includeToken }, callback);
 	}
 	// Return current client state
 	else {
@@ -291,19 +280,17 @@ Client.prototype.changeState = function(state) {
   }
 }
 
-// TODO: Обновилась позиция всего одного водителя и не нужно пересчитывать расстояние и время прибытия
-// всех остальных
-//  Notify client about changes in nearby vehicles
-Client.prototype.updateNearbyDrivers = function() {
+// Notify client about changes in nearby vehicles
+Client.prototype.sendDriversNearby = function() {
 	if (!this.connected || this.state !== Client.LOOKING) return;
 	
 	console.log('Update nearby drivers for client ' + this.id + ', connected: ' + this.connected + ', state: ' + this.state);
-	this._updateNearbyDrivers({}, function(err, response) {
+	this.findAndSendDriversNearby({}, function(err, response) {
 		this.send(response);
 	}.bind(this));
 }
 
-Client.prototype._updateNearbyDrivers = function(options, callback) {
+Client.prototype.findAndSendDriversNearby = function(options, callback) {
 	Driver.allAvailableNear(this.location, function(err, vehicles) {
 		options.vehicles = vehicles;
 		callback(err, MessageFactory.createClientOK(this, options));

@@ -51,6 +51,13 @@ namespace :deploy do
     end
   end
 
+  desc 'Start dispatcher'
+  task :start do
+    on roles(:app), in: :sequence do
+      execute '/etc/init.d/forever', "start"
+    end
+  end
+
   desc 'Restart dispatcher'
   task :restart do
     on roles(:app), in: :sequence do

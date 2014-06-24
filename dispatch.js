@@ -9,10 +9,11 @@ var async = require('async'),
     clientRepository = require('./models/client').repository,
     Driver = require("./models/driver").Driver,
     Client = require("./models/client").Client,
+    city = require("./models/city"),
     redis = require("redis").createClient(),
     ErrorCodes = require("./error_codes"),
-    DistanceMatrix = require('./lib/google-distance'),
-    MessageFactory = require("./messageFactory");
+    MessageFactory = require("./messageFactory"),
+    mongoClient = require('./mongo_client');
 
 function Dispatcher() {
     this.driverEventCallback = this._clientsUpdateNearbyDrivers.bind(this);
@@ -95,54 +96,13 @@ Dispatcher.prototype = {
     // TODO: Записать в Client lastEstimatedTrip расчет поездки
     // И сохранять для каждого клиента это в базе
     SetDestination: function(context, callback) {
-        var m = context.message;
-
-        clientRepository.get(m.id, function(err, client) {
+        clientRepository.get(context.message.id, function(err, client) {
             if (err) return callback(err);
 
-            // TODO: Учти DistanceMatrix выдает несколько вариантов маршрута
-            // https://developers.google.com/maps/documentation/javascript/distancematrix
-            // Нужно выбрать самый короткий по расстоянию или самый быстрый по времени
-            DistanceMatrix.get(m.pickupLocation, m.destination, function(err, data) {
-              if (err) {
-                // default to 20 minute and 9 km per trip
-                data = { durationSeconds: 20 * 60, distanceKms: 9 };
-                console.log(err);
-              }
-
-              var distanceKm = data.distanceKms / 1000.0;
-
-              // Time per trip with speed less than 21 km/h = 1.5 min per 5 km
-              var billedTimeLow = (distanceKm / 5) * 1.5;
-              // Use 5 minutes per 5 km during traffic
-              var billedTimeHigh = (distanceKm / 5) * 5;
-              // 500 meters for each 5 km below < 21 km/h
-              var billedDistance = distanceKm - distanceKm * 0.1;
-
-              // Include 2 km in base fare
-              var base_km = 2;
-              billedDistance = billedDistance > 2 ? billedDistance - 2 : 0;
-
-              // TODO: Нужно спросить Fare у Backend, или вообще перенести весь расчет в API Backend
-              var fare = { base: 130.00, per_minute: 5.0, per_km: 13.0, minimum: 130 }
-
-              var estimateLow = Math.round((fare.base + billedTimeLow * fare.per_minute + billedDistance * fare.per_km) / 10) * 10;
-              var estimateHigh = Math.round((fare.base + billedTimeHigh * fare.per_minute + billedDistance * fare.per_km) / 10) * 10;
-
-              var estimateString;
-
-              if (estimateLow !== estimateHigh)
-                estimateString = estimateLow.toString() + '-' + estimateHigh.toString() + ' руб.';
-              else
-                estimateString = estimateLow.toString() + ' руб.';
-              
-              callback(null, MessageFactory.clientFareEstimate(client, estimateString));
-            });
-
+            city.estimateFare(client, context.message, callback);
         });
     },
     
-    // TODO: Сделать как в Uber. Используется одно сообщение PickupCanceledClient вместо моих CancelPickup, CancelTripClient
     PickupCanceledClient: function(context, callback) {
         clientRepository.get(context.message.id, function(err, client) {
             if (err) return callback(err);
@@ -150,6 +110,8 @@ Dispatcher.prototype = {
             client.cancelPickup(context, callback);
         });
     },
+
+    // TODO: Сделать как в Uber. Используется одно сообщение PickupCanceledClient вместо моих CancelPickup, CancelTripClient
 
     // TODO: УБРАТЬ НИЖНИЕ ДВА СООБЩЕНИЯ И ИСПОЛЬЗОВАТЬ ОДНО PickupCanceledClient ВЫШЕ
     // Client canceled pickup request while we were searching/waiting for drivers
@@ -328,13 +290,17 @@ Dispatcher.prototype = {
 }
 
 function responseWithError(text, errorCode){
-    console.log(text);
     var msg = MessageFactory.createError(text, errorCode);
 
     console.log('Sending response:');
     console.log(util.inspect(msg, {depth: 3}));
 
-    this.send(JSON.stringify(msg));
+    try {
+        this.send(JSON.stringify(msg));    
+    }
+    catch(e) {
+
+    };
 }
 
 Dispatcher.prototype._parseJSONData = function(data, connection) {
@@ -372,7 +338,7 @@ Dispatcher.prototype._clientsUpdateNearbyDrivers = function(driver, clientReques
     clientRepository.each(function(client) {
         if (client.id === skipClientId) return;
 
-        client.updateNearbyDrivers();
+        client.sendDriversNearby();
     });
 }
 
@@ -416,20 +382,20 @@ Dispatcher.prototype.load = function(callback) {
     function(err, result){
         async.parallel([
             function(next) {
-                console.log('Cache ' + result.drivers.length + ' driver(s)');
+                // console.log('Cache ' + result.drivers.length + ' driver(s)');
                 async.each(result.drivers, function(driver, cb){
                     self._subscribeToDriverEvents(driver);
                     driver.load(cb);
                 }, next);
             },
             function(next) {
-                console.log('Cache ' + result.clients.length + ' client(s)');
+                // console.log('Cache ' + result.clients.length + ' client(s)');
                 async.each(result.clients, function(client, cb){
                     client.load(cb);
                 }, next);
             },
             function(next) {
-                console.log('Cache ' + result.trips.length + ' trip(s)');
+                // console.log('Cache ' + result.trips.length + ' trip(s)');
                 async.each(result.trips, function(trip, cb){
                     trip.load(function(err) {
                         if (err) console.log('Error loading trip ' + trip.id + ':' + err);

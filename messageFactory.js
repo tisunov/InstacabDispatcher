@@ -1,90 +1,18 @@
 var _ = require('underscore'),
-	schedule = require("./lib/schedule");
-
-var city = {
-  cityName: "Воронеж",
-  vehicleViews: {
-    "1": {
-      id: 1,
-      fareDetailsUrl: null,
-      allowFareEstimate: true,
-      mapImages: [
-        {
-          url: "https://s3-eu-west-1.amazonaws.com/instacab-assets/car-types/map70px/map-uberx.png",
-          width: 70,
-          height: 70
-        }
-      ],
-      monoImages: [
-        {
-          url: "https://s3-eu-west-1.amazonaws.com/instacab-assets/car-types/mono/mono-uberx.png",
-          width: 100,
-          height: 37
-        }
-      ],
-      description: "INSTACAB",
-      allowCashPayment: true,
-      requestAfterMobileConfirm: true,
-      // pickupButtonString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",
-      // confirmPickupButtonString: "Подтвердить заказ",
-      requestPickupButtonString: "ЗАКАЗАТЬ {string}",
-      setPickupLocationString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",
-      pickupEtaString: "Время прибытия машины примерно {string}",
-      noneAvailableString: "НЕТ СВОБОДНЫХ АВТОМОБИЛЕЙ",
-    },
-
-    "2": {
-    	id: 2,
-    	fareDetailsUrl: null,
-    	allowFareEstimate: true,
-    	mapImages: [
-    	  {
-    	    url: "https://s3-eu-west-1.amazonaws.com/instacab-assets/car-types/map70px/map-taxi.png",
-    	    width: 70,
-    	    height: 70
-    	  }
-    	],
-    	monoImages: [
-    	  {
-    	    url: "https://s3-eu-west-1.amazonaws.com/instacab-assets/car-types/mono/mono-taxi.png",
-    	    width: 100,
-    	    height: 37
-    	  }
-    	],
-    	description: "ТАКСИ",
-      requestAfterMobileConfirm: false,
-    	allowCashPayment: false,
-    	allowCashError: "Для доставки пончиков необходимо зарегистрировать банковскую карту. 240 руб автоматически снимется сразу после доставки пончиков.",
-    	addCreditCardButtonTitle: "Добавить Карту",
-    	// pickupButtonString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",
-    	// confirmPickupButtonString: "Подтвердить заказ",
-    	requestPickupButtonString: "ЗАКАЗАТЬ {string}",
-    	setPickupLocationString: "ВЫБРАТЬ МЕСТО ПОСАДКИ",
-    	pickupEtaString: "Время прибытия машины примерно {string}",
-    	noneAvailableString: "НЕТ СВОБОДНЫХ ТАКСИ",
-    }
-  },
-  vehicleViewsOrder: [ 2, 1 ],
-  defaultVehicleViewId: 1
-};
-
-function getCity() {
-	city.vehicleViews["1"].noneAvailableString = schedule.getNoneAvailableString();
-	return city;
-}
+    city = require('./models/city');
 
 function tripForClientToJSON(trip) {
 	var vehicle = trip.driver.vehicle;
-
-	vehicle.vehicleViewId = city.defaultVehicleViewId;
-	vehicle.uuid = vehicle.id;
-
-	// Web Mobile Client
-	vehicle.vehicleType = {
-		make: vehicle.make,
-		model: vehicle.model
-	}
 	
+	// Web Mobile Client
+	_.extend(vehicle, {
+		uuid: vehicle.id,
+		vehicleType: {
+			make: vehicle.make,
+			model: vehicle.model
+		}
+	});
+
 	return {
 		id: trip.id,
 		pickupLocation: trip.pickupLocation,
@@ -101,9 +29,8 @@ function tripForClientToJSON(trip) {
 			photoUrl: trip.driver.picture
 		},
 		vehicle: vehicle,
-		eta: trip.eta,
-		// Web Mobile Client
-		vehicleViewId: city.defaultVehicleViewId,
+		vehicleViewId: trip.vehicleViewId,
+		eta: trip.eta
 	}
 }
 
@@ -131,6 +58,8 @@ function userToJSON(user, includeToken) {
 	return json;
 }
 
+// TODO: Это должен делать метод User.toJSON
+// А для God view сделать отдельный код который будет выбирать нужные данные
 function clientToJSON(user, includeToken) {
 	var json = userToJSON(user, includeToken);
 
@@ -140,6 +69,7 @@ function clientToJSON(user, includeToken) {
 
 	json.hasConfirmedMobile = user.hasConfirmedMobile;
 	json.referralCode = user.referralCode;
+	json.isAdmin = user.isAdmin
 
 	return json;
 }
@@ -179,28 +109,6 @@ function GetNoun(number, one, two, five) {
     return five;
 } 
 
-function MessageFactory() {
-	
-}
-
-function vehiclePointsToVehiclePaths(vehiclePoints) {
-	var vehiclePaths = {};
-	_.map(vehiclePoints, function(item) {
-		// TODO: Использовать вместо порядковых id => "cff13a78-dc45-495b-b28f-c27a802d9742". Зачем так делает Uber?
-	
-		// TODO: Записывать изменения позиции водителя в массив последовательных координат
-		// чтобы позже на клиенте их можно было бы плавно анимировать хоть и не в реальном времени (с небольшой задержкой),
-		// но за время задержки можно выполнить Map Fitting сгладив индивидуальные точки (устранив погрешности GPS), и потом сделать плавную анимацию между точками
-		vehiclePaths[item.id] = [{
-			epoch: item.epoch || 0, // TODO: Передавать Unix epoch реального получения координаты от водителя
-			latitude: item.latitude,
-			longitude: item.longitude,
-			course: item.course || 0
-		}];
-	});
-
-	return vehiclePaths;
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Factory Methods
@@ -209,9 +117,9 @@ MessageFactory.createClientOK = function(client, options) {
 	options = options || {};
 
 	var msg = {
-		messageType: "OK",
-		city: getCity()
-	}
+    messageType: "OK",
+    city: city.toJSON()    
+  };
 
 	if (client) 
 		msg.client = clientToJSON(client, options.includeToken);
@@ -227,30 +135,55 @@ MessageFactory.createClientOK = function(client, options) {
 			msg.trip = jsonTrip;
 	}
 	
+	var nearbyVehicles = {};
+
 	// Nearby Vehicles
 	if (options.vehicles && options.vehicles.length > 0) {
-		var minEta = options.vehicles.length == 1 ? options.vehicles[0].eta : _.min(options.vehicles, function(vehicle){ return vehicle.eta; }).eta;
-		var minEtaString = minEta + " " + GetNoun(minEta, 'минута', 'минуты', 'минут');
+    var vehiclePathPoints = options.vehicles;
 
-		// Web Mobile Client
-		msg.nearbyVehicles = {
-			"1": {
-				etaString: minEtaString,
-				etaStringShort: minEtaString,
-				minEta: minEta,
-				vehiclePaths: vehiclePointsToVehiclePaths(options.vehicles)
-			}
-		}
+    // TODO: Преобразовать массив объектов vehiclePathPoints в хэш по ключу viewId в котором есть
+    // время прибытия ближашего автомобиля из viewId и массив координат [1] по ключам vehiclePathPoint.vehicleId
+    var vehicleViews = {}, vehicleViewIds;
+    // convert array to hash by viewId key to get minEta later
+    vehiclePathPoints.forEach(function(val, i) {
+    	vehicleViews[val.viewId] = vehicleViews[val.viewId] || []
+    	vehicleViews[val.viewId].push(val);
+    });
+
+    vehicleViewIds = Object.keys(vehicleViews);
+
+    // convert vehiclePathPoints to nearby vehiclePaths keyed by vehicle id
+    vehiclePathPoints.forEach(function(val, i) {
+			nearbyVehicles[val.viewId] = nearbyVehicles[val.viewId] || { vehiclePaths: {} };
+
+			// just one path point right now
+			nearbyVehicles[val.viewId].vehiclePaths[val.id] = [{
+			  epoch: val.epoch,
+			  latitude: val.latitude,
+			  longitude: val.longitude,
+			  course: val.course
+			}];    	
+    });
+
+    // find minEta for each vehicle view
+    vehicleViewIds.forEach(function(viewId, i) {
+    	var vehicles = vehicleViews[viewId];
+    	var vehicle = vehicles.length == 1 ? vehicles[0] : _.min(vehicles, function(v){ return v.eta; });
+
+    	var nearbyVehicle = nearbyVehicles[viewId];
+    	nearbyVehicle.minEta = vehicle.eta;
+    	nearbyVehicle.etaString = vehicle.eta + " " + GetNoun(vehicle.eta, 'минута', 'минуты', 'минут');
+    });
 	}
 
 	// Sorry that we don't have a car for you
-	if (options.sorryMsg) {
-		msg.nearbyVehicles = {
-			"1": {
-				sorryMsg: options.sorryMsg,
-			}
-		}
-	}	
+	if (options.sorryMsg && options.vehicleViewId) {
+		nearbyVehicles[options.vehicleViewId] = nearbyVehicles[options.vehicleViewId] || {};
+		nearbyVehicles[options.vehicleViewId].sorryMsg = options.sorryMsg;
+	}
+
+	if (!_.isEmpty(nearbyVehicles))
+		msg.nearbyVehicles = nearbyVehicles;
 
 	if (options.apiResponse) {
 		msg.apiResponse = options.apiResponse;
@@ -272,7 +205,7 @@ MessageFactory.createClientEndTrip = function(client, trip) {
 MessageFactory.clientFareEstimate = function(client, fareEstimateString) {
 	var msg = {
 		messageType: "OK",
-		city: getCity(),
+		city: city.toJSON(),
 		client: clientToJSON(client),
 	};
 
@@ -363,6 +296,10 @@ MessageFactory.createDriverPickup = function(driver, trip, client) {
 			client: userToJSON(client)
 		}
 	}
+}
+
+function MessageFactory() {
+
 }
 
 module.exports = MessageFactory;

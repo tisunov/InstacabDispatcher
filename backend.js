@@ -1,11 +1,12 @@
 var Driver = require("./models/driver").Driver,
-	Client = require("./models/client").Client,
-	driverRepository = require('./models/driver').repository,
-	clientRepository = require('./models/client').repository,		
-	request = require("request"),
-	util = require("util"),
-	MessageFactory = require("./messageFactory"),
-	config = require('konfig')();
+		Client = require("./models/client").Client,
+		driverRepository = require('./models/driver').repository,
+		clientRepository = require('./models/client').repository,
+		request = require("request"),
+		util = require("util"),
+		MessageFactory = require("./messageFactory"),
+		config = require('konfig')(),
+		_ = require('underscore');
 
 function Backend() { 
 	
@@ -13,12 +14,6 @@ function Backend() {
 
 var backendUrl = 'http://' + config.app.BackendApiHost + ':' + config.app.BackendApiPort;
 var backendApiUrl = backendUrl + '/api/v1';
-
-function initProperties(sourceProps) {
-	Object.keys(sourceProps).forEach(function(propName) {
-    	this[propName] = sourceProps[propName];
-	}.bind(this));
-};
 
 function login(url, email, password, deviceId, constructor, repository, callback) {
 	request.post(url, { form: {email: email, password: password} }, function (error, response, body) {
@@ -46,8 +41,7 @@ function login(url, email, password, deviceId, constructor, repository, callback
 				return callback(new Error("Повторный вход с указанными параметрами запрещен."));
 			}
 
-			initProperties.call(user, properties)
-
+			_.extend(user, properties);
 			callback(null, user);
 		});
 	});
@@ -91,7 +85,8 @@ Backend.prototype.signupClient = function(signupInfo, callback) {
 
 		// set user properties
 		var client = new Client();
-		initProperties.call(client, data.client); // TODO: Передать данные в конструктор и там их присвоить
+		// TODO: Передать данные в конструктор и там их присвоить
+		_.extend(client, data.client);
 
 		callback(null, client, null);
 	});
@@ -122,9 +117,6 @@ Backend.prototype.billTrip = function(trip, callback) {
 		// network error
 		if (error) return callback(error);
 
-		console.log('+ Backend.billTrip:');
-		console.log(util.inspect(body, {colors:true}));
-		
 		callback(null, body['fare_billed_to_card'], body['fare'], body['paid_by_card']);
 	});
 }
@@ -178,7 +170,7 @@ Backend.prototype.apiCommand = function(client, message, callback) {
 				try {
 					apiResponse.data = JSON.parse(body);
 				}
-	    		catch(e) { /* ignore */ }
+	    	catch(e) { /* ignore */ }
 			}
 
 			callback(null, MessageFactory.createClientOK(client, { apiResponse: apiResponse }));

@@ -20,7 +20,8 @@
 		"mongoskin": "~>1.3.20",
 		"winston": "~>0.7.2",
 		"cors": "2.2.0",
-		"request-redis-cache": "~> 0.1.0"
+		"request-redis-cache": "~> 0.1.0",
+		"amqplib": "~> 0.2.0"
 	},
 	"engines": {
 		"node": "0.10.x",

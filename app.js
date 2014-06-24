@@ -16,7 +16,8 @@ var Dispatcher = require('./dispatch'),
     cors = require('cors'),
     apiBackend = require('./backend'),
     async = require('async'),
-    db = require('./mongo_client');
+    db = require('./mongo_client'),
+    amqpConsumer = require('./amqp_consumer');
 
 var dispatcher = new Dispatcher();
 
@@ -26,25 +27,25 @@ dispatcher.load(function(err) {
   var app = express();
   var port = process.env.PORT || 9000;
   var server = app.listen(port);
-  console.log('Dispatcher started on port %d', port);
+  console.log(' [*] Dispatcher started on port %d', port);
 
   // Websockets
   var wss = new WebSocketServer({ server: server });
   wss.on('connection', function(connection) {
-    console.log('socket client connected');
-
+    
     connection.on('message', function(data) {
       dispatcher.processMessage(data, connection);
     });
 
     connection.on('close', function() {
-      console.log('socket client disconnected');
       connection.removeAllListeners();
+      connection = null;
     });
 
     connection.on('error', function(reason, code){
       console.log('socket error: reason ' + reason + ', code ' + code);
       connection.removeAllListeners();
+      connection = null;
     })
   });
 
@@ -76,7 +77,7 @@ dispatcher.load(function(err) {
     resp.end();
 
     if (req.body.eventName === "NearestCabRequest" && req.body.parameters.reason === "openApp") {
-      apiBackend.clientOpenApp(req.body.parameters.clientId);
+      apiBackend.clientOpenApp(req.body.parameters.clientId || req.body.clientId);
     }
   });
 
@@ -92,8 +93,7 @@ dispatcher.load(function(err) {
   // 
   // State management
   app.put('/clients/:id', function(req, resp) {
-    // console.log(req.body);
-
+    
     clientRepository.get(req.body.id, function(err, client) {
       if (err) return console.log(err);
 
@@ -124,7 +124,7 @@ dispatcher.load(function(err) {
 
         callback(null, {
           id: item._id,
-          clientId: item.parameters.clientId,
+          clientId: item.parameters.clientId || item.clientId,
           longitude: item.location[0] || 0,
           latitude: item.location[1] || 0,
           epoch: item.epoch,
@@ -141,9 +141,12 @@ dispatcher.load(function(err) {
 
   app.get('/query/pickup_requests', function(req, resp) {
     var filter = {
-      eventName: 'PickupRequest', 
+      // TODO: Сделать миграцию, позже переименовать в базе PickupRequest -> RequestVehicleRequest
+      eventName: { $in: ['RequestVehicleRequest', 'PickupRequest']}, 
       'parameters.clientId': { $nin: filterClientIds } // filter out Pavel Tisunov and Mikhail Zhizhenko
     };
+
+    // TODO: Сделать миграцию, перенести clientId из parameters.clientId в root.clientId
 
     db.collection('mobile_events').find(filter).toArray(function(err, items) {
       if (err) return resp.end(JSON.stringify({pickup_requests: ""}));
@@ -152,7 +155,7 @@ dispatcher.load(function(err) {
 
         callback(null, {
           id: item._id,
-          clientId: item.parameters.clientId,
+          clientId: item.parameters.clientId || item.clientId,
           longitude: item.location[0],
           latitude: item.location[1],
           epoch: item.epoch,

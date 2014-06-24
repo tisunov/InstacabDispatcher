@@ -91,6 +91,11 @@ Driver.prototype.offDuty = function(context) {
   return MessageFactory.createDriverOK(this);
 }
 
+// TODO: Записывать изменения позиции водителя в массив последовательных координат
+// чтобы позже на клиенте их можно было бы плавно анимировать хоть и не в реальном времени (с небольшой задержкой),
+// но за время задержки можно выполнить Map Fitting сгладив индивидуальные точки (устранив погрешности GPS), 
+// и потом сделать плавную анимацию между точками
+
 // Update driver's position
 Driver.prototype.ping = function(context) {
   this.updateLocation(context);
@@ -276,13 +281,16 @@ Driver.prototype.isAvailable = function() {
   return this.connected && this.state === Driver.AVAILABLE;
 }
 
-function isAvailable(driver, callback) {
-  callback(driver.isAvailable());
+function isAvailable(vehicleViewId, driver, callback) {
+  var result = driver.isAvailable();
+  if (vehicleViewId)
+    result = result && (driver.vehicle.viewId === vehicleViewId);
+
+  callback(result);
 }
 
-function findAvailableDrivers(callback) {
-  // bind function context and first (err) param to null
-  repository.filter(isAvailable, callback.bind(null, null));
+function findAvailableDrivers(vehicleViewId, callback) {  
+  repository.filter(isAvailable.bind(null, vehicleViewId), callback.bind(null, null)); // bind function context and first (err) param to null
 }
 
 function round(arg) { 
@@ -290,13 +298,14 @@ function round(arg) {
 }
 
 function cacheKeyFor(driverLocation, pickupLocation) {
-  return (round(driverLocation.latitude) + round(driverLocation.longitude) +
-          round(pickupLocation.latitude) + round(pickupLocation.longitude)).toString();
+  return round(driverLocation.latitude + driverLocation.longitude + pickupLocation.latitude + pickupLocation.longitude).toString();
 }
 
 Driver.prototype.queryETAToLocation = function(pickupLocation, callback) {
   var self = this;
   
+  console.log(" [*] Query ETA using cache key: %s", cacheKeyFor(this.location, pickupLocation))
+
   // Cache Google Distance Matrix query result, we have only 2500 queries per day
   cache.get({
     cacheKey: cacheKeyFor(this.location, pickupLocation),
@@ -308,6 +317,8 @@ Driver.prototype.queryETAToLocation = function(pickupLocation, callback) {
       DistanceMatrix.get(self.location, pickupLocation, function(err, data) {
         // Store only approximate driving duration, instead of whole result to save memory
         if (!err) {
+          console.log(" [*] Google Distance Matrix query: %s", Math.ceil(data.durationSeconds / 60))
+
           // To get more accurate estimate multiply by 1.5
           data = { durationSeconds: data.durationSeconds * 1.5 }
         }
@@ -324,6 +335,8 @@ Driver.prototype.queryETAToLocation = function(pickupLocation, callback) {
 
     var eta = Math.ceil(data.durationSeconds / 60);
     if (eta === 0) eta = 2;
+
+    console.log(" [*] Final ETA: %s", eta);
 
     callback(null, eta);
   });
@@ -357,33 +370,34 @@ Driver.prototype.changeState = function(state, client) {
   }
 }
 
-function vehicleLocationsWithTimeToLocation(location, drivers, callback) {
+function queryDriversETAToLocation(location, drivers, callback) {
   async.map(drivers, function(driver, next) {
     driver.queryETAToLocation(location, function(err, eta) {
-      var v = {
+      var vehicle = {
         id: driver.vehicle.id,
         longitude: driver.location.longitude, 
         latitude: driver.location.latitude,
-        epoch: driver.location.epoch,
-        course: driver.location.course,
+        epoch: driver.location.epoch || 0,
+        course: driver.location.course || 0,
+        viewId: driver.vehicle.viewId,
         eta: eta
       };
 
-      next(null, v);
+      next(null, vehicle);
     });
   }, callback);
 }
 
-Driver.allAvailableNear = function(location, callback) {
+Driver.allAvailableNear = function(clientLocation, callback) {
   async.waterfall([
-    findAvailableDrivers,
-    vehicleLocationsWithTimeToLocation.bind(null, location)
+    findAvailableDrivers.bind(null, null),
+    queryDriversETAToLocation.bind(null, clientLocation)
   ], callback);
 }
 
-Driver.availableSortedByDistanceFrom = function(pickupLocation, callback) {
+Driver.availableSortedByDistanceFrom = function(pickupLocation, vehicleViewId, callback) {
   async.waterfall([
-    findAvailableDrivers,
+    findAvailableDrivers.bind(null, vehicleViewId),
     // find distance to each driver
     function(availableDrivers, nextFn) {
       console.log("Available drivers:");

@@ -110,6 +110,7 @@ function driveToClient(driverId, tripId, pickupLocation) {
     pingDriver.longitude = tripCoordinates[i][1];
     pingDriver.epoch = Math.round(new Date().getTime() / 1000.0);
     pingDriver.token = token;
+    pingDriver.course = Math.round(Math.random(360) * 100);
     client.sendWithLog(pingDriver);
 
     // Send arriving now
@@ -126,7 +127,7 @@ function driveToClient(driverId, tripId, pickupLocation) {
     }
 
     i++;
-  }, 1000);
+  }, 500);
 }
 
 function driveClient(driverId, callback) {
@@ -140,6 +141,7 @@ function driveClient(driverId, callback) {
     pingDriver.longitude = tripCoordinates[i][1];
     pingDriver.epoch = Math.round(new Date().getTime()/1000.0); // in seconds
     pingDriver.token = token;
+    pingDriver.course = Math.round(Math.random(360) * 100);
     client.sendWithLog(pingDriver);
 
     // Send Ping
@@ -147,7 +149,7 @@ function driveClient(driverId, callback) {
       clearInterval(timerId);
       callback();
     }
-  }, 1000);
+  }, 500);
 
 }
 
@@ -232,9 +234,9 @@ client.on('message', function(event) {
             endTrip.epoch = Math.round(new Date().getTime() / 1000.0);
             client.sendWithLog(endTrip);
           });
-        }, 10000);
+        }, 5000);
 
-      }, 2000);
+      }, 500);
       break;
   }    
 });

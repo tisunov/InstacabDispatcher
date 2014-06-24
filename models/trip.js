@@ -54,7 +54,7 @@ Trip.prototype._dispatchToNextAvailableDriver = function() {
 	console.log(util.inspect(this.rejectedDriverIds));
 
 	var self = this;
-	Driver.availableSortedByDistanceFrom(this.pickupLocation, function(err, driversWithDistance) {
+	Driver.availableSortedByDistanceFrom(this.pickupLocation, this.vehicleViewId, function(err, driversWithDistance) {
 		if (err) {
 			console.log("Can't find available drivers:");
 			console.log(util.inspect(err));
@@ -184,7 +184,7 @@ Trip.prototype._estimateTimeToClientThenDispatch = function() {
 }
 
 Trip.prototype.getSchema = function() {
-	return ['id', 'clientId', 'driverId', 'state', 'cancelReason', 'pickupLocation', 'dropoffLocation', 'confirmLocation', 'pickupAt', 'dropoffAt', 'createdAt', 'fareBilledToCard', 'fare', 'paidByCard', 'rejectedDriverIds', 'route', 'eta', 'secondsToArrival', 'confirmedAt', 'arrivedAt', 'driverRating', 'feedback'];
+	return ['id', 'clientId', 'driverId', 'state', 'cancelReason', 'pickupLocation', 'dropoffLocation', 'confirmLocation', 'pickupAt', 'dropoffAt', 'createdAt', 'fareBilledToCard', 'fare', 'paidByCard', 'rejectedDriverIds', 'route', 'eta', 'secondsToArrival', 'confirmedAt', 'arrivedAt', 'driverRating', 'feedback', 'vehicleViewId'];
 }
 
 Trip.prototype._setClient = function(value) {
@@ -200,10 +200,11 @@ Trip.prototype._setDriver = function(driver) {
 }
 
 // Клиент запросил машину
-Trip.prototype.pickup = function(client, location, driver) {
+Trip.prototype.pickup = function(client, location, vehicleViewId, driver) {
 	this._setClient(client);
 	this._setDriver(driver);	
 	this.pickupLocation = location;
+	this.vehicleViewId = vehicleViewId;
 	this._changeState(Trip.DISPATCHING);
 	this._save();
 
