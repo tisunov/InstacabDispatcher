@@ -6,7 +6,6 @@ var util = require("util"),
 	MessageFactory = require("../messageFactory"),
 	ErrorCodes = require("../error_codes"),
 	mongoClient = require("../mongo_client"),
-	geofence = require("../lib/geofence"),
 	city = require('./city'),
 	config = require('konfig')();
 
@@ -46,22 +45,27 @@ Client.prototype.ping = function(context, callback) {
 }
 
 Client.prototype.pickup = function(context, callback) {
-	var m = context.message;
-
 	this.updateLocation(context);
+
+	// double request
 	if (this.state !== Client.LOOKING) return callback(null, this._createOK());
 
+	// client app will ask user to confirm mobile
 	if (!this.hasConfirmedMobile) {
 		require('../backend').requestMobileConfirmation(this.id);
 		return callback(null, this._createOK());
 	}
 
-	if (!Client.canRequestToLocation(m.pickupLocation)) {
+	var m = context.message;
+
+	// check geofence
+	if (!city.isPickupLocationAllowed(m.pickupLocation, m.vehicleViewId)) {
 		require('../backend').clientRequestPickup(this.id, { restrictedLocation: m.pickupLocation });
 
 		return callback(null, MessageFactory.createClientOK(this, { sorryMsg: city.sorryMsgGeofence, vehicleViewId: m.vehicleViewId }));
 	}
 
+	// find nearest (by straight line distance from client) driver
 	Driver.availableSortedByDistanceFrom(m.pickupLocation, m.vehicleViewId, function(err, items){
 		if (err) return callback(err);
 
@@ -311,10 +315,6 @@ Client.publishAll = function() {
       user.publish();
     });
   });
-}
-
-Client.canRequestToLocation = function(location) {
-	return geofence.isLocationAllowed(location);
 }
 
 // export Client constructor

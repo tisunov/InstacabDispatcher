@@ -3,13 +3,14 @@ var EventEmitter = require('events').EventEmitter,
     DistanceMatrix = require('../lib/google-distance'),
     _ = require('underscore'),
     redis = require("redis").createClient(),
-    mongoClient = require('../mongo_client');
+    mongoClient = require('../mongo_client'),
+    InNOut = require('in-n-out');
 
 function City() {
   EventEmitter.call(this);
   
-  this.vehicleViewSorryMessages = {};
-  this.sorryMsgGeofence = "К сожалению мы еще не работаем в вашей области. Мы постоянно расширяем наш сервис, следите за обновлениями вступив в группу vk.com/instacab";
+  this.vehicleViews = {};
+  this.sorryMsgGeofence = "К сожалению мы еще не работаем в вашей области. Мы постоянно расширяем наш сервис, следите за обновлениями вступив в группу vk.com/instacab. Напишите нам в Твитере @instacab_vrn";
 
   redis.get('city', function(err, reply) {
     if (err) throw err;
@@ -78,7 +79,15 @@ City.prototype.estimateFare = function(client, message, callback) {
 }
 
 City.prototype.getSorryMsg = function(vehicleViewId) {
-  return this.vehicleViewSorryMessages[vehicleViewId];
+  return this.vehicleViews[vehicleViewId].sorryMsg;
+}
+
+City.prototype.isPickupLocationAllowed = function(location, vehicleViewId) {
+  var vehicleView = this.vehicleViews[vehicleViewId];
+  if (!vehicleView) return false;
+
+  // instance of InNOut.GeofencedGroup
+  return vehicleView.geofence.getValidKeys([location.longitude, location.latitude]).length != 0;
 }
 
 City.prototype.update = function(object) {
@@ -92,12 +101,32 @@ City.prototype.update = function(object) {
 City.prototype.extractServiceInfo = function(attributes) {
   for (var vehicleViewId in attributes.vehicleViews) {
     var vehicleView = attributes.vehicleViews[vehicleViewId];
-    this.vehicleViewSorryMessages[vehicleViewId] = vehicleView.sorryMsg;
+    
+    this.vehicleViews[vehicleViewId] = {
+      sorryMsg: vehicleView.sorryMsg,
+      geofence: this.loadGeofence(vehicleView.geofence, vehicleViewId)
+    };
 
     delete vehicleView.sorryMsg;
+    delete vehicleView.geofence;
   }
 
   return attributes;
+}
+
+City.prototype.loadGeofence = function(geoJSON, vehicleViewId) {
+  var gfGroup = new InNOut.GeofencedGroup();
+  if (!geoJSON) return gfGroup;
+
+  var geofences = [];
+  geoJSON.features.forEach(function(feature) {
+    console.log(" [*] Loading geofence '%s' for vehicleViewId %d", feature.properties.name, vehicleViewId);
+
+    geofences.push(new InNOut.Geofence(feature.geometry.coordinates));
+  })
+
+  gfGroup.add(1, geofences, []);
+  return gfGroup;
 }
 
 City.prototype.toJSON = function() {
