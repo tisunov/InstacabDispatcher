@@ -56,8 +56,10 @@ City.prototype.estimateFare = function(client, message, callback) {
     var estimateLow = Math.round((fare.base + billedTimeLow * fare.perMinute + billedDistance * fare.perKilometer) / 10) * 10;
     var estimateHigh = Math.round((fare.base + billedTimeHigh * fare.perMinute + billedDistance * fare.perKilometer) / 10) * 10;
 
-    var estimateString;
+    if (estimateLow < fare.minimum) estimateLow = fare.minimum;
+    if (estimateHigh < fare.minimum) estimateHigh = fare.minimum;
 
+    var estimateString;
     if (estimateLow !== estimateHigh)
       estimateString = estimateLow.toString() + '-' + estimateHigh.toString() + ' руб.';
     else

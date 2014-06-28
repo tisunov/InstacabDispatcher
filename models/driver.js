@@ -293,22 +293,22 @@ function findAvailableDrivers(vehicleViewId, callback) {
   repository.filter(isAvailable.bind(null, vehicleViewId), callback.bind(null, null)); // bind function context and first (err) param to null
 }
 
-function round(arg) { 
+function round(arg) {
   return Math.round(arg * 10000) / 10000;
 }
 
-function cacheKeyFor(driverLocation, pickupLocation) {
-  return round(driverLocation.latitude + driverLocation.longitude + pickupLocation.latitude + pickupLocation.longitude).toString();
+Driver.prototype._cacheKeyFor = function(pickupLocation) {
+  return round(this.location.latitude + this.location.longitude + pickupLocation.latitude + pickupLocation.longitude).toString() + '-' + this.vehicle.viewId;
 }
 
 Driver.prototype.queryETAToLocation = function(pickupLocation, callback) {
   var self = this;
   
-  console.log(" [*] Query ETA using cache key: %s", cacheKeyFor(this.location, pickupLocation))
+  console.log(" [*] Query ETA using cache key: %s", this._cacheKeyFor(pickupLocation))
 
   // Cache Google Distance Matrix query result, we have only 2500 queries per day
   cache.get({
-    cacheKey: cacheKeyFor(this.location, pickupLocation),
+    cacheKey: this._cacheKeyFor(pickupLocation),
     cacheTtl: 5 * 60, // 5 minutes in seconds
     // Dynamic `options` to pass to our `uncachedGet` call
     requestOptions: {},
