@@ -10,7 +10,8 @@ var util = require("util"),
 	config = require('konfig')();
 
 function Client() {
-	User.call(this, Client.LOOKING);	
+	User.call(this, Client.LOOKING);
+	this.isAdmin = false;
 }
 
 util.inherits(Client, User);

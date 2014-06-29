@@ -46,12 +46,15 @@ City.prototype.estimateFare = function(client, message, callback) {
     var billedTimeLow = (distanceKm / 5) * 1.5;
     // Use 5 minutes per 5 km during traffic
     var billedTimeHigh = (distanceKm / 5) * 5;
-    // 500 meters for each 5 km below < 21 km/h
-    var billedDistance = distanceKm - distanceKm * 0.1;
 
-    // Include 2 km in base fare
-    var base_km = 2;
-    billedDistance = billedDistance > 2 ? billedDistance - 2 : 0;
+    // 500 meters for each 5 km below < 21 km/h
+    var billedDistance;
+    if (fare.perMinute > 0)
+      billedDistance = distanceKm - distanceKm * 0.1;
+    else
+      billedDistance = distanceKm;
+
+    console.log(" [*] %s + %s * %s", fare.base.toString(), billedDistance.toString(), fare.perKilometer.toString());
 
     var estimateLow = Math.round((fare.base + billedTimeLow * fare.perMinute + billedDistance * fare.perKilometer) / 10) * 10;
     var estimateHigh = Math.round((fare.base + billedTimeHigh * fare.perMinute + billedDistance * fare.perKilometer) / 10) * 10;
@@ -76,7 +79,7 @@ City.prototype.estimateFare = function(client, message, callback) {
       if (err) console.log(err);
     });
     
-    callback(null, require("../messageFactory").clientFareEstimate(client, estimateString));
+    callback(null, require("../messageFactory").clientFareEstimate(client, estimateLow, estimateHigh, estimateString));
   });
 }
 
