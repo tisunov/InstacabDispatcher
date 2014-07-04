@@ -30,9 +30,10 @@ util.inherits(City, EventEmitter);
 
 City.prototype.estimateFare = function(client, message, callback) {
   var m = message,
-      fare = this.attributes.vehicleViews[m.vehicleViewId].fare;
+      vehicleView = this.attributes.vehicleViews[m.vehicleViewId],
+      fare = vehicleView ? vehicleView.fare : null;
 
-  if (!fare) return callback(new Error('Fare for vehicleViewId ' + m.vehicleViewId + 'not found'));
+  if (!vehicleView || !fare) return callback(new Error('Fare for vehicleViewId ' + m.vehicleViewId + 'not found'));
 
   DistanceMatrix.get(m.pickupLocation, m.destination, function(err, data) {
     if (err) {
@@ -137,7 +138,7 @@ City.prototype.loadGeofence = function(geoJSON, vehicleViewId) {
 
 City.prototype.isCyclist = function(vehicleViewId) {
   if (!vehicleViewId) return false;
-  
+
   var vehicleView = this.attributes.vehicleViews[vehicleViewId];
 
   return vehicleView ? this.attributes.vehicleViews[vehicleViewId].description.toLowerCase() === 'свифт' : false;
