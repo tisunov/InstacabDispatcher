@@ -134,6 +134,10 @@ City.prototype.loadGeofence = function(geoJSON, vehicleViewId) {
   return gfGroup;
 }
 
+City.prototype.isCyclist = function(vehicleViewId) {
+  return this.attributes.vehicleViews[vehicleViewId].description.toLowerCase() === 'свифт';
+}
+
 City.prototype.toJSON = function() {
   return this.attributes;
 }

@@ -8,6 +8,7 @@ var MessageFactory = require("../messageFactory"),
   redisClient = require("redis").createClient()
   cache = new RequestRedisCache({ redis: redisClient }),
   mongoClient = require('../mongo_client'),
+  city = require('./city'),
   User = require("./user");
 
 function Driver() {
@@ -320,7 +321,12 @@ Driver.prototype.queryETAToLocation = function(pickupLocation, callback) {
           console.log(" [*] Google Distance Matrix query: %s", Math.ceil(data.durationSeconds / 60))
 
           // To get more accurate estimate multiply by 1.5
-          data = { durationSeconds: data.durationSeconds * 1.5 }
+          // data = { durationSeconds: data.durationSeconds * 1.5 }
+
+          // FIXME:
+          if (city.isCyclist(self.vehicle.viewId)) {
+            data.durationSeconds *= 2; // average driving speed 60 km/h, average cycling speed 20 km/h
+          }
         }
           
         cb(err, data);
