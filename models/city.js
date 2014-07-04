@@ -15,7 +15,8 @@ function City() {
   redis.get('city', function(err, reply) {
     if (err) throw err;
 
-    this.attributes = this.extractServiceInfo(JSON.parse(reply));
+    if (reply)
+      this.attributes = this.extractServiceInfo(JSON.parse(reply));
   }.bind(this));
 }
 
