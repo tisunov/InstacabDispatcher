@@ -184,7 +184,8 @@ Backend.prototype.smsTripStatusToClient = function(trip, client) {
 		driver_name: trip.driver.firstName,
 		driver_rating: trip.driver.rating,
 		trip_state: trip.state.toLowerCase(),
-		eta_minutes: trip.eta
+		eta_minutes: trip.eta,
+		vehicle_view_id: trip.vehicleViewId
 	};
 
 	request.post(backendUrl + '/api/v1/clients/' + client.id + '/sms', { json: payload }, function (error, response, body) {

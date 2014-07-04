@@ -136,6 +136,8 @@ City.prototype.loadGeofence = function(geoJSON, vehicleViewId) {
 }
 
 City.prototype.isCyclist = function(vehicleViewId) {
+  if (!vehicleViewId) return false;
+
   return this.attributes.vehicleViews[vehicleViewId].description.toLowerCase() === 'свифт';
 }
 
