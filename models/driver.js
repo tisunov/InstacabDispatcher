@@ -320,8 +320,8 @@ Driver.prototype.queryETAToLocation = function(pickupLocation, callback) {
         if (!err) {
           console.log(" [*] Google Distance Matrix query: %s", Math.ceil(data.durationSeconds / 60))
 
-          // To get more accurate estimate multiply by 1.5
-          // data = { durationSeconds: data.durationSeconds * 1.5 }
+          // To get more accurate estimate multiply by 1.2
+          data = { durationSeconds: data.durationSeconds * 1.2 }
 
           // FIXME:
           if (city.isCyclist(self.vehicle.viewId)) {
