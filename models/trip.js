@@ -130,7 +130,7 @@ Trip.prototype._cancelDriverPickup = function(clientCanceled) {
 	if (clientCanceled) {
 		this._clearPickupTimeout();
 		this._changeState(Trip.CLIENT_CANCELED);
-		this.driver.notifyPickupCanceled('Клиент отменил запрос');
+		this.driver.notifyPickupCanceled('Клиент отменил заказ');
 	}
 	else {
 		this.rejectedDriverIds.push(this.driver.id);
@@ -277,53 +277,25 @@ Trip.prototype.driverArriving = function(driverContext, callback) {
 	callback(null, response);
 }
 
-// Client canceled pickup before any Driver confirmed
-Trip.prototype.clientCancelPickup = function(clientContext, callback) {
-	var response = this.client.cancelPickup(clientContext);
-
-	if (this.state !== Trip.CLIENT_CANCELED) {
-		this._changeState(Trip.CLIENT_CANCELED);
-		this._cancelDriverPickup(true);
-		this._archive();
-	}
-	
-	callback(null, response);
-}
-
 // Driver canceled trip after confirmation or arrival
-Trip.prototype.driverCancel = function(driverContext, callback) {
-	var response = this.driver.cancelTrip(driverContext);
+Trip.prototype.pickupCanceledDriver = function(cancelReason) {
+	if (this.state === Trip.DRIVER_CANCELED || this.state === Trip.CLIENT_CANCELED) return;
 
-	if (this.state !== Trip.DRIVER_CANCELED) {
-		this.cancelReason = driverContext.message.reason;
-		this._changeState(Trip.DRIVER_CANCELED);
-		this._archive();
+	this.cancelReason = cancelReason;
+	this._changeState(Trip.DRIVER_CANCELED);
+	this._archive();
 
-		this.client.notifyTripCanceled();
-	}
-
-	callback(null, response);
-}
-
-// Клиент отменил Trip после подтверждения Водителем
-Trip.prototype.clientCancel = function(clientContext, callback) {
-	if (this.state !== Trip.CLIENT_CANCELED) {
-		this._changeState(Trip.CLIENT_CANCELED);
-		this._archive();
-
-		this.driver.notifyTripCanceled();
-	}
-
-	this.client.cancelTrip(clientContext, callback);
+	this.client.notifyTripCanceled();
 }
 
 Trip.prototype.pickupCanceledClient = function() {
-	if (this.state === Trip.CLIENT_CANCELED) return;
+	if (this.state === Trip.DRIVER_CANCELED || this.state === Trip.CLIENT_CANCELED) return;
 
 	this._changeState(Trip.CLIENT_CANCELED);
+	this._clearPickupTimeout();
 	this._archive();
 
-	this.driver.notifyTripCanceled();
+	this.driver.notifyPickupCanceled('Клиент отменил заказ');
 }
 
 // Водитель начал поездку. Известить клиента что поездка началась
@@ -387,10 +359,6 @@ Trip.prototype._bill = function() {
 		this.paidByCard = paidByCard;
 		this.publish();
 		this._save();
-
-		// TODO: Что делать когда платеж по какой то причине не прошел? 
-		// Нужно послать и водителю и клиенту уведомление чтобы они показали сообщение
-		// вместо цены и уведомить службу поддержки о критической ошибке платежа по поездке
 
 		this.client.notifyTripBilled();
 		this.driver.notifyTripBilled();		

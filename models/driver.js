@@ -96,6 +96,7 @@ Driver.prototype.offDuty = function(context) {
 // чтобы позже на клиенте их можно было бы плавно анимировать хоть и не в реальном времени (с небольшой задержкой),
 // но за время задержки можно выполнить Map Fitting сгладив индивидуальные точки (устранив погрешности GPS), 
 // и потом сделать плавную анимацию между точками
+// TODO: Записывать если координата действительно отличается, может быть разница всего на 0.00002 тогда она не нужна
 
 // Update driver's position
 Driver.prototype.ping = function(context) {
@@ -111,11 +112,11 @@ Driver.prototype.ping = function(context) {
   return MessageFactory.createDriverOK(this, false, this.trip, this.state === Driver.PENDINGRATING);
 }
 
-// Driver explicitly canceled trip
-Driver.prototype.cancelTrip = function(context) {
+Driver.prototype.cancelPickup = function(context) {
   this.updateLocation(context);
 
-  if (this.state === Driver.ACCEPTED || this.state === Driver.ARRIVED) {
+  if (this.state === Driver.DISPATCHING || this.state === Driver.ACCEPTED || this.state === Driver.ARRIVED) {
+    this.trip.pickupCanceledDriver(context.message.reason);
     this.changeState(Driver.AVAILABLE);
     this.buildAndLogEvent('PickupCanceledRequest', context);
 
@@ -228,24 +229,16 @@ Driver.prototype.dispatch = function(client, trip) {
 
 // Notify driver that Client canceled pickup or pickup timed out
 Driver.prototype.notifyPickupCanceled = function(reason) {
-  if (this.state !== Driver.DISPATCHING) return;
+  if (Driver.AVAILABLE === this.state) return;
 
   this.changeState(Driver.AVAILABLE);
-  this.send(MessageFactory.createDriverPickupCanceled(this, reason));
+  this.send(MessageFactory.createDriverPickupCanceledByClient(this, reason));
   this.save();
 }
 
 Driver.prototype.notifyPickupTimeout = function() {
   this.tripsRejected += 1;
   this.notifyPickupCanceled();
-}
-
-Driver.prototype.notifyTripCanceled = function() {
-  if (this.state !== Driver.ACCEPTED && this.state !== Driver.ARRIVED) return;
-
-  this.changeState(Driver.AVAILABLE);
-  this.send(MessageFactory.createDriverTripCanceled(this, "Клиент отменил заказ."));
-  this.save();
 }
 
 Driver.prototype.notifyTripBilled = function() {

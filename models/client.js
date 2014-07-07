@@ -123,18 +123,6 @@ Client.prototype.cancelPickup = function(context, callback) {
 	this._generateOKResponse(false, callback);
 }
 
-// Client explicitly canceled trip
-Client.prototype.cancelTrip = function(context, callback) {
-	this.updateLocation(context);	
-
-	if (this.state === Client.WAITINGFORPICKUP) {
-		this.changeState(Client.LOOKING);
-		this.save();
-	}
-	
-	this._generateOKResponse(false, callback);
-}
-
 Client.prototype.rateDriver = function(context, callback) {
 	this.updateLocation(context);
 
@@ -196,7 +184,7 @@ Client.prototype.notifyTripCanceled = function() {
 	// nulls out this.trip
 	this.changeState(Client.LOOKING);	
 
-	this.send(MessageFactory.createClientTripCanceled(this, "Водитель был вынужден отменить твой заказ, но возможно у нас есть еще один свободный Instacab! Пожалуйста попробуй снова заказать машину."));
+	this.send(MessageFactory.createClientPickupCanceledByDriver(this, "Водитель был вынужден отменить твой заказ, но возможно у нас есть еще один свободный Instacab! Пожалуйста попробуй снова заказать машину."));
 
 	this.save();
 }

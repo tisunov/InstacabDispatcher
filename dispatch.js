@@ -111,25 +111,9 @@ Dispatcher.prototype = {
         });
     },
 
-    // TODO: Сделать как в Uber. Используется одно сообщение PickupCanceledClient вместо моих CancelPickup, CancelTripClient
-
-    // TODO: УБРАТЬ НИЖНИЕ ДВА СООБЩЕНИЯ И ИСПОЛЬЗОВАТЬ ОДНО PickupCanceledClient ВЫШЕ
-    // Client canceled pickup request while we were searching/waiting for drivers
-    CancelPickup: function(context, callback) {
-        tripRepository.get(context.message.tripId, function(err, trip){
-            if (err) return callback(err);
-
-            trip.clientCancelPickup(context, callback);
-        });
-    },
-
-    // Client canceled trip after driver was dispatched and before trip start
-    CancelTripClient: function(context, callback) {
-        tripRepository.get(context.message.tripId, function(err, trip){
-            if (err) return callback(err);
-
-            trip.clientCancel(context, callback);
-        });
+    // TODO: Убрать когда выпустишь новую версию iOS Client
+    CancelTripClient: function(context, callback) { 
+        this.PickupCanceledClient(context, callback);
     },
 
     RatingDriver: function(context, callback) {
@@ -206,11 +190,11 @@ Dispatcher.prototype = {
         });
     },
 
-    CancelTripDriver: function(context, callback) {
-        tripRepository.get(context.message.tripId, function(err, trip){
+    PickupCanceledDriver: function(context, callback) {
+        driverRepository.get(context.message.id, function(err, driver) {
             if (err) return callback(err);
 
-            trip.driverCancel(context, callback);
+            driver.cancelPickup(context, callback);
         });
     },
     

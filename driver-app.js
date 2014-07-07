@@ -1,8 +1,10 @@
 var login1 = {
   messageType: "LoginDriver",
   app: "driver",
-  email: 'mike@mail.ru',
-  password: 'securepassword',
+  // email: 'mike@mail.ru',
+  // password: 'securepassword',
+  email: 'pavel@instacab.ru',
+  password: 'kpqfch',
   latitude: 51.724789,
   longitude: 39.171527,
   epoch: Math.round(new Date().getTime() / 1000.0),

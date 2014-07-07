@@ -13,9 +13,19 @@ function tripForClientToJSON(trip) {
 		}
 	});
 
+	// TODO: exclude if empty
+	// fareBilledToCard: undefined,
+	// fare: undefined,
+	// paidByCard: undefined,
+	// dropoffAt: undefined,
+
 	return {
 		id: trip.id,
-		pickupLocation: trip.pickupLocation,
+		pickupLocation: {
+			latitude: trip.pickupLocation.latitude,
+      longitude: trip.pickupLocation.longitude,
+      streetAddress: trip.pickupLocation.streetAddress
+		},
 		fareBilledToCard: trip.fareBilledToCard,
 		fare: trip.fare,
 		paidByCard: trip.paidByCard,
@@ -227,7 +237,8 @@ MessageFactory.createClientPickupCanceled = function(client, reason) {
 	}
 }
 
-MessageFactory.createClientTripCanceled = function(client, reason) {
+// TODO: Устрани путаницу с PickupCanceled/TripCanceled, оставить только PickupCanceled и в ответ посылать только OK/Error
+MessageFactory.createClientPickupCanceledByDriver = function(client, reason) {
 	return {
 		messageType: 'TripCanceled',
 		reason: reason,
@@ -235,20 +246,11 @@ MessageFactory.createClientTripCanceled = function(client, reason) {
 	}
 }
 
-// TODO: Устрани путаницу с PickupCanceled/TripCanceled, оставить только PickupCanceled и в ответ посылать только OK/Error
-MessageFactory.createDriverPickupCanceled = function(driver, reason) {
+MessageFactory.createDriverPickupCanceledByClient = function(driver, reason) {
 	return {
 		messageType: 'PickupCanceled',
 		reason: reason,
 		driver: clientToJSON(driver)
-	}
-}
-
-MessageFactory.createDriverTripCanceled = function(driver, reason) {
-	return {
-		messageType: 'TripCanceled',
-		reason: reason,
-		driver: userToJSON(driver)
 	}
 }
 
