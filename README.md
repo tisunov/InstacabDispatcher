@@ -10,7 +10,6 @@ Instacab Dispatcher is a Node.js app which coordinates drivers and clients, disp
 
 ## Requirements
 * Node.js 0.10.x
-* Npm 1.3.x
 * Redis 2.8
 * MongoDB
 * RabbitMQ
