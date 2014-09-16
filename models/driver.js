@@ -193,7 +193,6 @@ Driver.prototype.rateClient = function(context, callback) {
 }
 
 Driver.prototype.listVehicles = function(callback) {
-  console.log("+ Driver.prototype.listVehicles");
   require('../backend').listVehicles(this, function(err, vehicles) {
     callback(err, MessageFactory.createDriverVehicleList(this, vehicles));
   }.bind(this));

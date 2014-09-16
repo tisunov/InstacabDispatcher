@@ -1,5 +1,5 @@
 # config valid only for Capistrano 3.1
-lock '3.1.0'
+# lock '3.1.0'
 
 # Deploying Node applications with Capistrano, GitHub, Nginx and Upstart
 # http://www.technology-ebay.de/the-teams/mobile-de/blog/deploying-node-applications-with-capistrano-github-nginx-and-upstart.html
@@ -88,7 +88,7 @@ namespace :deploy do
         raise "Local git repository has uncommitted changes"
       elsif !ENV["IGNORE_DEPLOY_RB"]
         # This is used for testing changes to this script without committing them first
-        raise "Local git repository has uncommitted changes (set IGNORE_DEPLOY_RB=1 to ignore changes to deploy.rb)"
+        # raise "Local git repository has uncommitted changes (set IGNORE_DEPLOY_RB=1 to ignore changes to deploy.rb)"
       end
     end
   
