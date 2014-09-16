@@ -49,6 +49,9 @@ Please refer to [Instacab Backend](https://github.com/tisunov/Instacab/)
 
 Please refer to [Instacab Client](https://github.com/tisunov/InstacabClient/)
 
+## Known Bugs
+* Memory footprint keeps growing while running in production, node.js memory leak detection tools yielded no results so far.
+
 ## TODO
 
 - [ ] Write unit tests
