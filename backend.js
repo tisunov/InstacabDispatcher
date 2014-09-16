@@ -1,146 +1,146 @@
 var Driver = require("./models/driver").Driver,
-		Client = require("./models/client").Client,
-		driverRepository = require('./models/driver').repository,
-		clientRepository = require('./models/client').repository,
-		request = require("request"),
-		util = require("util"),
-		MessageFactory = require("./messageFactory"),
-		config = require('konfig')(),
-		_ = require('underscore');
+    Client = require("./models/client").Client,
+    driverRepository = require('./models/driver').repository,
+    clientRepository = require('./models/client').repository,
+    request = require("request"),
+    util = require("util"),
+    MessageFactory = require("./messageFactory"),
+    config = require('konfig')(),
+    _ = require('underscore');
 
 function Backend() { 
-	
+  
 }
 
 var backendUrl = 'http://' + config.app.BackendApiHost + ':' + config.app.BackendApiPort;
 var backendApiUrl = backendUrl + '/api/v1';
 
 function login(url, email, password, deviceId, constructor, repository, callback) {
-	request.post(url, { form: {email: email, password: password} }, function (error, response, body) {
-		// network error
-		if (error) return callback(error);
-		
-		try {
-			var properties = JSON.parse(body);
-			util.inspect(properties, {colors: true});
-		} catch (e) {
-			console.log(e.message);
-			return callback(new Error("Техническая ошибка входа. Уже работаем над ней."));
-		}
+  request.post(url, { form: {email: email, password: password} }, function (error, response, body) {
+    // network error
+    if (error) return callback(error);
+    
+    try {
+      var properties = JSON.parse(body);
+      util.inspect(properties, {colors: true});
+    } catch (e) {
+      console.log(e.message);
+      return callback(new Error("Техническая ошибка входа. Уже работаем над ней."));
+    }
 
-		// authentication error
-		if (response.statusCode !== 200) return callback(new Error(properties['error'] || body));
+    // authentication error
+    if (response.statusCode !== 200) return callback(new Error(properties['error'] || body));
 
-		// set user properties
-		repository.get(properties.id, function(err, user) {
-			if (err) {
-				user = new constructor();
-			}
-			// case of a 2nd login with same credentials
-			else if (user.connected && user.deviceId !== deviceId) {
-				return callback(new Error("Повторный вход с указанными параметрами запрещен."));
-			}
+    // set user properties
+    repository.get(properties.id, function(err, user) {
+      if (err) {
+        user = new constructor();
+      }
+      // case of a 2nd login with same credentials
+      else if (user.connected && user.deviceId !== deviceId) {
+        return callback(new Error("Повторный вход с указанными параметрами запрещен."));
+      }
 
-			_.extend(user, properties);
-			callback(null, user);
-		});
-	});
+      _.extend(user, properties);
+      callback(null, user);
+    });
+  });
 }
 
 Backend.prototype.loginDriver = function(email, password, deviceId, callback) {
-	login(backendUrl + '/api/v1/drivers/sign_in', email, password, deviceId, Driver, driverRepository, callback);
+  login(backendUrl + '/api/v1/drivers/sign_in', email, password, deviceId, Driver, driverRepository, callback);
 }
 
 Backend.prototype.loginClient = function(email, password, deviceId, callback) {
-	login(backendUrl + '/api/v1/sign_in', email, password, deviceId, Client, clientRepository, callback);
+  login(backendUrl + '/api/v1/sign_in', email, password, deviceId, Client, clientRepository, callback);
 }
 
 // TODO: Сделать через AMQP
 Backend.prototype.signupClient = function(signupInfo, callback) {
-	request.post(backendUrl + '/api/v1/sign_up', { form: signupInfo }, function (error, response, body) {
-		// network error
-		if (error) return callback(error);
+  request.post(backendUrl + '/api/v1/sign_up', { form: signupInfo }, function (error, response, body) {
+    // network error
+    if (error) return callback(error);
 
-		console.log(body);
-		try {
-			var data = JSON.parse(body);
-		} catch (e) {
-			console.log(e.message);
-			return callback(new Error("Техническая ошибка входа. Уже работаем над ней."));
-		}
+    console.log(body);
+    try {
+      var data = JSON.parse(body);
+    } catch (e) {
+      console.log(e.message);
+      return callback(new Error("Техническая ошибка входа. Уже работаем над ней."));
+    }
 
-		console.log('Response statusCode = ' + response.statusCode);
+    console.log('Response statusCode = ' + response.statusCode);
 
-		// if response not HTTP 201 Created
-		if (response.statusCode !== 201) {
-			
-			var apiResponse = {
-				error: { statusCode: response.statusCode },
-				data: data.errors
-			}
+    // if response not HTTP 201 Created
+    if (response.statusCode !== 201) {
+      
+      var apiResponse = {
+        error: { statusCode: response.statusCode },
+        data: data.errors
+      }
 
-			// Generate API response as expected by client app
-			return callback(null, null, { messageType: 'Error', apiResponse: apiResponse });
-		}
+      // Generate API response as expected by client app
+      return callback(null, null, { messageType: 'Error', apiResponse: apiResponse });
+    }
 
-		// set user properties
-		var client = new Client();
-		// TODO: Передать данные в конструктор и там их присвоить
-		_.extend(client, data.client);
+    // set user properties
+    var client = new Client();
+    // TODO: Передать данные в конструктор и там их присвоить
+    _.extend(client, data.client);
 
-		callback(null, client, null);
-	});
+    callback(null, client, null);
+  });
 }
 
 function tripToJson(trip) {
-	var tripData = {};
+  var tripData = {};
 
-	trip.getSchema().forEach(function(prop) {
-	    if (trip[prop]) {
-	        tripData[prop] = trip[prop];
-	    }
-	});
+  trip.getSchema().forEach(function(prop) {
+      if (trip[prop]) {
+          tripData[prop] = trip[prop];
+      }
+  });
 
-	return tripData;
+  return tripData;
 }
 
 // TODO: Сделать через AMQP
 Backend.prototype.addTrip = function(trip, callback) {
-	request.post(backendUrl + '/api/v1/trips', { json: {trip: tripToJson(trip)} }, function (error, response, body) {
-		callback(error);
-	});	
+  request.post(backendUrl + '/api/v1/trips', { json: {trip: tripToJson(trip)} }, function (error, response, body) {
+    callback(error);
+  }); 
 }
 
 // TODO: Сделать через AMQP
 Backend.prototype.billTrip = function(trip, callback) {
-	request.post(backendUrl + '/api/v1/trips/bill', { json: {trip: tripToJson(trip)} }, function (error, response, body) {
-		// network error
-		if (error) return callback(error);
+  request.post(backendUrl + '/api/v1/trips/bill', { json: {trip: tripToJson(trip)} }, function (error, response, body) {
+    // network error
+    if (error) return callback(error);
 
-		callback(null, body['fare_billed_to_card'], body['fare'], body['paid_by_card']);
-	});
+    callback(null, body['fare_billed_to_card'], body['fare'], body['paid_by_card']);
+  });
 }
 
 // TODO: Сделать через AMQP
 Backend.prototype.rateDriver = function(tripId, rating, feedback, callback) {
-	var payload = {
-		trip: { rating: rating, feedback: feedback }
-	};
+  var payload = {
+    trip: { rating: rating, feedback: feedback }
+  };
 
-	request.put(backendUrl + '/api/v1/trips/' + tripId + '/rate_driver', { json: payload }, function (error, response, body) {
-		callback();
-	});
+  request.put(backendUrl + '/api/v1/trips/' + tripId + '/rate_driver', { json: payload }, function (error, response, body) {
+    callback();
+  });
 }
 
 // TODO: Сделать через AMQP
 Backend.prototype.rateClient = function(tripId, rating, callback) {
-	var payload = {
-		trip: { rating: rating }
-	};
+  var payload = {
+    trip: { rating: rating }
+  };
 
-	request.put(backendUrl + '/api/v1/trips/' + tripId + '/rate_client', { json: payload }, function (error, response, body) {
-		callback();
-	});
+  request.put(backendUrl + '/api/v1/trips/' + tripId + '/rate_client', { json: payload }, function (error, response, body) {
+    callback();
+  });
 }
 
 // TODO: Сделать через AMQP
@@ -151,101 +151,101 @@ Backend.prototype.rateClient = function(tripId, rating, callback) {
 // apiUrl: '/clients/validate',
 // apiMethod: 'POST'
 Backend.prototype.apiCommand = function(client, message, callback) {
-	request(
-		{ method: message.apiMethod,
-			 uri: backendApiUrl + message.apiUrl,
-			form: message.apiParameters
-		},
-		function(error, response, body) {
-			var apiResponse = {
-				error: {
-					statusCode: response.statusCode
-				}
-			};
+  request(
+    { method: message.apiMethod,
+       uri: backendApiUrl + message.apiUrl,
+      form: message.apiParameters
+    },
+    function(error, response, body) {
+      var apiResponse = {
+        error: {
+          statusCode: response.statusCode
+        }
+      };
 
-			if (error) {
-				apiResponse.error.message = error.message;
-			}
-			else if (body) {
-				try {
-					apiResponse.data = JSON.parse(body);
-				}
-	    	catch(e) { /* ignore */ }
-			}
+      if (error) {
+        apiResponse.error.message = error.message;
+      }
+      else if (body) {
+        try {
+          apiResponse.data = JSON.parse(body);
+        }
+        catch(e) { /* ignore */ }
+      }
 
-			callback(null, MessageFactory.createClientOK(client, { apiResponse: apiResponse }));
-		}
-	);
+      callback(null, MessageFactory.createClientOK(client, { apiResponse: apiResponse }));
+    }
+  );
 }
 
 // TODO: Сделать через AMQP
 Backend.prototype.smsTripStatusToClient = function(trip, client) {
-	var payload = {
-		driver_name: trip.driver.firstName,
-		driver_rating: trip.driver.rating,
-		trip_state: trip.state.toLowerCase(),
-		eta_minutes: trip.eta,
-		vehicle_view_id: trip.vehicleViewId
-	};
+  var payload = {
+    driver_name: trip.driver.firstName,
+    driver_rating: trip.driver.rating,
+    trip_state: trip.state.toLowerCase(),
+    eta_minutes: trip.eta,
+    vehicle_view_id: trip.vehicleViewId
+  };
 
-	request.post(backendUrl + '/api/v1/clients/' + client.id + '/sms', { json: payload }, function (error, response, body) {
-		if (error) console.log(error);
+  request.post(backendUrl + '/api/v1/clients/' + client.id + '/sms', { json: payload }, function (error, response, body) {
+    if (error) console.log(error);
 
-	});
+  });
 }
 
 Backend.prototype.listVehicles = function(driver, callback) {
-	request.get(backendUrl + '/api/v1/drivers/' + driver.id + '/vehicles', function (error, response, body) {
-		if (error) console.log(error);
+  request.get(backendUrl + '/api/v1/drivers/' + driver.id + '/vehicles', function (error, response, body) {
+    if (error) console.log(error);
 
-		try {
-			var response = JSON.parse(body);
-		} catch (e) {
-			console.log(e.message);
-			return callback(new Error("Техническая ошибка. Уже работаем над ней."));
-		}
+    try {
+      var response = JSON.parse(body);
+    } catch (e) {
+      console.log(e.message);
+      return callback(new Error("Техническая ошибка. Уже работаем над ней."));
+    }
 
-		callback(null, response.vehicles);
-	});
+    callback(null, response.vehicles);
+  });
 }
 
 Backend.prototype.selectVehicle = function(driver, vehicleId, callback) {
-	request.put(backendUrl + '/api/v1/drivers/' + driver.id + '/select_vehicle', { json: { vehicle_id: vehicleId } }, function (error, response, body) {
-		// network error
-		if (error) return callback(error);
+  request.put(backendUrl + '/api/v1/drivers/' + driver.id + '/select_vehicle', { json: { vehicle_id: vehicleId } }, function (error, response, body) {
+    // network error
+    if (error) return callback(error);
 
-		callback(null, body.vehicle);
-	});
+    callback(null, body.vehicle);
+  });
 }
 
 Backend.prototype.getActiveFare = function(callback) {
-	request.get(backendUrl + '/api/v1/fares', function (error, response, body) {
-		if (error) console.log(error);
+  request.get(backendUrl + '/api/v1/fares', function (error, response, body) {
+    if (error) console.log(error);
 
-		try {
-			var response = JSON.parse(body);
-		} catch (e) {
-			console.log(e.message);
-			return callback(new Error("Техническая ошибка."));
-		}
+    try {
+      var response = JSON.parse(body);
+    } catch (e) {
+      console.log(e.message);
+      return callback(new Error("Техническая ошибка."));
+    }
 
-		callback(null, response.fare);
-	});
+    callback(null, response.fare);
+  });
 }
 
 Backend.prototype.requestMobileConfirmation = function(clientId) {
-	request.put(backendUrl + '/api/v1/clients/' + clientId + '/request_mobile_confirmation', function(error, response, body) {
-	});	
+  request.put(backendUrl + '/api/v1/clients/' + clientId + '/request_mobile_confirmation', function(error, response, body) {
+  }); 
 }
 
 Backend.prototype.clientOpenApp = function(clientId) {
-	request.get(backendUrl + '/api/v1/clients/' + clientId + '/open_app', function(error, response, body) {
-	});
+  request.get(backendUrl + '/api/v1/clients/' + clientId + '/open_app', function(error, response, body) {
+  });
 }
 
 Backend.prototype.clientRequestPickup = function(clientId, params) {
-	request.put(backendUrl + '/api/v1/clients/' + clientId + '/request_pickup', { json: params }, function(error, response, body) {
-	});
+  request.put(backendUrl + '/api/v1/clients/' + clientId + '/request_pickup', { json: params }, function(error, response, body) {
+  });
 }
 
 module.exports = new Backend();
